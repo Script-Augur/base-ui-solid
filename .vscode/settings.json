@@ -1,0 +1,14 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/node_modules/@script-augur": false
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/node_modules/@script-augur/**": false
+  }
+}

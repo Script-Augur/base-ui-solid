@@ -1,0 +1,47 @@
+{
+  "name": "@script-augur/base-ui-solid-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "node": ">=20.17.0 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' run build",
+    "test": "pnpm -r --filter './packages/*' --if-present run test",
+    "typecheck": "pnpm -r --filter './packages/*' --if-present run typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "check": "prettier --check . && eslint .",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "prettier": "@script-augur/prettier-config",
+  "devDependencies": {
+    "@changesets/cli": "^2.27.11",
+    "@script-augur/eslint-config": "^0.2.4",
+    "@script-augur/eslint-plugin-module-ordering": "^0.2.1",
+    "@script-augur/prettier-config": "^0.2.1",
+    "@script-augur/tsconfig": "^0.2.1",
+    "@tanstack/eslint-config": "^0.4.0",
+    "@types/node": "^22.15.30",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.6",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "solid-js": "^1.9.15",
+    "storybook": "^10.5.10",
+    "storybook-solidjs-vite": "^10.6.0",
+    "typescript": "^5.9.2",
+    "vite": "^6.3.5",
+    "vite-plugin-solid": "^2.11.6",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "human-id": "1.0.2"
+    }
+  }
+}

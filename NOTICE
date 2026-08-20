@@ -1,0 +1,11 @@
+# NOTICE
+
+This repository includes an unofficial SolidJS port of [Base UI](https://base-ui.com/)
+behavior and accessibility contracts. Portions of the design and approach are derived
+from Base UI (`@base-ui/react`, `@base-ui/utils`), which is licensed under the MIT License:
+
+Copyright (c) 2019 Material-UI SAS
+
+See the upstream project: https://github.com/mui/base-ui
+
+Upstream pin for this workspace is recorded in `UPSTREAM.md`.
