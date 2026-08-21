@@ -24,7 +24,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.27.11",
     "@script-augur/eslint-config": "^0.2.4",
-    "@script-augur/eslint-plugin-module-ordering": "^0.2.1",
+    "@script-augur/eslint-plugin-module-ordering": "^0.2.2",
     "@script-augur/prettier-config": "^0.2.1",
     "@script-augur/tsconfig": "^0.2.1",
     "@tanstack/eslint-config": "^0.4.0",

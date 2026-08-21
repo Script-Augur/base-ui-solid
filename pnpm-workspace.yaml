@@ -10,6 +10,7 @@ minimumReleaseAgeExclude:
   - storybook
   - "@storybook/*"
   - baseline-browser-mapping
+  - '@script-augur/eslint-plugin-module-ordering@0.2.2'
 
 # Native/tooling packages that need postinstall scripts under strictDepBuilds.
 allowBuilds:
