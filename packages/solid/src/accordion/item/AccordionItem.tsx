@@ -64,7 +64,7 @@ export function AccordionItem(componentProps: AccordionItemProps): JSX.Element {
     return i === -1 ? 0 : i
   }
 
-  const disabled = () => local.disabled ?? root.disabled()
+  const disabled = () => Boolean(local.disabled) || root.disabled()
   const isOpen = () => root.value().indexOf(itemValue()) !== -1
 
   const [mounted, mountedAssign] = createSignal(false)
