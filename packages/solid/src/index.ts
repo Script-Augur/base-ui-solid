@@ -40,6 +40,24 @@ export {
   CollapsiblePanelCssVars,
 } from './collapsible'
 export {
+  Accordion,
+  AccordionRoot,
+  AccordionRootDataAttributes,
+  AccordionRootContext,
+  useAccordionRootContext,
+  AccordionItem,
+  AccordionItemDataAttributes,
+  AccordionItemContext,
+  useAccordionItemContext,
+  AccordionHeader,
+  AccordionHeaderDataAttributes,
+  AccordionTrigger,
+  AccordionTriggerDataAttributes,
+  AccordionPanel,
+  AccordionPanelDataAttributes,
+  AccordionPanelCssVars,
+} from './accordion'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -92,6 +110,25 @@ export type {
   CollapsiblePanelProps,
   CollapsiblePanelState,
 } from './collapsible'
+export type {
+  AccordionRootChangeEventDetails,
+  AccordionRootChangeEventReason,
+  AccordionRootContextValue,
+  AccordionRootProps,
+  AccordionRootState,
+  AccordionValue,
+  AccordionItemChangeEventDetails,
+  AccordionItemChangeEventReason,
+  AccordionItemContextValue,
+  AccordionItemProps,
+  AccordionItemState,
+  AccordionHeaderProps,
+  AccordionHeaderState,
+  AccordionTriggerProps,
+  AccordionTriggerState,
+  AccordionPanelProps,
+  AccordionPanelState,
+} from './accordion'
 export type {
   CreateControlledOptions,
   ControlledSetter,
