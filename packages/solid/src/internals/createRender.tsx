@@ -44,11 +44,10 @@ export function createRender<
   const render = options.render
 
   if (typeof render === 'function') {
-    const fn = render as (...args: Array<unknown>) => unknown
-    if (fn.length >= 2) {
-      return (render as RenderFunction<TState, TProps>)(options.props, state)
-    }
-    return <Dynamic component={render as ValidComponent} {...options.props} />
+    // Always treat functions as Base UI render props `(props, state) => JSX`.
+    // Solid components also accept a single props argument, so a second `state`
+    // parameter is harmlessly ignored when `render={MyComponent}`.
+    return (render as RenderFunction<TState, TProps>)(options.props, state)
   }
 
   if (render != null && typeof render === 'object') {

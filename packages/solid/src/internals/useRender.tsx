@@ -38,14 +38,13 @@ export function useRender<
   const state = (options.state ?? {}) as TState
   const render = options.render
 
-  if (typeof render === 'function' && render.length >= 2) {
+  if (typeof render === 'function') {
     return (render as RenderFn<TProps, TState>)(options.props, state)
   }
 
   const component =
-    (typeof render === 'function' || typeof render === 'string'
-      ? (render as ValidComponent)
-      : undefined) ?? options.defaultElement
+    (typeof render === 'string' ? (render as ValidComponent) : undefined) ??
+    options.defaultElement
 
   return <Dynamic component={component} {...options.props} />
 }

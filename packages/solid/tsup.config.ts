@@ -11,7 +11,10 @@ const pkg = JSON.parse(
 ) as { name: string; version: string }
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: {
+    index: 'src/index.ts',
+    button: 'src/button/index.ts',
+  },
   format: ['esm'],
   dts: true,
   clean: true,
