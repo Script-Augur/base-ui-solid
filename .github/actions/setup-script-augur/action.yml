@@ -8,7 +8,7 @@ inputs:
   pnpm-version:
     description: pnpm version
     required: false
-    default: '9.9.0'
+    default: '11.22.0'
   cache:
     description: Enable setup-node pnpm cache (requires pnpm-lock.yaml)
     required: false

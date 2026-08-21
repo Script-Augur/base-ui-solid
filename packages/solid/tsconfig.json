@@ -5,7 +5,8 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["vite/client"]
   },
   "include": ["src"]
 }
