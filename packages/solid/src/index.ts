@@ -19,6 +19,7 @@ export const version: string = __PACKAGE_VERSION__
 export const PACKAGE_NAME: string = __PACKAGE_NAME__
 
 export { Button, ButtonDataAttributes } from './button'
+export { Separator, SeparatorDataAttributes } from './separator'
 export {
   createControlled,
   createRender,
@@ -45,6 +46,7 @@ export {
 } from './internals'
 
 export type { ButtonProps, ButtonState } from './button'
+export type { Orientation, SeparatorProps, SeparatorState } from './separator'
 export type {
   CreateControlledOptions,
   ControlledSetter,

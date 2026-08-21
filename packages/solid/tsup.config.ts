@@ -14,6 +14,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     button: 'src/button/index.ts',
+    separator: 'src/separator/index.ts',
   },
   format: ['esm'],
   dts: true,
