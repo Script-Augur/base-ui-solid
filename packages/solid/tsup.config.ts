@@ -17,6 +17,7 @@ export default defineConfig({
     separator: 'src/separator/index.ts',
     toggle: 'src/toggle/index.ts',
     'toggle-group': 'src/toggle-group/index.ts',
+    collapsible: 'src/collapsible/index.ts',
   },
   format: ['esm'],
   dts: true,

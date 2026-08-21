@@ -4,6 +4,7 @@
  */
 export const REASONS = {
   none: 'none',
+  triggerPress: 'trigger-press',
 } as const
 
 /**
