@@ -22,6 +22,12 @@ export { Button, ButtonDataAttributes } from './button'
 export { Separator, SeparatorDataAttributes } from './separator'
 export { Toggle, ToggleDataAttributes } from './toggle'
 export {
+  ToggleGroup,
+  ToggleGroupDataAttributes,
+  ToggleGroupContext,
+  useToggleGroupContext,
+} from './toggle-group'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -56,6 +62,13 @@ export type {
   ToggleProps,
   ToggleState,
 } from './toggle'
+export type {
+  ToggleGroupChangeEventDetails,
+  ToggleGroupChangeEventReason,
+  ToggleGroupContextValue,
+  ToggleGroupProps,
+  ToggleGroupState,
+} from './toggle-group'
 export type {
   CreateControlledOptions,
   ControlledSetter,

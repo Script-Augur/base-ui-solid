@@ -16,6 +16,7 @@ export default defineConfig({
     button: 'src/button/index.ts',
     separator: 'src/separator/index.ts',
     toggle: 'src/toggle/index.ts',
+    'toggle-group': 'src/toggle-group/index.ts',
   },
   format: ['esm'],
   dts: true,

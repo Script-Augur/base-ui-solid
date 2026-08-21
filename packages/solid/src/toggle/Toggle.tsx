@@ -1,4 +1,4 @@
-import { mergeProps, splitProps } from 'solid-js'
+import { createEffect, createUniqueId, mergeProps, splitProps } from 'solid-js'
 
 import {
   REASONS,
@@ -8,6 +8,7 @@ import { createControlled } from '../internals/createControlled'
 import { createRender } from '../internals/createRender'
 import { useButton } from '../internals/useButton'
 import { dataAttr } from '../internals/useRender'
+import { useToggleGroupContext } from '../toggle-group/ToggleGroupContext'
 
 import { ToggleDataAttributes } from './ToggleDataAttributes'
 
@@ -50,12 +51,35 @@ export function Toggle(componentProps: ToggleProps): JSX.Element {
     'ref',
   ])
 
-  const [pressed, setPressed] = createControlled({
-    value: () => local.pressed,
-    defaultValue: local.defaultPressed ?? false,
+  const groupContext = useToggleGroupContext()
+  const generatedId = createUniqueId()
+  // Match upstream: falsy `value` (including "") falls back to a generated id.
+  const resolvedValue = () => local.value || generatedId
+
+  createEffect(() => {
+    if (
+      groupContext &&
+      local.value === undefined &&
+      groupContext.isValueInitialized()
+    ) {
+      console.error(
+        'Base UI: A `Toggle` component rendered in a `ToggleGroup` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Provide the `Toggle` with a `value` prop matching the `ToggleGroup` values prop type.'
+      )
+    }
   })
 
-  const disabled = () => local.disabled ?? false
+  const [pressed, setPressed] = createControlled({
+    value: () => {
+      if (groupContext) {
+        const value = resolvedValue()
+        return groupContext.value().indexOf(value) > -1
+      }
+      return local.pressed
+    },
+    defaultValue: groupContext ? false : (local.defaultPressed ?? false),
+  })
+
+  const disabled = () => (local.disabled || groupContext?.disabled()) ?? false
 
   const { getButtonProps, buttonRef } = useButton({
     disabled,
@@ -81,8 +105,20 @@ export function Toggle(componentProps: ToggleProps): JSX.Element {
           onClick(event: MouseEvent) {
             const nextPressed = !pressed()
             const details = createChangeEventDetails(REASONS.none, event)
+
+            // `onPressedChange` runs before the group commits so that canceling
+            // here can also veto the group value change (shared `details`).
             local.onPressedChange?.(nextPressed, details)
             if (details.isCanceled) return
+
+            if (groupContext) {
+              const applied = groupContext.setGroupValue(
+                resolvedValue(),
+                nextPressed,
+                details
+              )
+              if (!applied) return
+            }
 
             setPressed(nextPressed)
           },
