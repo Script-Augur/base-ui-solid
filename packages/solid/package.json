@@ -44,6 +44,11 @@
       "import": "./dist/toggle-group.js",
       "default": "./dist/toggle-group.js"
     },
+    "./collapsible": {
+      "types": "./dist/collapsible.d.ts",
+      "import": "./dist/collapsible.js",
+      "default": "./dist/collapsible.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

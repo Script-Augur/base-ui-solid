@@ -28,6 +28,18 @@ export {
   useToggleGroupContext,
 } from './toggle-group'
 export {
+  Collapsible,
+  CollapsibleRoot,
+  CollapsibleRootDataAttributes,
+  CollapsibleRootContext,
+  useCollapsibleRootContext,
+  CollapsibleTrigger,
+  CollapsibleTriggerDataAttributes,
+  CollapsiblePanel,
+  CollapsiblePanelDataAttributes,
+  CollapsiblePanelCssVars,
+} from './collapsible'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -69,6 +81,17 @@ export type {
   ToggleGroupProps,
   ToggleGroupState,
 } from './toggle-group'
+export type {
+  CollapsibleRootChangeEventDetails,
+  CollapsibleRootChangeEventReason,
+  CollapsibleRootContextValue,
+  CollapsibleRootProps,
+  CollapsibleRootState,
+  CollapsibleTriggerProps,
+  CollapsibleTriggerState,
+  CollapsiblePanelProps,
+  CollapsiblePanelState,
+} from './collapsible'
 export type {
   CreateControlledOptions,
   ControlledSetter,
