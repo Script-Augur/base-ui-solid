@@ -3,6 +3,7 @@
  * controlled state, floating, dismiss, focus trap, scroll lock, direction).
  */
 export { createControlled } from './createControlled'
+export { createChangeEventDetails, REASONS } from './createChangeEventDetails'
 export { createRender, splitRenderProps } from './createRender'
 export { useRender, mergeAttrs, dataAttr, callHandler } from './useRender'
 export { useButton } from './useButton'
@@ -26,6 +27,10 @@ export type {
   ControlledSetter,
   ControlledSignal,
 } from './createControlled'
+export type {
+  BaseUIChangeEventDetails,
+  ChangeEventReason,
+} from './createChangeEventDetails'
 export type {
   CreateRenderOptions,
   RenderProp,

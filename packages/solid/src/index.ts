@@ -20,8 +20,11 @@ export const PACKAGE_NAME: string = __PACKAGE_NAME__
 
 export { Button, ButtonDataAttributes } from './button'
 export { Separator, SeparatorDataAttributes } from './separator'
+export { Toggle, ToggleDataAttributes } from './toggle'
 export {
   createControlled,
+  createChangeEventDetails,
+  REASONS,
   createRender,
   splitRenderProps,
   useRender,
@@ -48,9 +51,17 @@ export {
 export type { ButtonProps, ButtonState } from './button'
 export type { Orientation, SeparatorProps, SeparatorState } from './separator'
 export type {
+  ToggleChangeEventDetails,
+  ToggleChangeEventReason,
+  ToggleProps,
+  ToggleState,
+} from './toggle'
+export type {
   CreateControlledOptions,
   ControlledSetter,
   ControlledSignal,
+  BaseUIChangeEventDetails,
+  ChangeEventReason,
   CreateRenderOptions,
   RenderProp,
   RenderFunction,
