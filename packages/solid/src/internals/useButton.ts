@@ -110,7 +110,10 @@ export function useButton(
           }
 
           const isCurrentTarget = event.target === event.currentTarget
-          const currentTarget = event.currentTarget as Element
+          const currentTarget = event.currentTarget
+          if (!(currentTarget instanceof Element)) {
+            return
+          }
           const isButton = isButtonElement(currentTarget)
           const isLink = !isNativeButton() && isValidLinkElement(currentTarget)
           const shouldClick =
@@ -168,11 +171,16 @@ export function useButton(
           const baseUIEvent = makeEventPreventable(event)
           callEventHandler(externalOnKeyUp, baseUIEvent)
 
+          const currentTarget = event.currentTarget
+          if (!(currentTarget instanceof Element)) {
+            return
+          }
+
           if (
-            event.target === event.currentTarget &&
+            event.target === currentTarget &&
             isNativeButton() &&
             isCompositeItem() &&
-            isButtonElement(event.currentTarget as HTMLElement) &&
+            isButtonElement(currentTarget) &&
             event.key === ' '
           ) {
             event.preventDefault()
@@ -184,14 +192,14 @@ export function useButton(
           }
 
           if (
-            event.target === event.currentTarget &&
+            event.target === currentTarget &&
             !isNativeButton() &&
             !isCompositeItem() &&
             !event.defaultPrevented &&
             event.key === ' '
           ) {
             baseUIEvent.preventBaseUIHandler()
-            dispatchClickWithModifiers(event.currentTarget, event)
+            dispatchClickWithModifiers(currentTarget, event)
           }
         },
         'on:pointerdown': (event: PointerEvent) => {
@@ -282,11 +290,13 @@ function callEventHandler<T extends Event>(
   }
 }
 
-function isButtonElement(elem: Element | null): elem is HTMLButtonElement {
+function isButtonElement(elem: EventTarget | null): elem is HTMLButtonElement {
   return elem instanceof HTMLElement && elem.tagName === 'BUTTON'
 }
 
-function isValidLinkElement(elem: Element | null): elem is HTMLAnchorElement {
+function isValidLinkElement(
+  elem: EventTarget | null
+): elem is HTMLAnchorElement {
   return (
     elem instanceof HTMLElement &&
     elem.tagName === 'A' &&
