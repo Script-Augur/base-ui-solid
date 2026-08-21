@@ -18,7 +18,7 @@ let globalId = 0
  * // "checkbox-label-1"
  * ```
  */
-export function generateId(prefix = "base-ui"): string {
+export function generateId(prefix = 'base-ui'): string {
   globalId += 1
   return `${prefix}-${globalId}`
 }

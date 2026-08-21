@@ -4,9 +4,9 @@ Solid-idiomatic port of [Base UI](https://base-ui.com/) headless components. Pub
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| `@script-augur/base-ui-solid` | Public Solid headless components |
+| Package                       | Purpose                                                 |
+| ----------------------------- | ------------------------------------------------------- |
+| `@script-augur/base-ui-solid` | Public Solid headless components                        |
 | `@script-augur/base-ui-utils` | Shared DOM/store helpers (workspace; publish if needed) |
 
 ## Install (consumers)

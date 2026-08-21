@@ -19,7 +19,7 @@ jobs:
 
       - uses: ./.github/actions/setup-script-augur
         with:
-          cache: "true"
+          cache: 'true'
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

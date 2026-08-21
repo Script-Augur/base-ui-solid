@@ -1,7 +1,7 @@
-import { mergeProps, splitProps } from "solid-js"
-import { Dynamic } from "solid-js/web"
+import { mergeProps, splitProps } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 
-import type { JSX, ValidComponent } from "solid-js"
+import type { JSX, ValidComponent } from 'solid-js'
 
 /**
  * Base UI-style `render` prop composition for Solid.
@@ -43,7 +43,7 @@ export function createRender<
   const state = (options.state ?? {}) as TState
   const render = options.render
 
-  if (typeof render === "function") {
+  if (typeof render === 'function') {
     const fn = render as (...args: Array<unknown>) => unknown
     if (fn.length >= 2) {
       return (render as RenderFunction<TState, TProps>)(options.props, state)
@@ -51,7 +51,7 @@ export function createRender<
     return <Dynamic component={render as ValidComponent} {...options.props} />
   }
 
-  if (render != null && typeof render === "object") {
+  if (render != null && typeof render === 'object') {
     const element = render as {
       type?: ValidComponent
       props?: Record<string, unknown>
@@ -62,7 +62,7 @@ export function createRender<
     }
   }
 
-  if (typeof render === "string") {
+  if (typeof render === 'string') {
     return <Dynamic component={render} {...options.props} />
   }
 
@@ -85,17 +85,17 @@ export function createRender<
  * ```
  */
 export function splitRenderProps<T extends Record<string, unknown>>(
-  props: T,
+  props: T
 ): [
-  Pick<T, "render" | "ref" | "class" | "style" | "children">,
-  Omit<T, "render" | "ref" | "class" | "style" | "children">,
+  Pick<T, 'render' | 'ref' | 'class' | 'style' | 'children'>,
+  Omit<T, 'render' | 'ref' | 'class' | 'style' | 'children'>,
 ] {
   return splitProps(props, [
-    "render",
-    "ref",
-    "class",
-    "style",
-    "children",
+    'render',
+    'ref',
+    'class',
+    'style',
+    'children',
   ]) as never
 }
 
@@ -107,10 +107,10 @@ export function splitRenderProps<T extends Record<string, unknown>>(
  * @param props - Props merged onto the rendered output.
  * @param state - Component state snapshot for the render function.
  */
-export type RenderFunction<
-  TState,
-  TProps extends Record<string, unknown>,
-> = (props: TProps, state: TState) => JSX.Element
+export type RenderFunction<TState, TProps extends Record<string, unknown>> = (
+  props: TProps,
+  state: TState
+) => JSX.Element
 
 /**
  * Base UI-style `render` prop: component type, JSX element, or render function.
@@ -119,9 +119,7 @@ export type RenderFunction<
  * @typeParam TProps - Props merged onto the rendered output.
  */
 export type RenderProp<TState, TProps extends Record<string, unknown>> =
-  | ValidComponent
-  | JSX.Element
-  | RenderFunction<TState, TProps>
+  ValidComponent | JSX.Element | RenderFunction<TState, TProps>
 
 /**
  * Options for {@link createRender}.

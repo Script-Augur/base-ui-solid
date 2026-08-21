@@ -1,7 +1,7 @@
-import { mergeProps } from "solid-js"
-import { Dynamic } from "solid-js/web"
+import { mergeProps } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 
-import type { JSX, ValidComponent } from "solid-js"
+import type { JSX, ValidComponent } from 'solid-js'
 
 /**
  * Resolves a Base UI-style `render` prop into a Solid element.
@@ -38,12 +38,12 @@ export function useRender<
   const state = (options.state ?? {}) as TState
   const render = options.render
 
-  if (typeof render === "function" && render.length >= 2) {
+  if (typeof render === 'function' && render.length >= 2) {
     return (render as RenderFn<TProps, TState>)(options.props, state)
   }
 
   const component =
-    (typeof render === "function" || typeof render === "string"
+    (typeof render === 'function' || typeof render === 'string'
       ? (render as ValidComponent)
       : undefined) ?? options.defaultElement
 
@@ -82,8 +82,8 @@ export function mergeAttrs(
  * <button data-open={dataAttr(open())} />
  * ```
  */
-export function dataAttr(condition: boolean | undefined): "" | undefined {
-  return condition ? "" : undefined
+export function dataAttr(condition: boolean | undefined): '' | undefined {
+  return condition ? '' : undefined
 }
 
 /**
@@ -100,7 +100,7 @@ export function dataAttr(condition: boolean | undefined): "" | undefined {
  */
 export function callHandler<T extends Event>(
   handler: ((event: T) => void) | undefined,
-  event: T,
+  event: T
 ): void {
   handler?.(event)
 }

@@ -42,7 +42,7 @@ export {
   DirectionProvider,
   useDirection,
   DirectionContext,
-} from "./internals"
+} from './internals'
 
 export type {
   CreateControlledOptions,
@@ -66,4 +66,4 @@ export type {
   TextDirection,
   DirectionProviderProps,
   DirectionContextValue,
-} from "./internals"
+} from './internals'

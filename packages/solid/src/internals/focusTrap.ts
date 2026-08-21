@@ -2,11 +2,11 @@ import {
   activeElement,
   contains,
   ownerDocument,
-} from "@script-augur/base-ui-utils"
-import { createEffect, onCleanup } from "solid-js"
-import { tabbable } from "tabbable"
+} from '@script-augur/base-ui-utils'
+import { createEffect, onCleanup } from 'solid-js'
+import { tabbable } from 'tabbable'
 
-import type { Accessor } from "solid-js"
+import type { Accessor } from 'solid-js'
 
 /**
  * Basic focus trap: Tab cycles within `container` while enabled, and focus is
@@ -44,14 +44,14 @@ export function createFocusTrap(options: FocusTrapOptions): void {
     if (initial) {
       queueMicrotask(() => initial.focus())
     } else {
-      if (!container.hasAttribute("tabindex")) {
-        container.setAttribute("tabindex", "-1")
+      if (!container.hasAttribute('tabindex')) {
+        container.setAttribute('tabindex', '-1')
       }
       queueMicrotask(() => container.focus())
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Tab") return
+      if (event.key !== 'Tab') return
       const items = getTabbables(container)
       if (items.length === 0) {
         event.preventDefault()
@@ -73,13 +73,13 @@ export function createFocusTrap(options: FocusTrapOptions): void {
       }
     }
 
-    doc.addEventListener("keydown", onKeyDown)
+    doc.addEventListener('keydown', onKeyDown)
 
     onCleanup(() => {
-      doc.removeEventListener("keydown", onKeyDown)
+      doc.removeEventListener('keydown', onKeyDown)
       const restore =
         options.restoreFocus?.() ?? (previouslyFocused as HTMLElement | null)
-      if (restore && typeof restore.focus === "function") {
+      if (restore && typeof restore.focus === 'function') {
         queueMicrotask(() => restore.focus())
       }
     })

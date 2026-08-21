@@ -5,11 +5,11 @@ import {
   flip,
   offset,
   shift,
-} from "@floating-ui/dom"
-import { createEffect, createSignal, onCleanup } from "solid-js"
+} from '@floating-ui/dom'
+import { createEffect, createSignal, onCleanup } from 'solid-js'
 
-import type { Middleware, Placement, Strategy } from "@floating-ui/dom"
-import type { Accessor } from "solid-js"
+import type { Middleware, Placement, Strategy } from '@floating-ui/dom'
+import type { Accessor } from 'solid-js'
 
 export { offset, flip, shift, arrow, autoUpdate, computePosition }
 
@@ -43,10 +43,10 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
   const [x, setX] = createSignal(0)
   const [y, setY] = createSignal(0)
   const [strategy, setStrategy] = createSignal<Strategy>(
-    options.strategy ?? "absolute",
+    options.strategy ?? 'absolute'
   )
   const [placement, setPlacement] = createSignal<Placement>(
-    options.placement ?? "bottom",
+    options.placement ?? 'bottom'
   )
   const [middlewareData, setMiddlewareData] = createSignal<
     Record<string, unknown>
@@ -73,8 +73,8 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
 
     const cleanup = autoUpdate(reference, floating, () => {
       void computePosition(reference, floating, {
-        placement: options.placement ?? "bottom",
-        strategy: options.strategy ?? "absolute",
+        placement: options.placement ?? 'bottom',
+        strategy: options.strategy ?? 'absolute',
         middleware,
       }).then(data => {
         setX(data.x)

@@ -18,9 +18,13 @@
     "build-storybook": "storybook build",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "prepare": "husky"
   },
   "prettier": "@script-augur/prettier-config",
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
+  },
   "devDependencies": {
     "@changesets/cli": "^2.27.11",
     "@script-augur/eslint-config": "^0.2.4",
@@ -30,6 +34,8 @@
     "@tanstack/eslint-config": "^0.4.0",
     "@types/node": "^22.15.30",
     "eslint": "^9.39.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "solid-js": "^1.9.15",

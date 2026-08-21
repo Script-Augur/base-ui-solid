@@ -1,8 +1,8 @@
-import { createContext, createMemo, useContext } from "solid-js"
+import { createContext, createMemo, useContext } from 'solid-js'
 
-import type { Accessor, JSX, ParentProps } from "solid-js"
+import type { Accessor, JSX, ParentProps } from 'solid-js'
 
-const DEFAULT_DIRECTION: TextDirection = "ltr"
+const DEFAULT_DIRECTION: TextDirection = 'ltr'
 
 /**
  * Context carrying writing direction for nested Base UI parts.
@@ -65,7 +65,7 @@ export function useDirection(): Accessor<TextDirection> {
 }
 
 /** Text direction for RTL-aware components. */
-export type TextDirection = "ltr" | "rtl"
+export type TextDirection = 'ltr' | 'rtl'
 
 /** Value provided by {@link DirectionProvider}. */
 export interface DirectionContextValue {

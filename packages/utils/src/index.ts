@@ -10,14 +10,14 @@
  * generateId("field")
  * ```
  */
-export { clamp } from "./clamp"
-export { generateId } from "./generateId"
-export { ownerDocument, ownerWindow } from "./owner"
-export { contains, getTarget, activeElement } from "./shadowDom"
-export { Timeout } from "./timeout"
-export { AnimationFrame } from "./animationFrame"
-export { inertValue } from "./inertValue"
-export { isElementDisabled } from "./isElementDisabled"
-export { mergeObjects } from "./mergeObjects"
-export { createStore } from "./store"
-export type { Store, Listener } from "./store"
+export { clamp } from './clamp'
+export { generateId } from './generateId'
+export { ownerDocument, ownerWindow } from './owner'
+export { contains, getTarget, activeElement } from './shadowDom'
+export { Timeout } from './timeout'
+export { AnimationFrame } from './animationFrame'
+export { inertValue } from './inertValue'
+export { isElementDisabled } from './isElementDisabled'
+export { mergeObjects } from './mergeObjects'
+export { createStore } from './store'
+export type { Store, Listener } from './store'

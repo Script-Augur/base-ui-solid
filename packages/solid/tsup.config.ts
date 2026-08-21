@@ -1,18 +1,18 @@
-import { readFileSync } from "node:fs"
-import { dirname, join } from "node:path"
-import { fileURLToPath } from "node:url"
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import { solidPlugin } from "esbuild-plugin-solid"
-import { defineConfig } from "tsup"
+import { solidPlugin } from 'esbuild-plugin-solid'
+import { defineConfig } from 'tsup'
 
 const packageDir = dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(
-  readFileSync(join(packageDir, "package.json"), "utf8"),
+  readFileSync(join(packageDir, 'package.json'), 'utf8')
 ) as { name: string; version: string }
 
 export default defineConfig({
-  entry: ["src/index.ts"],
-  format: ["esm"],
+  entry: ['src/index.ts'],
+  format: ['esm'],
   dts: true,
   clean: true,
   treeshake: true,
@@ -22,6 +22,6 @@ export default defineConfig({
   },
   esbuildPlugins: [solidPlugin()],
   esbuildOptions(options) {
-    options.jsx = "preserve"
+    options.jsx = 'preserve'
   },
 })

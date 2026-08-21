@@ -13,11 +13,14 @@
  * ```
  */
 export function isElementDisabled(
-  element: Element | null | undefined,
+  element: Element | null | undefined
 ): boolean {
   if (!element || !(element instanceof HTMLElement)) return false
-  if ("disabled" in element && Boolean((element as HTMLInputElement).disabled)) {
+  if (
+    'disabled' in element &&
+    Boolean((element as HTMLInputElement).disabled)
+  ) {
     return true
   }
-  return element.getAttribute("aria-disabled") === "true"
+  return element.getAttribute('aria-disabled') === 'true'
 }

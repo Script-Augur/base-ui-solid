@@ -1,6 +1,6 @@
-import { createMemo, createSignal } from "solid-js"
+import { createMemo, createSignal } from 'solid-js'
 
-import type { Accessor } from "solid-js"
+import type { Accessor } from 'solid-js'
 
 /**
  * Creates a Solid signal that works in both controlled and uncontrolled modes,
@@ -35,7 +35,7 @@ import type { Accessor } from "solid-js"
  * ```
  */
 export function createControlled<T>(
-  options: CreateControlledOptions<T>,
+  options: CreateControlledOptions<T>
 ): ControlledSignal<T> {
   const [uncontrolled, setUncontrolled] = createSignal(options.defaultValue)
   const isControlled = createMemo(() => options.value?.() !== undefined)
@@ -44,9 +44,9 @@ export function createControlled<T>(
     return isControlled() ? (options.value!() as T) : uncontrolled()
   }
 
-  const setValue: ControlledSetter<T> = (next) => {
+  const setValue: ControlledSetter<T> = next => {
     const resolved =
-      typeof next === "function" ? (next as (prev: T) => T)(getValue()) : next
+      typeof next === 'function' ? (next as (prev: T) => T)(getValue()) : next
     if (!isControlled()) setUncontrolled(() => resolved)
 
     options.onChange?.(resolved)
