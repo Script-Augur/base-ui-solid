@@ -24,8 +24,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Package exports point at dist/; build before lint/test so workspace
+      # dependencies like @script-augur/base-ui-utils resolve.
+      - run: pnpm build
+
       - run: pnpm lint
 
       - run: pnpm test:run
-
-      - run: pnpm build

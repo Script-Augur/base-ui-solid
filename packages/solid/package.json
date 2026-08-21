@@ -34,6 +34,11 @@
       "import": "./dist/separator.js",
       "default": "./dist/separator.js"
     },
+    "./toggle": {
+      "types": "./dist/toggle.d.ts",
+      "import": "./dist/toggle.js",
+      "default": "./dist/toggle.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
