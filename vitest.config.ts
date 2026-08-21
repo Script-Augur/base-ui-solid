@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config"
+import { defineConfig } from 'vitest/config'
 
 /**
  * Root Vitest config — `pnpm test` watches all packages with normal Vitest
@@ -6,6 +6,6 @@ import { defineConfig } from "vitest/config"
  */
 export default defineConfig({
   test: {
-    projects: ["packages/utils", "packages/solid"],
+    projects: ['packages/utils', 'packages/solid'],
   },
 })

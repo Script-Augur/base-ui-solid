@@ -1,17 +1,12 @@
-import type { Meta, StoryObj } from "storybook-solidjs-vite"
+import type { Meta, StoryObj } from 'storybook-solidjs-vite'
 
-import {
-  DirectionProvider,
-  PACKAGE_NAME,
-  useDirection,
-  version,
-} from "../src"
+import { DirectionProvider, PACKAGE_NAME, useDirection, version } from '../src'
 
-import type { TextDirection } from "../src"
+import type { TextDirection } from '../src'
 
 const meta = {
-  title: "Core/Primitives",
-  parameters: { layout: "centered" },
+  title: 'Core/Primitives',
+  parameters: { layout: 'centered' },
 } satisfies Meta
 
 export default meta
@@ -33,17 +28,18 @@ export const PackageInfo: Story = {
 function DirectionProbe() {
   const direction = useDirection()
   return (
-    <div dir={direction()} style={{ "text-align": "start", "max-width": "28rem" }}>
+    <div
+      dir={direction()}
+      style={{ 'text-align': 'start', 'max-width': '28rem' }}
+    >
       <p data-testid="direction">
         Resolved direction: <strong>{direction()}</strong>
       </p>
       <ol>
+        <li>Open the Controls panel at the bottom of this canvas.</li>
         <li>
-          Open the Controls panel at the bottom of this canvas.
-        </li>
-        <li>
-          Toggle the <code>direction</code> control between <code>ltr</code>{" "}
-          and <code>rtl</code>.
+          Toggle the <code>direction</code> control between <code>ltr</code> and{' '}
+          <code>rtl</code>.
         </li>
         <li>
           Confirm the resolved value updates and start-aligned content flips.
@@ -56,16 +52,16 @@ function DirectionProbe() {
 
 export const Direction: StoryObj<DirectionArgs> = {
   args: {
-    direction: "ltr",
+    direction: 'ltr',
   },
   argTypes: {
     direction: {
-      control: "inline-radio",
-      options: ["ltr", "rtl"],
-      description: "Writing direction passed to DirectionProvider.",
+      control: 'inline-radio',
+      options: ['ltr', 'rtl'],
+      description: 'Writing direction passed to DirectionProvider.',
     },
   },
-  render: (args) => (
+  render: args => (
     <DirectionProvider direction={args.direction}>
       <DirectionProbe />
     </DirectionProvider>

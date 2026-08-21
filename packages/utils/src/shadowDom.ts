@@ -17,7 +17,7 @@
  */
 export function contains(
   parent: Node | null | undefined,
-  child: Node | null,
+  child: Node | null
 ): boolean {
   if (!parent || !child) return false
   if (parent === child) return true
@@ -53,7 +53,7 @@ export function contains(
  * ```
  */
 export function getTarget(event: Event): EventTarget | null {
-  if ("composedPath" in event && typeof event.composedPath === "function") {
+  if ('composedPath' in event && typeof event.composedPath === 'function') {
     const path = event.composedPath()
     return path[0] ?? event.target
   }

@@ -15,12 +15,24 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./button": {
+      "types": "./dist/button.d.ts",
+      "import": "./dist/button.js",
+      "default": "./dist/button.js"
+    },
+    "./separator": {
+      "types": "./dist/separator.d.ts",
+      "import": "./dist/separator.js",
+      "default": "./dist/separator.js"
     },
     "./package.json": "./package.json"
   },

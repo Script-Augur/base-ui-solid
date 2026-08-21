@@ -1,7 +1,7 @@
-import { contains, getTarget, ownerDocument } from "@script-augur/base-ui-utils"
-import { createEffect, onCleanup } from "solid-js"
+import { contains, getTarget, ownerDocument } from '@script-augur/base-ui-utils'
+import { createEffect, onCleanup } from 'solid-js'
 
-import type { Accessor } from "solid-js"
+import type { Accessor } from 'solid-js'
 
 /**
  * Escape key + outside pointer-down dismiss helpers. Attaches listeners while
@@ -35,7 +35,7 @@ export function createDismiss(options: DismissOptions): void {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (!escapeKey) return
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         options.onDismiss(event)
       }
     }
@@ -52,15 +52,15 @@ export function createDismiss(options: DismissOptions): void {
     }
 
     if (escapeKey) {
-      doc.addEventListener("keydown", onKeyDown)
+      doc.addEventListener('keydown', onKeyDown)
     }
     if (outsidePress) {
-      doc.addEventListener("pointerdown", onPointerDown, true)
+      doc.addEventListener('pointerdown', onPointerDown, true)
     }
 
     onCleanup(() => {
-      doc.removeEventListener("keydown", onKeyDown)
-      doc.removeEventListener("pointerdown", onPointerDown, true)
+      doc.removeEventListener('keydown', onKeyDown)
+      doc.removeEventListener('pointerdown', onPointerDown, true)
     })
   })
 }

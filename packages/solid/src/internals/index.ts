@@ -5,6 +5,9 @@
 export { createControlled } from './createControlled'
 export { createRender, splitRenderProps } from './createRender'
 export { useRender, mergeAttrs, dataAttr, callHandler } from './useRender'
+export { useButton } from './useButton'
+export { useFocusableWhenDisabled } from './useFocusableWhenDisabled'
+export { makeEventPreventable } from './makeEventPreventable'
 export {
   useFloating,
   offset,
@@ -31,6 +34,12 @@ export type {
   NativeProps,
 } from './createRender'
 export type { RenderFn, UseRenderOptions } from './useRender'
+export type { UseButtonParameters, UseButtonReturnValue } from './useButton'
+export type {
+  UseFocusableWhenDisabledParameters,
+  UseFocusableWhenDisabledReturnValue,
+} from './useFocusableWhenDisabled'
+export type { BaseUIEvent } from './makeEventPreventable'
 export type {
   UseFloatingOptions,
   UseFloatingReturn,

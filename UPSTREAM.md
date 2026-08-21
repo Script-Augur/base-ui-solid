@@ -2,8 +2,8 @@
 
 This port targets Base UI React at the following versions:
 
-| Package | Version |
-| --- | --- |
+| Package          | Version |
+| ---------------- | ------- |
 | `@base-ui/react` | `1.7.0` |
 | `@base-ui/utils` | `0.3.2` |
 

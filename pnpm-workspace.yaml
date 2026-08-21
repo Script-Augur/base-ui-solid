@@ -1,5 +1,5 @@
 packages:
-  - "packages/*"
+  - 'packages/*'
 
 overrides:
   human-id: 1.0.2
@@ -8,7 +8,7 @@ overrides:
 # (and a transitive browserslist helper published the same day).
 minimumReleaseAgeExclude:
   - storybook
-  - "@storybook/*"
+  - '@storybook/*'
   - baseline-browser-mapping
   - '@script-augur/eslint-plugin-module-ordering@0.2.2'
 

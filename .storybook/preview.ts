@@ -1,9 +1,9 @@
-import type { Preview } from "storybook-solidjs-vite"
+import type { Preview } from 'storybook-solidjs-vite'
 
 const preview: Preview = {
   parameters: {
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
-    layout: "centered",
+    layout: 'centered',
   },
 }
 

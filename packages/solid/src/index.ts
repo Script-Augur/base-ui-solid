@@ -1,17 +1,14 @@
 /**
- * Public package entry — core primitives for the Base UI Solid port.
+ * Public package entry — Base UI Solid port.
  *
  * Upstream pin: `@base-ui/react@1.7.0` (see `UPSTREAM.md`).
  *
  * @example
  * ```tsx
- * import {
- *   createControlled,
- *   DirectionProvider,
- *   version,
- * } from "@script-augur/base-ui-solid"
+ * import { Button, version } from "@script-augur/base-ui-solid"
+ * // or: import { Button } from "@script-augur/base-ui-solid/button"
  *
- * console.log(version)
+ * <Button onClick={() => {}}>Save</Button>
  * ```
  */
 
@@ -21,6 +18,8 @@ export const version: string = __PACKAGE_VERSION__
 /** npm package name (from `package.json` at build time). */
 export const PACKAGE_NAME: string = __PACKAGE_NAME__
 
+export { Button, ButtonDataAttributes } from './button'
+export { Separator, SeparatorDataAttributes } from './separator'
 export {
   createControlled,
   createRender,
@@ -29,6 +28,8 @@ export {
   mergeAttrs,
   dataAttr,
   callHandler,
+  useButton,
+  useFocusableWhenDisabled,
   useFloating,
   offset,
   flip,
@@ -42,8 +43,10 @@ export {
   DirectionProvider,
   useDirection,
   DirectionContext,
-} from "./internals"
+} from './internals'
 
+export type { ButtonProps, ButtonState } from './button'
+export type { Orientation, SeparatorProps, SeparatorState } from './separator'
 export type {
   CreateControlledOptions,
   ControlledSetter,
@@ -55,6 +58,10 @@ export type {
   NativeProps,
   RenderFn,
   UseRenderOptions,
+  UseButtonParameters,
+  UseButtonReturnValue,
+  UseFocusableWhenDisabledParameters,
+  UseFocusableWhenDisabledReturnValue,
   UseFloatingOptions,
   UseFloatingReturn,
   FloatingStyles,
@@ -66,4 +73,4 @@ export type {
   TextDirection,
   DirectionProviderProps,
   DirectionContextValue,
-} from "./internals"
+} from './internals'

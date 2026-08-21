@@ -1,10 +1,10 @@
-import { createRoot } from "solid-js"
-import { describe, expect, it, vi } from "vitest"
+import { createRoot } from 'solid-js'
+import { describe, expect, it, vi } from 'vitest'
 
-import { createControlled } from "./createControlled"
+import { createControlled } from './createControlled'
 
-describe("createControlled", () => {
-  it("uses defaultValue when uncontrolled", () => {
+describe('createControlled', () => {
+  it('uses defaultValue when uncontrolled', () => {
     createRoot(dispose => {
       const [value, setValue] = createControlled({ defaultValue: 1 })
       expect(value()).toBe(1)
@@ -14,7 +14,7 @@ describe("createControlled", () => {
     })
   })
 
-  it("mirrors controlled value and calls onChange", () => {
+  it('mirrors controlled value and calls onChange', () => {
     createRoot(dispose => {
       let controlled = 10
       const onChange = vi.fn((next: number) => {
@@ -33,7 +33,7 @@ describe("createControlled", () => {
     })
   })
 
-  it("supports functional updates", () => {
+  it('supports functional updates', () => {
     createRoot(dispose => {
       const [value, setValue] = createControlled({ defaultValue: 3 })
       setValue(prev => prev + 1)
