@@ -191,7 +191,7 @@ export function useButton(
             event.key === ' '
           ) {
             baseUIEvent.preventBaseUIHandler()
-            dispatchClickWithModifiers(event.currentTarget as Element, event)
+            dispatchClickWithModifiers(event.currentTarget, event)
           }
         },
         'on:pointerdown': (event: PointerEvent) => {
