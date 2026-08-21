@@ -23,6 +23,10 @@
   },
   "prettier": "@script-augur/prettier-config",
   "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
     "*": "prettier --write --ignore-unknown"
   },
   "devDependencies": {
