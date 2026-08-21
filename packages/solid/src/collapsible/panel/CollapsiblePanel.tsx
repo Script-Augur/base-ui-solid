@@ -81,7 +81,9 @@ export function CollapsiblePanel(
           get id() {
             return id()
           },
-          get hidden() {
+          // Solid maps `hidden` to the boolean IDL property; use `attr:hidden`
+          // so `hidden="until-found"` is preserved for Find-in-Page.
+          get ['attr:hidden']() {
             return hidden()
           },
           get class() {

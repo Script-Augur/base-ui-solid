@@ -64,6 +64,8 @@ export function useButton(
       JSX.EventHandlerUnion<HTMLElement, MouseEvent> | undefined
     const externalOnMouseDown = externalProps.onMouseDown as
       JSX.EventHandlerUnion<HTMLElement, MouseEvent> | undefined
+    const externalOnMouseUp = externalProps.onMouseUp as
+      JSX.EventHandlerUnion<HTMLElement, MouseEvent> | undefined
     const externalOnKeyUp = externalProps.onKeyUp as
       JSX.EventHandlerUnion<HTMLElement, KeyboardEvent> | undefined
     const externalOnKeyDown = externalProps.onKeyDown as
@@ -74,6 +76,7 @@ export function useButton(
     const otherExternalProps = { ...externalProps }
     delete otherExternalProps.onClick
     delete otherExternalProps.onMouseDown
+    delete otherExternalProps.onMouseUp
     delete otherExternalProps.onKeyUp
     delete otherExternalProps.onKeyDown
     delete otherExternalProps.onPointerDown
@@ -93,6 +96,13 @@ export function useButton(
           if (!disabled()) {
             callEventHandler(externalOnMouseDown, event)
           }
+        },
+        'on:mouseup': (event: MouseEvent) => {
+          if (disabled()) {
+            return
+          }
+          const baseUIEvent = makeEventPreventable(event)
+          callEventHandler(externalOnMouseUp, baseUIEvent)
         },
         'on:keydown': (event: KeyboardEvent) => {
           if (disabled() && focusableWhenDisabled() && event.key !== 'Tab') {

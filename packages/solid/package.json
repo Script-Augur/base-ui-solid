@@ -49,6 +49,11 @@
       "import": "./dist/collapsible.js",
       "default": "./dist/collapsible.js"
     },
+    "./accordion": {
+      "types": "./dist/accordion.d.ts",
+      "import": "./dist/accordion.js",
+      "default": "./dist/accordion.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
