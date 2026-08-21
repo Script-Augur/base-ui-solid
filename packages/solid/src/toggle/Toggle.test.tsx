@@ -13,13 +13,13 @@ describe('Toggle', () => {
   describe('pressed state', () => {
     it('controlled', () => {
       function App() {
-        const [pressed, setPressed] = createSignal(false)
+        const [pressed, pressedAssign] = createSignal(false)
         return (
           <div>
             <input
               type="checkbox"
               checked={pressed()}
-              onChange={() => setPressed(!pressed())}
+              onChange={() => pressedAssign(!pressed())}
             />
             <Toggle pressed={pressed()} />
           </div>

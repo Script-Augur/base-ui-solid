@@ -25,8 +25,8 @@ export { offset, flip, shift, arrow, autoUpdate, computePosition }
  * import { useFloating } from "@script-augur/base-ui-solid"
  *
  * const [open] = createSignal(true)
- * const [reference, setReference] = createSignal<HTMLElement | null>(null)
- * const [floating, setFloating] = createSignal<HTMLElement | null>(null)
+ * const [reference, referenceAssign] = createSignal<HTMLElement | null>(null)
+ * const [floating, floatingAssign] = createSignal<HTMLElement | null>(null)
  *
  * const { floatingStyles } = useFloating({
  *   open,
@@ -35,20 +35,20 @@ export { offset, flip, shift, arrow, autoUpdate, computePosition }
  *   placement: "bottom-start",
  * })
  *
- * // <button ref={setReference}>Anchor</button>
- * // <div ref={setFloating} style={floatingStyles()}>Popover</div>
+ * // <button ref={referenceAssign}>Anchor</button>
+ * // <div ref={floatingAssign} style={floatingStyles()}>Popover</div>
  * ```
  */
 export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
-  const [x, setX] = createSignal(0)
-  const [y, setY] = createSignal(0)
-  const [strategy, setStrategy] = createSignal<Strategy>(
+  const [x, xAssign] = createSignal(0)
+  const [y, yAssign] = createSignal(0)
+  const [strategy, strategyAssign] = createSignal<Strategy>(
     options.strategy ?? 'absolute'
   )
-  const [placement, setPlacement] = createSignal<Placement>(
+  const [placement, placementAssign] = createSignal<Placement>(
     options.placement ?? 'bottom'
   )
-  const [middlewareData, setMiddlewareData] = createSignal<
+  const [middlewareData, middlewareDataAssign] = createSignal<
     Record<string, unknown>
   >({})
 
@@ -77,11 +77,11 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
         strategy: options.strategy ?? 'absolute',
         middleware,
       }).then(data => {
-        setX(data.x)
-        setY(data.y)
-        setStrategy(data.strategy)
-        setPlacement(data.placement)
-        setMiddlewareData(data.middlewareData as Record<string, unknown>)
+        xAssign(data.x)
+        yAssign(data.y)
+        strategyAssign(data.strategy)
+        placementAssign(data.placement)
+        middlewareDataAssign(data.middlewareData as Record<string, unknown>)
       })
     })
 

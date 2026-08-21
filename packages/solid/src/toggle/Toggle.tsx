@@ -68,7 +68,7 @@ export function Toggle(componentProps: ToggleProps): JSX.Element {
     }
   })
 
-  const [pressed, setPressed] = createControlled({
+  const [pressed, pressedAssign] = createControlled({
     value: () => {
       if (groupContext) {
         const value = resolvedValue()
@@ -120,7 +120,7 @@ export function Toggle(componentProps: ToggleProps): JSX.Element {
               if (!applied) return
             }
 
-            setPressed(nextPressed)
+            pressedAssign(nextPressed)
           },
         }) as Record<string, unknown>
       ),

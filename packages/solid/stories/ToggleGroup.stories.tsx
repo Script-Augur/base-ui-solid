@@ -80,12 +80,12 @@ export const Disabled: Story = {
 
 export const Controlled: Story = {
   render: () => {
-    const [value, setValue] = createSignal<string[]>(['italic'])
+    const [value, valueAssign] = createSignal<string[]>(['italic'])
     return (
       <div
         style={{ display: 'flex', 'flex-direction': 'column', gap: '0.75rem' }}
       >
-        <ToggleGroup value={value()} onValueChange={next => setValue(next)}>
+        <ToggleGroup value={value()} onValueChange={next => valueAssign(next)}>
           <Toggle value="bold">Bold</Toggle>
           <Toggle value="italic">Italic</Toggle>
           <Toggle value="underline">Underline</Toggle>
