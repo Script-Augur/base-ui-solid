@@ -42,12 +42,12 @@ export const Disabled: Story = {
 
 export const Controlled: Story = {
   render: () => {
-    const [pressed, setPressed] = createSignal(false)
+    const [pressed, pressedAssign] = createSignal(false)
     return (
       <div
         style={{ display: 'flex', 'flex-direction': 'column', gap: '0.75rem' }}
       >
-        <Toggle pressed={pressed()} onPressedChange={setPressed}>
+        <Toggle pressed={pressed()} onPressedChange={pressedAssign}>
           Bold
         </Toggle>
         <p>pressed: {String(pressed())}</p>

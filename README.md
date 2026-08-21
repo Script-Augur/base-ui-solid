@@ -54,6 +54,8 @@ pnpm storybook
 pnpm changeset
 ```
 
+Contributor / agent conventions (signal naming, etc.): [AGENTS.md](./AGENTS.md).
+
 ## License
 
 MIT — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE).

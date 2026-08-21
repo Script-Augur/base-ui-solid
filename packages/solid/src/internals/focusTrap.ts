@@ -21,7 +21,7 @@ import type { Accessor } from 'solid-js'
  * import { createFocusTrap } from "@script-augur/base-ui-solid"
  *
  * const [open] = createSignal(true)
- * const [dialog, setDialog] = createSignal<HTMLElement | null>(null)
+ * const [dialog, dialogAssign] = createSignal<HTMLElement | null>(null)
  *
  * createFocusTrap({
  *   enabled: open,

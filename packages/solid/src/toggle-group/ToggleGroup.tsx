@@ -58,7 +58,7 @@ export function ToggleGroup(componentProps: ToggleGroupProps): JSX.Element {
   const isValueInitialized = () =>
     local.value !== undefined || local.defaultValue !== undefined
 
-  const [groupValue, setValueState] = createControlled({
+  const [groupValue, groupValueAssign] = createControlled({
     value: () => local.value,
     defaultValue: local.defaultValue ?? EMPTY_ARRAY,
   })
@@ -91,7 +91,7 @@ export function ToggleGroup(componentProps: ToggleGroupProps): JSX.Element {
       return false
     }
 
-    setValueState(newGroupValue)
+    groupValueAssign(newGroupValue)
     return true
   }
 

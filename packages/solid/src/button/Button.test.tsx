@@ -217,7 +217,7 @@ describe('Button', () => {
       const handleClick = vi.fn()
 
       function TestButton() {
-        const [disabled, setDisabled] = createSignal(false)
+        const [disabled, disabledAssign] = createSignal(false)
 
         return (
           <Button
@@ -225,7 +225,7 @@ describe('Button', () => {
             focusableWhenDisabled
             onClick={event => {
               handleClick(event)
-              setDisabled(true)
+              disabledAssign(true)
             }}
           >
             Save

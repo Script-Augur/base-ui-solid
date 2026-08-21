@@ -108,13 +108,13 @@ describe('ToggleGroup', () => {
   describe('controlled', () => {
     it('pressed state', () => {
       function App() {
-        const [value, setValue] = createSignal<Array<string>>(['two'])
+        const [value, valueAssign] = createSignal<Array<string>>(['two'])
         return (
           <div>
-            <button type="button" onClick={() => setValue(['one'])}>
+            <button type="button" onClick={() => valueAssign(['one'])}>
               set one
             </button>
-            <button type="button" onClick={() => setValue(['two'])}>
+            <button type="button" onClick={() => valueAssign(['two'])}>
               set two
             </button>
             <ToggleGroup value={value()}>
@@ -213,13 +213,13 @@ describe('ToggleGroup', () => {
   describe('prop: multiple', () => {
     it('sets data-multiple only when true', () => {
       function App() {
-        const [multiple, setMultiple] = createSignal(false)
+        const [multiple, multipleAssign] = createSignal(false)
         return (
           <div>
-            <button type="button" onClick={() => setMultiple(true)}>
+            <button type="button" onClick={() => multipleAssign(true)}>
               enable multiple
             </button>
-            <button type="button" onClick={() => setMultiple(false)}>
+            <button type="button" onClick={() => multipleAssign(false)}>
               disable multiple
             </button>
             <ToggleGroup multiple={multiple()}>

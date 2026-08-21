@@ -15,13 +15,13 @@ import type { Accessor } from 'solid-js'
  * import { createSignal } from "solid-js"
  * import { createDismiss } from "@script-augur/base-ui-solid"
  *
- * const [open, setOpen] = createSignal(true)
- * const [panel, setPanel] = createSignal<HTMLElement | null>(null)
+ * const [open, openAssign] = createSignal(true)
+ * const [panel, panelAssign] = createSignal<HTMLElement | null>(null)
  *
  * createDismiss({
  *   enabled: open,
  *   refs: () => [panel()],
- *   onDismiss: () => setOpen(false),
+ *   onDismiss: () => openAssign(false),
  * })
  * ```
  */

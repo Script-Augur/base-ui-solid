@@ -12,7 +12,10 @@ import type { Accessor } from 'solid-js'
  *
  * @typeParam T - Value type managed by the controlled signal.
  * @param options - Controlled / uncontrolled wiring.
- * @returns A `[getValue, setValue]` tuple, like `createSignal`.
+ * @returns A `[value, valueAssign]` tuple, like `createSignal`.
+ *
+ * Prefer naming the setter with the same stem as the value (`open` /
+ * `openAssign`) so renames stay searchable — see `AGENTS.md`.
  *
  * @example
  * ```tsx
@@ -20,39 +23,39 @@ import type { Accessor } from 'solid-js'
  * import { createControlled } from "@script-augur/base-ui-solid"
  *
  * // Uncontrolled (internal state + optional onChange)
- * const [open, setOpen] = createControlled({
+ * const [open, openAssign] = createControlled({
  *   defaultValue: false,
  *   onChange: (next) => console.log("open?", next),
  * })
  *
  * // Controlled (parent owns state)
- * const [checked, setChecked] = createSignal(false)
- * const [value, setValue] = createControlled({
+ * const [checked, checkedAssign] = createSignal(false)
+ * const [value, valueAssign] = createControlled({
  *   value: checked,
  *   defaultValue: false,
- *   onChange: setChecked,
+ *   onChange: checkedAssign,
  * })
  * ```
  */
 export function createControlled<T>(
   options: CreateControlledOptions<T>
 ): ControlledSignal<T> {
-  const [uncontrolled, setUncontrolled] = createSignal(options.defaultValue)
+  const [uncontrolled, uncontrolledAssign] = createSignal(options.defaultValue)
   const isControlled = createMemo(() => options.value?.() !== undefined)
 
   const getValue: Accessor<T> = () => {
     return isControlled() ? (options.value!() as T) : uncontrolled()
   }
 
-  const setValue: ControlledSetter<T> = next => {
+  const valueAssign: ControlledSetter<T> = next => {
     const resolved =
       typeof next === 'function' ? (next as (prev: T) => T)(getValue()) : next
-    if (!isControlled()) setUncontrolled(() => resolved)
+    if (!isControlled()) uncontrolledAssign(() => resolved)
 
     options.onChange?.(resolved)
   }
 
-  return [getValue, setValue]
+  return [getValue, valueAssign]
 }
 
 /**
@@ -87,7 +90,7 @@ export interface CreateControlledOptions<T> {
 export type ControlledSetter<T> = (next: T | ((prev: T) => T)) => void
 
 /**
- * Tuple returned by {@link createControlled}: `[getValue, setValue]`.
+ * Tuple returned by {@link createControlled}: `[value, valueAssign]`.
  *
  * @typeParam T - Value type managed by the controlled signal.
  */
