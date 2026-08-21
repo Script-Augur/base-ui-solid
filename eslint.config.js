@@ -15,6 +15,10 @@ export default createScriptAugurEslintConfig({
     "node_modules/**",
     "packages/*/dist/**",
     "packages/*/stories/**",
+    "packages/*/tsup.config.ts",
+    "packages/*/vitest.config.ts",
+    "packages/*/vitest.setup.ts",
     "storybook-static/**",
+    "vitest.config.ts",
   ],
 })

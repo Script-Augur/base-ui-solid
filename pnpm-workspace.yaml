@@ -1,2 +1,18 @@
 packages:
   - "packages/*"
+
+overrides:
+  human-id: 1.0.2
+
+# Keep pnpm 11's 1-day default; allow intentional fresh Storybook pins
+# (and a transitive browserslist helper published the same day).
+minimumReleaseAgeExclude:
+  - storybook
+  - "@storybook/*"
+  - baseline-browser-mapping
+  - '@script-augur/eslint-plugin-module-ordering@0.2.2'
+
+# Native/tooling packages that need postinstall scripts under strictDepBuilds.
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true

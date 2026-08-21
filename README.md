@@ -47,7 +47,8 @@ body {
 ```bash
 pnpm install
 pnpm build
-pnpm test
+pnpm test        # watch mode (Vitest)
+pnpm test:run    # one-shot (CI)
 pnpm lint
 pnpm storybook
 pnpm changeset
