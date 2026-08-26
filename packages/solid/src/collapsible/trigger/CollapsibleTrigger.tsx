@@ -36,7 +36,7 @@ export function CollapsibleTrigger(
 
   const disabled = () => local.disabled ?? context.disabled()
 
-  const { getButtonProps, buttonRef } = useButton({
+  const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     focusableWhenDisabled: () => true,
     native: () => local.nativeButton ?? true,
@@ -71,7 +71,7 @@ export function CollapsibleTrigger(
           return dataAttr(context.open())
         },
         ref(element: HTMLElement) {
-          buttonRef(element)
+          buttonRefAssign(element)
           const userRef = local.ref
           if (typeof userRef === 'function') {
             userRef(element as HTMLButtonElement)

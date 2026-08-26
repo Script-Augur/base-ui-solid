@@ -1,5 +1,6 @@
 import { contains, getTarget, ownerDocument } from '@script-augur/base-ui-utils'
-import { createEffect, onCleanup } from 'solid-js'
+
+import { listenerEffect } from './listenerEffect'
 
 import type { Accessor } from 'solid-js'
 
@@ -7,7 +8,7 @@ import type { Accessor } from 'solid-js'
  * Escape key + outside pointer-down dismiss helpers. Attaches listeners while
  * `enabled` is true and cleans them up automatically.
  *
- * @param options - Dismiss configuration.
+ * @param options - Dismiss configuration (`enabled`, `refs`, `onDismiss`).
  * @returns `void` — side-effect helper; listeners dispose with the owning scope.
  *
  * @example
@@ -26,22 +27,26 @@ import type { Accessor } from 'solid-js'
  * ```
  */
 export function createDismiss(options: DismissOptions): void {
-  createEffect(() => {
-    if (!options.enabled()) return
-
-    const escapeKey = options.escapeKey !== false
-    const outsidePress = options.outsidePress !== false
-    const doc = ownerDocument(options.refs().find(Boolean) ?? null)
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!escapeKey) return
+  listenerEffect(
+    () => {
+      if (!options.enabled() || options.escapeKey === false) return null
+      return ownerDocument(options.refs().find(Boolean) ?? null)
+    },
+    'keydown',
+    event => {
       if (event.key === 'Escape') {
         options.onDismiss(event)
       }
     }
+  )
 
-    const onPointerDown = (event: PointerEvent) => {
-      if (!outsidePress) return
+  listenerEffect(
+    () => {
+      if (!options.enabled() || options.outsidePress === false) return null
+      return ownerDocument(options.refs().find(Boolean) ?? null)
+    },
+    'pointerdown',
+    event => {
       const target = getTarget(event) as Node | null
       const roots = options.refs().filter(Boolean) as Array<HTMLElement>
       if (roots.length === 0) return
@@ -49,20 +54,9 @@ export function createDismiss(options: DismissOptions): void {
       if (!inside) {
         options.onDismiss(event)
       }
-    }
-
-    if (escapeKey) {
-      doc.addEventListener('keydown', onKeyDown)
-    }
-    if (outsidePress) {
-      doc.addEventListener('pointerdown', onPointerDown, true)
-    }
-
-    onCleanup(() => {
-      doc.removeEventListener('keydown', onKeyDown)
-      doc.removeEventListener('pointerdown', onPointerDown, true)
-    })
-  })
+    },
+    true
+  )
 }
 
 /**

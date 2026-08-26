@@ -81,7 +81,7 @@ export function Toggle(componentProps: ToggleProps): JSX.Element {
 
   const disabled = () => (local.disabled || groupContext?.disabled()) ?? false
 
-  const { getButtonProps, buttonRef } = useButton({
+  const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     native: () => local.nativeButton ?? true,
   })
@@ -141,7 +141,7 @@ export function Toggle(componentProps: ToggleProps): JSX.Element {
           return dataAttr(disabled())
         },
         ref(element: HTMLElement) {
-          buttonRef(element)
+          buttonRefAssign(element)
           const userRef = local.ref
           if (typeof userRef === 'function') {
             userRef(element as HTMLButtonElement)

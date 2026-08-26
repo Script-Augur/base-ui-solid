@@ -54,6 +54,11 @@
       "import": "./dist/accordion.js",
       "default": "./dist/accordion.js"
     },
+    "./tabs": {
+      "types": "./dist/tabs.d.ts",
+      "import": "./dist/tabs.js",
+      "default": "./dist/tabs.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

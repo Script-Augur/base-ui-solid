@@ -41,7 +41,7 @@ export function Button(componentProps: ButtonProps): JSX.Element {
     'ref',
   ])
 
-  const { getButtonProps, buttonRef } = useButton({
+  const { getButtonProps, buttonRefAssign } = useButton({
     disabled: () => local.disabled ?? false,
     focusableWhenDisabled: () => local.focusableWhenDisabled ?? false,
     native: () => local.nativeButton ?? true,
@@ -68,7 +68,7 @@ export function Button(componentProps: ButtonProps): JSX.Element {
         return dataAttr(local.disabled ?? false)
       },
       ref(element: HTMLElement) {
-        buttonRef(element)
+        buttonRefAssign(element)
         const userRef = local.ref
         if (typeof userRef === 'function') {
           userRef(element as HTMLButtonElement)
