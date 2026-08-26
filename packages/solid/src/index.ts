@@ -76,6 +76,21 @@ export {
   TabsIndicatorCssVars,
 } from './tabs'
 export {
+  Progress,
+  ProgressRoot,
+  ProgressRootDataAttributes,
+  ProgressRootContext,
+  useProgressRootContext,
+  ProgressTrack,
+  ProgressTrackDataAttributes,
+  ProgressIndicator,
+  ProgressIndicatorDataAttributes,
+  ProgressLabel,
+  ProgressLabelDataAttributes,
+  ProgressValue,
+  ProgressValueDataAttributes,
+} from './progress'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -168,6 +183,20 @@ export type {
   TabsIndicatorProps,
   TabsIndicatorState,
 } from './tabs'
+export type {
+  ProgressRootContextValue,
+  ProgressRootProps,
+  ProgressRootState,
+  ProgressStatus,
+  ProgressTrackProps,
+  ProgressTrackState,
+  ProgressIndicatorProps,
+  ProgressIndicatorState,
+  ProgressLabelProps,
+  ProgressLabelState,
+  ProgressValueProps,
+  ProgressValueState,
+} from './progress'
 export type {
   CreateControlledOptions,
   ControlledSetter,

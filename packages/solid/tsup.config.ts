@@ -20,6 +20,7 @@ export default defineConfig({
     collapsible: 'src/collapsible/index.ts',
     accordion: 'src/accordion/index.ts',
     tabs: 'src/tabs/index.ts',
+    progress: 'src/progress/index.ts',
   },
   format: ['esm'],
   dts: true,
