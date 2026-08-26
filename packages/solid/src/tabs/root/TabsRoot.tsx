@@ -69,7 +69,10 @@ export function TabsRoot(componentProps: TabsRootProps): JSX.Element {
     defaultValue: initialDefaultValue,
   })
   const [activationDirectionState, activationDirectionStateAssign] =
-    createSignal({
+    createSignal<{
+      previousValue: TabsValue
+      tabActivationDirection: TabsActivationDirection
+    }>({
       previousValue: value(),
       tabActivationDirection: 'none',
     })
