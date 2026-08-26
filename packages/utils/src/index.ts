@@ -11,6 +11,9 @@
  * ```
  */
 export { clamp } from './clamp'
+export { formatNumber, getFormatter } from './formatNumber'
+export { stringifyLocale } from './stringifyLocale'
+export { valueToPercent } from './valueToPercent'
 export { generateId } from './generateId'
 export { ownerDocument, ownerWindow } from './owner'
 export { contains, getTarget, activeElement } from './shadowDom'

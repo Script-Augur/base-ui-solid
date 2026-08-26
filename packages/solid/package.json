@@ -59,6 +59,11 @@
       "import": "./dist/tabs.js",
       "default": "./dist/tabs.js"
     },
+    "./progress": {
+      "types": "./dist/progress.d.ts",
+      "import": "./dist/progress.js",
+      "default": "./dist/progress.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
