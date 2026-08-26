@@ -17,10 +17,14 @@ import type { JSX, ValidComponent } from 'solid-js'
  * ```tsx
  * import { createRender } from "@script-augur/base-ui-solid"
  *
- * // Default element
+ * // Default element with reactive props (use getters for derived values)
  * createRender({
  *   defaultElement: "button",
- *   props: { type: "button", children: "Save" },
+ *   props: mergeProps(elementProps, {
+ *     type: "button",
+ *     get "aria-pressed"() { return pressed() },
+ *     children: "Save",
+ *   }),
  * })
  *
  * // Custom render function with state
@@ -41,31 +45,31 @@ export function createRender<
   TProps extends Record<string, unknown> = Record<string, unknown>,
 >(options: CreateRenderOptions<TState, TProps>): JSX.Element {
   const state = (options.state ?? {}) as TState
-  const render = options.render
+  const props = mergeProps(options.props as Record<string, unknown>) as TProps
 
-  if (typeof render === 'function') {
+  if (typeof options.render === 'function') {
     // Always treat functions as Base UI render props `(props, state) => JSX`.
     // Solid components also accept a single props argument, so a second `state`
     // parameter is harmlessly ignored when `render={MyComponent}`.
-    return (render as RenderFunction<TState, TProps>)(options.props, state)
+    return (options.render as RenderFunction<TState, TProps>)(props, state)
   }
 
-  if (render != null && typeof render === 'object') {
-    const element = render as {
+  if (options.render != null && typeof options.render === 'object') {
+    const element = options.render as {
       type?: ValidComponent
       props?: Record<string, unknown>
     }
     if (element.type) {
-      const merged = mergeProps(element.props ?? {}, options.props)
+      const merged = mergeProps(element.props ?? {}, props)
       return <Dynamic component={element.type} {...merged} />
     }
   }
 
-  if (typeof render === 'string') {
-    return <Dynamic component={render} {...options.props} />
+  if (typeof options.render === 'string') {
+    return <Dynamic component={options.render} {...props} />
   }
 
-  return <Dynamic component={options.defaultElement} {...options.props} />
+  return <Dynamic component={options.defaultElement} {...props} />
 }
 
 /**
@@ -132,7 +136,11 @@ export interface CreateRenderOptions<
 > {
   /** Default HTML tag or component when `render` is omitted. */
   defaultElement: ValidComponent
-  /** Props merged onto the rendered element. */
+  /**
+   * Props merged onto the rendered element.
+   * Use `mergeProps` with getters for values that depend on signals —
+   * snapshot values are not tracked by `Dynamic`'s spread effect.
+   */
   props: TProps
   /** Component state passed to render functions. */
   state?: TState
