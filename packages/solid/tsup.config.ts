@@ -19,6 +19,7 @@ export default defineConfig({
     'toggle-group': 'src/toggle-group/index.ts',
     collapsible: 'src/collapsible/index.ts',
     accordion: 'src/accordion/index.ts',
+    tabs: 'src/tabs/index.ts',
   },
   format: ['esm'],
   dts: true,

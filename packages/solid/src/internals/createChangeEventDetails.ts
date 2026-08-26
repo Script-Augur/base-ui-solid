@@ -5,14 +5,25 @@
 export const REASONS = {
   none: 'none',
   triggerPress: 'trigger-press',
+  initial: 'initial',
+  disabled: 'disabled',
+  missing: 'missing',
+  listNavigation: 'list-navigation',
 } as const
 
 /**
  * Creates cancelable change-event details for `on*Change` handlers.
  *
+ * Matches upstream `createChangeEventDetails(reason, event, trigger, customProperties)`
+ * closely enough for Accordion (2-arg) and Tabs (custom props like
+ * `activationDirection`).
+ *
  * @typeParam TReason - Reason string union for this event.
+ * @typeParam TCustom - Extra properties merged onto the details object.
  * @param reason - Why the change occurred.
  * @param event - Optional native event that triggered the change.
+ * @param trigger - Optional element that triggered the change.
+ * @param customProperties - Optional extra fields merged onto details.
  * @returns A details object with {@link BaseUIChangeEventDetails.cancel}.
  *
  * @example
@@ -24,20 +35,33 @@ export const REASONS = {
  */
 export function createChangeEventDetails<
   TReason extends string = ChangeEventReason,
->(reason: TReason, event?: Event): BaseUIChangeEventDetails<TReason> {
+  TCustom extends Record<string, unknown> = Record<string, never>,
+>(
+  reason: TReason,
+  event?: Event,
+  trigger?: Element,
+  customProperties?: TCustom
+): BaseUIChangeEventDetails<TReason> & TCustom {
   let canceled = false
-  return {
+  const details = {
     reason,
-    event,
+    event: event ?? new Event('base-ui'),
+    trigger,
     cancel() {
       canceled = true
     },
     get isCanceled() {
       return canceled
     },
+    ...(customProperties ?? ({} as TCustom)),
   }
+
+  return details
 }
 
+/**
+ * Reason strings from {@link REASONS}.
+ */
 export type ChangeEventReason = (typeof REASONS)[keyof typeof REASONS]
 
 /**
@@ -52,6 +76,8 @@ export interface BaseUIChangeEventDetails<
   reason: TReason
   /** Underlying native event when available. */
   event?: Event
+  /** Element that triggered the change, when applicable. */
+  trigger?: Element
   /** Prevents the component from committing the change. */
   cancel: () => void
   /** Whether {@link cancel} was called. */

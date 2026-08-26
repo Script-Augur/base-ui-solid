@@ -58,6 +58,24 @@ export {
   AccordionPanelCssVars,
 } from './accordion'
 export {
+  Tabs,
+  TabsRoot,
+  TabsRootDataAttributes,
+  TabsRootContext,
+  useTabsRootContext,
+  TabsList,
+  TabsListDataAttributes,
+  TabsListContext,
+  useTabsListContext,
+  TabTrigger,
+  TabTriggerDataAttributes,
+  TabsPanel,
+  TabsPanelDataAttributes,
+  TabsIndicator,
+  TabsIndicatorDataAttributes,
+  TabsIndicatorCssVars,
+} from './tabs'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -129,6 +147,27 @@ export type {
   AccordionPanelProps,
   AccordionPanelState,
 } from './accordion'
+export type {
+  TabsRootChangeEventDetails,
+  TabsRootChangeEventReason,
+  TabsRootContextValue,
+  TabsRootProps,
+  TabsRootState,
+  TabsValue,
+  TabsListProps,
+  TabsListState,
+  TabsListContextValue,
+  TabsActivationDirection,
+  TabTriggerMetadata,
+  TabsIndicatorPosition,
+  TabTriggerProps,
+  TabsIndicatorSize,
+  TabTriggerState,
+  TabsPanelProps,
+  TabsPanelState,
+  TabsIndicatorProps,
+  TabsIndicatorState,
+} from './tabs'
 export type {
   CreateControlledOptions,
   ControlledSetter,

@@ -39,7 +39,7 @@ export function AccordionTrigger(
 
   const disabled = () => Boolean(local.disabled) || collapsible.disabled()
 
-  const { getButtonProps, buttonRef } = useButton({
+  const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     focusableWhenDisabled: () => true,
     native: () => local.nativeButton ?? true,
@@ -93,7 +93,7 @@ export function AccordionTrigger(
           return dataAttr(disabled())
         },
         ref(element: HTMLElement) {
-          buttonRef(element)
+          buttonRefAssign(element)
           const userRef = local.ref
           if (typeof userRef === 'function') {
             userRef(element as HTMLButtonElement)

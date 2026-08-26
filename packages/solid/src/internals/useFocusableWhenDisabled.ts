@@ -1,5 +1,7 @@
 import { createMemo } from 'solid-js'
 
+import { readMaybeAccessor } from './readMaybeAccessor'
+
 import type { Accessor } from 'solid-js'
 
 /**
@@ -23,9 +25,12 @@ export function useFocusableWhenDisabled(
 ): UseFocusableWhenDisabledReturnValue {
   const props = createMemo(() => {
     const disabled = parameters.disabled()
-    const focusableWhenDisabled = parameters.focusableWhenDisabled?.()
-    const composite = parameters.composite?.() ?? false
-    const tabIndexProp = parameters.tabIndex?.() ?? 0
+    const focusableWhenDisabled = readMaybeAccessor(
+      parameters.focusableWhenDisabled,
+      undefined
+    )
+    const composite = readMaybeAccessor(parameters.composite, false)
+    const tabIndexProp = readMaybeAccessor(parameters.tabIndex, 0)
     const isNativeButton = parameters.isNativeButton()
 
     const isFocusableComposite = composite && focusableWhenDisabled !== false
@@ -87,8 +92,14 @@ export interface UseFocusableWhenDisabledReturnValue {
   props: Accessor<FocusableWhenDisabledProps>
 }
 
+/**
+ * Disabled / tabIndex / aria-disabled attributes for a button host.
+ */
 interface FocusableWhenDisabledProps {
+  /** Set when the control is disabled but still focusable. */
   'aria-disabled'?: boolean
+  /** Native disabled attribute when the control should not receive focus. */
   disabled?: boolean
+  /** Tab index while the control is focusable. */
   tabIndex?: number
 }

@@ -2,6 +2,7 @@ import { dispatchClickWithModifiers } from '@script-augur/base-ui-utils'
 import { createEffect, mergeProps, on } from 'solid-js'
 
 import { makeEventPreventable } from './makeEventPreventable'
+import { readMaybeAccessor } from './readMaybeAccessor'
 import { useFocusableWhenDisabled } from './useFocusableWhenDisabled'
 
 import type { BaseUIEvent } from './makeEventPreventable'
@@ -12,11 +13,11 @@ import type { Accessor, JSX } from 'solid-js'
  * (`role="button"`), matching Base UI's `useButton` contracts.
  *
  * @param parameters - Disabled / native / composite configuration (accessors).
- * @returns `getButtonProps` + `buttonRef` to attach to the rendered element.
+ * @returns `getButtonProps` + `buttonRefAssign` to attach to the rendered element.
  *
  * @example
  * ```tsx
- * const { getButtonProps, buttonRef } = useButton({
+ * const { getButtonProps, buttonRefAssign } = useButton({
  *   disabled: () => props.disabled ?? false,
  *   native: () => props.nativeButton ?? true,
  * })
@@ -25,11 +26,14 @@ import type { Accessor, JSX } from 'solid-js'
 export function useButton(
   parameters: UseButtonParameters = {}
 ): UseButtonReturnValue {
-  const disabled = () => parameters.disabled?.() ?? false
-  const tabIndex = () => parameters.tabIndex?.() ?? 0
-  const isNativeButton = () => parameters.native?.() ?? true
-  const focusableWhenDisabled = () => parameters.focusableWhenDisabled?.()
-  const isCompositeItem = () => parameters.composite?.() ?? false
+  const disabled = () => readMaybeAccessor(parameters.disabled, false) ?? false
+  const tabIndex = () => readMaybeAccessor(parameters.tabIndex, 0) ?? 0
+  const isNativeButton = () =>
+    readMaybeAccessor(parameters.native, true) ?? true
+  const focusableWhenDisabled = () =>
+    readMaybeAccessor(parameters.focusableWhenDisabled, undefined)
+  const isCompositeItem = () =>
+    readMaybeAccessor(parameters.composite, false) ?? false
 
   let elementRef: HTMLElement | null = null
 
@@ -41,6 +45,9 @@ export function useButton(
     isNativeButton,
   })
 
+  /**
+   * Clears native `disabled` on composite items that should remain focusable.
+   */
   const updateDisabled = () => {
     const element = elementRef
     if (!isButtonElement(element)) return
@@ -57,6 +64,12 @@ export function useButton(
 
   createEffect(on(focusableWhenDisabledProps, updateDisabled))
 
+  /**
+   * Merges native-button / role="button" props with `externalProps`.
+   *
+   * @param externalProps - Additional props (event handlers are composed).
+   * @returns Props to spread onto the host element.
+   */
   function getButtonProps(
     externalProps: Record<string, unknown> = {}
   ): Record<string, unknown> {
@@ -242,14 +255,19 @@ export function useButton(
     )
   }
 
-  const buttonRef = (element: HTMLElement | null) => {
+  /**
+   * Stores the host element and reapplies disabled-attribute fixes.
+   *
+   * @param element - Mounted button host, or `null` on unmount.
+   */
+  const buttonRefAssign = (element: HTMLElement | null) => {
     elementRef = element
     updateDisabled()
   }
 
   return {
     getButtonProps,
-    buttonRef,
+    buttonRefAssign,
   }
 }
 
@@ -285,12 +303,22 @@ export interface UseButtonReturnValue {
   getButtonProps: (
     externalProps?: Record<string, unknown>
   ) => Record<string, unknown>
-  /** Ref callback for the rendered button element. */
-  buttonRef: (element: HTMLElement | null) => void
+  /** Ref callback for the rendered button element.
+   *
+   * @param element - Mounted button host, or `null` on unmount.
+   */
+  buttonRefAssign: (element: HTMLElement | null) => void
 }
 
 export type { BaseUIEvent }
 
+/**
+ * Invokes a Solid/JSX event handler union if it is a function.
+ *
+ * @typeParam T - Native event type.
+ * @param handler - Function handler or event-handler object.
+ * @param event - Event to pass through.
+ */
 function callEventHandler<T extends Event>(
   handler: JSX.EventHandlerUnion<HTMLElement, T> | undefined,
   event: T
@@ -300,10 +328,22 @@ function callEventHandler<T extends Event>(
   }
 }
 
+/**
+ * Whether `elem` is a native `<button>`.
+ *
+ * @param elem - Event target to test.
+ * @returns `true` when `elem` is an `HTMLButtonElement`.
+ */
 function isButtonElement(elem: EventTarget | null): elem is HTMLButtonElement {
   return elem instanceof HTMLElement && elem.tagName === 'BUTTON'
 }
 
+/**
+ * Whether `elem` is an `<a>` with an `href`.
+ *
+ * @param elem - Event target to test.
+ * @returns `true` when `elem` is a navigable anchor.
+ */
 function isValidLinkElement(
   elem: EventTarget | null
 ): elem is HTMLAnchorElement {
