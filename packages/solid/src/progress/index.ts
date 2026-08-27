@@ -6,22 +6,14 @@ export {
   ProgressRootContext,
   useProgressRootContext,
 } from './root/ProgressRootContext'
-export {
-  ProgressTrack,
-  ProgressTrackDataAttributes,
-} from './track/ProgressTrack'
-export {
-  ProgressIndicator,
-  ProgressIndicatorDataAttributes,
-} from './indicator/ProgressIndicator'
-export {
-  ProgressLabel,
-  ProgressLabelDataAttributes,
-} from './label/ProgressLabel'
-export {
-  ProgressValue,
-  ProgressValueDataAttributes,
-} from './value/ProgressValue'
+export { ProgressTrack } from './track/ProgressTrack'
+export { ProgressTrackDataAttributes } from './track/ProgressTrackDataAttributes'
+export { ProgressIndicator } from './indicator/ProgressIndicator'
+export { ProgressIndicatorDataAttributes } from './indicator/ProgressIndicatorDataAttributes'
+export { ProgressLabel } from './label/ProgressLabel'
+export { ProgressLabelDataAttributes } from './label/ProgressLabelDataAttributes'
+export { ProgressValue } from './value/ProgressValue'
+export { ProgressValueDataAttributes } from './value/ProgressValueDataAttributes'
 
 export type {
   ProgressRootProps,
