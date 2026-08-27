@@ -22,6 +22,7 @@ export default defineConfig({
     tabs: 'src/tabs/index.ts',
     progress: 'src/progress/index.ts',
     meter: 'src/meter/index.ts',
+    avatar: 'src/avatar/index.ts',
   },
   format: ['esm'],
   dts: true,

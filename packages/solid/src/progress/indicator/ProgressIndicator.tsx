@@ -10,7 +10,6 @@ import type { RenderProp } from '../../internals/createRender'
 import type { ProgressRootState } from '../root/ProgressRoot'
 import type { JSX } from 'solid-js'
 
-export { ProgressIndicatorDataAttributes }
 /**
  * Visualizes the completion status of the task.
  * Renders a `<div>` element.

@@ -16,7 +16,6 @@ import type { RenderProp } from '../../internals/createRender'
 import type { ProgressRootState } from '../root/ProgressRoot'
 import type { JSX } from 'solid-js'
 
-export { ProgressLabelDataAttributes }
 /**
  * An accessible label for the progress bar.
  * Renders a `<span>` element.

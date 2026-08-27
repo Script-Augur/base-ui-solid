@@ -10,7 +10,6 @@ import type { RenderProp } from '../../internals/createRender'
 import type { ProgressRootState } from '../root/ProgressRoot'
 import type { JSX } from 'solid-js'
 
-export { ProgressTrackDataAttributes }
 /**
  * Contains the progress bar indicator.
  * Renders a `<div>` element.

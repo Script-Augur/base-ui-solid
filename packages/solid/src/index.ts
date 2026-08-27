@@ -101,6 +101,15 @@ export {
   MeterValue,
 } from './meter'
 export {
+  Avatar,
+  AvatarRoot,
+  AvatarRootContext,
+  useAvatarRootContext,
+  AvatarImage,
+  AvatarImageDataAttributes,
+  AvatarFallback,
+} from './avatar'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -220,6 +229,16 @@ export type {
   MeterValueProps,
   MeterValueState,
 } from './meter'
+export type {
+  AvatarRootContextValue,
+  AvatarRootProps,
+  AvatarRootState,
+  ImageLoadingStatus,
+  AvatarImageProps,
+  AvatarImageState,
+  AvatarFallbackProps,
+  AvatarFallbackState,
+} from './avatar'
 export type {
   CreateControlledOptions,
   ControlledSetter,

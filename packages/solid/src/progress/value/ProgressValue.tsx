@@ -10,7 +10,6 @@ import type { RenderProp } from '../../internals/createRender'
 import type { ProgressRootState } from '../root/ProgressRoot'
 import type { JSX, JSXElement } from 'solid-js'
 
-export { ProgressValueDataAttributes }
 /**
  * A text element displaying the current value.
  * Renders a `<span>` element.
