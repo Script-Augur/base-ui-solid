@@ -21,6 +21,7 @@ export default defineConfig({
     accordion: 'src/accordion/index.ts',
     tabs: 'src/tabs/index.ts',
     progress: 'src/progress/index.ts',
+    meter: 'src/meter/index.ts',
   },
   format: ['esm'],
   dts: true,
