@@ -64,6 +64,11 @@
       "import": "./dist/progress.js",
       "default": "./dist/progress.js"
     },
+    "./meter": {
+      "types": "./dist/meter.d.ts",
+      "import": "./dist/meter.js",
+      "default": "./dist/meter.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

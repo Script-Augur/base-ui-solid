@@ -91,6 +91,16 @@ export {
   ProgressValueDataAttributes,
 } from './progress'
 export {
+  Meter,
+  MeterRoot,
+  MeterRootContext,
+  useMeterRootContext,
+  MeterTrack,
+  MeterIndicator,
+  MeterLabel,
+  MeterValue,
+} from './meter'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -197,6 +207,19 @@ export type {
   ProgressValueProps,
   ProgressValueState,
 } from './progress'
+export type {
+  MeterRootContextValue,
+  MeterRootProps,
+  MeterRootState,
+  MeterTrackProps,
+  MeterTrackState,
+  MeterIndicatorProps,
+  MeterIndicatorState,
+  MeterLabelProps,
+  MeterLabelState,
+  MeterValueProps,
+  MeterValueState,
+} from './meter'
 export type {
   CreateControlledOptions,
   ControlledSetter,

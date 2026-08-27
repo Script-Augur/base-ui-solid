@@ -39,7 +39,7 @@ runs:
         fi
         echo "NPM_TOKEN=$TOKEN" >> "$GITHUB_ENV"
         echo "NODE_AUTH_TOKEN=$TOKEN" >> "$GITHUB_ENV"
-        # Ensure project .npmrc ${NPM_TOKEN} expands for this job
+        # pnpm does not expand ${…} in project .npmrc; put auth in the user npmrc.
         mkdir -p "$HOME"
         {
           echo "@script-augur:registry=https://npm.pkg.github.com"
