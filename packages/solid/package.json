@@ -1,6 +1,6 @@
 {
   "name": "@script-augur/base-ui-solid",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Solid-idiomatic port of Base UI headless components",
   "type": "module",
   "license": "MIT",

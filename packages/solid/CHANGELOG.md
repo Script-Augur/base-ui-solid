@@ -1,5 +1,12 @@
 # @script-augur/base-ui-solid
 
+## 0.2.0
+
+### Minor Changes
+
+- 61c1bdc: Add Avatar (`Root` / `Image` / `Fallback`) with image loading status, enter/exit transition hooks, delayed fallback, deep import `@script-augur/base-ui-solid/avatar`, and Storybook stories.
+- 76f91ea: Add Meter (`Root` / `Track` / `Indicator` / `Label` / `Value`) with range normalization, formatted value display, ARIA attributes, deep import `@script-augur/base-ui-solid/meter`, and Storybook stories.
+
 ## 0.1.0
 
 ### Minor Changes
