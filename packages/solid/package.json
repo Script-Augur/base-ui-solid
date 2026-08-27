@@ -69,6 +69,11 @@
       "import": "./dist/meter.js",
       "default": "./dist/meter.js"
     },
+    "./avatar": {
+      "types": "./dist/avatar.d.ts",
+      "import": "./dist/avatar.js",
+      "default": "./dist/avatar.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

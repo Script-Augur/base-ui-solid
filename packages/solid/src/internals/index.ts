@@ -25,6 +25,15 @@ export { listenerEffect } from './listenerEffect'
 export { readMaybeAccessor } from './readMaybeAccessor'
 export { createScrollLock } from './scrollLock'
 export { DirectionProvider, useDirection, DirectionContext } from './direction'
+export { createTransitionStatus } from './createTransitionStatus'
+export {
+  createOpenChangeComplete,
+  runOnceAnimationsFinished,
+} from './createOpenChangeComplete'
+export {
+  TransitionStatusDataAttributes,
+  transitionStatusMapping,
+} from './stateAttributesMapping'
 export type {
   CreateControlledOptions,
   ControlledSetter,
@@ -65,3 +74,4 @@ export type {
   DirectionProviderProps,
   DirectionContextValue,
 } from './direction'
+export type { TransitionStatus } from './createTransitionStatus'
