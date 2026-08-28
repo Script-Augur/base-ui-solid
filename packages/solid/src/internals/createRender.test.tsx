@@ -54,6 +54,33 @@ describe('createRender', () => {
       expect(host).toHaveAttribute('aria-valuenow', '42')
     })
 
+    it('keeps the same DOM node when reactive state data-attributes update', async () => {
+      const [active, activeAssign] = createSignal(false)
+
+      render(() =>
+        createRender({
+          defaultElement: 'div',
+          state: {
+            get active() {
+              return active()
+            },
+          },
+          mapStateToDataAttributes: true,
+          props: { 'data-testid': 'host' },
+        })
+      )
+
+      const host = screen.getByTestId('host')
+      expect(host).not.toHaveAttribute('data-active')
+
+      activeAssign(true)
+      await flushMicrotasks()
+
+      const next = screen.getByTestId('host')
+      expect(next).toBe(host)
+      expect(next).toHaveAttribute('data-active')
+    })
+
     it('forwards reactive getters to custom render functions', async () => {
       const [value, valueAssign] = createSignal('a')
 
@@ -269,8 +296,8 @@ describe('createRender', () => {
         expect(span).toHaveAttribute('class', 'test-class')
         const attributes = span?.attributes
         if (attributes) {
-          for (let index = 0; index < attributes.length; index += 1) {
-            const name = attributes[index]?.name
+          for (const attr of attributes) {
+            const name = attr.name
             if (name === 'id' || name === 'class') continue
             expect(name).not.toMatch(/^data-/)
           }

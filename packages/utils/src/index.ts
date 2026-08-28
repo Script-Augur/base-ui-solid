@@ -24,4 +24,10 @@ export { isElementDisabled } from './isElementDisabled'
 export { mergeObjects } from './mergeObjects'
 export { dispatchClickWithModifiers } from './dispatchClickWithModifiers'
 export { createStore } from './store'
+export {
+  SCROLL_EDGE_TOLERANCE_PX,
+  getMaxScrollOffset,
+  normalizeScrollOffset,
+} from './scrollEdges'
+export { platform, isWebkitEngine } from './platform'
 export type { Store, Listener } from './store'
