@@ -142,12 +142,22 @@ function renderInner<
   }
 
   if (typeof renderProp === 'string') {
+    if (renderProp === 'div') {
+      return renderStableDiv(outProps())
+    }
     return <Dynamic component={renderProp as ValidComponent} {...outProps()} />
   }
 
   if (isRenderElementDescriptor(renderProp)) {
     const merged = mergeRenderProps(renderProp.props ?? {}, outProps())
+    if (renderProp.component === 'div') {
+      return renderStableDiv(merged)
+    }
     return <Dynamic component={renderProp.component} {...merged} />
+  }
+
+  if (options.defaultElement === 'div') {
+    return renderStableDiv(renderDefaultElementProps('div', outProps()))
   }
 
   return (
@@ -157,6 +167,16 @@ function renderInner<
       {...renderDefaultElementProps(options.defaultElement, outProps())}
     />
   )
+}
+
+/**
+ * `div` host that stays mounted across reactive prop updates.
+ *
+ * Solid's `Dynamic` remounts when reactive props change (its memo tracks
+ * `spread` reads), which resets `scrollTop` and breaks Scroll Area.
+ */
+function renderStableDiv(props: Record<string, unknown>): JSX.Element {
+  return <div {...props} />
 }
 function computeRenderElementProps<
   TState extends Record<string, unknown>,

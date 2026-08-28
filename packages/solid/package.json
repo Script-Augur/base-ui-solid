@@ -74,6 +74,11 @@
       "import": "./dist/avatar.js",
       "default": "./dist/avatar.js"
     },
+    "./scroll-area": {
+      "types": "./dist/scroll-area.d.ts",
+      "import": "./dist/scroll-area.js",
+      "default": "./dist/scroll-area.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

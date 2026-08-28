@@ -23,6 +23,7 @@ export default defineConfig({
     progress: 'src/progress/index.ts',
     meter: 'src/meter/index.ts',
     avatar: 'src/avatar/index.ts',
+    'scroll-area': 'src/scroll-area/index.ts',
   },
   format: ['esm'],
   dts: true,
