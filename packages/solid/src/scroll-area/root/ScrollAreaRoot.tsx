@@ -264,8 +264,6 @@ export function ScrollAreaRoot(
    * @param event - Pointer down on a thumb (primary button only).
    */
   function handlePointerDown(event: PointerEvent) {
-    // Primary is `0`. jsdom `fireEvent.pointerDown` often yields an Event with
-    // `button` undefined (or `-1`); treat those as primary so drag/snap still work.
     if (event.button > 0) return
 
     if (activePointerId !== null) {
