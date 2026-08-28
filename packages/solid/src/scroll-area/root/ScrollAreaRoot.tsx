@@ -264,8 +264,9 @@ export function ScrollAreaRoot(
    * @param event - Pointer down on a thumb (primary button only).
    */
   function handlePointerDown(event: PointerEvent) {
-    // jsdom / synthetic events may omit `button`; treat missing as primary (0).
-    if (event.button !== 0) return
+    // Primary is `0`. jsdom `fireEvent.pointerDown` often yields an Event with
+    // `button` undefined (or `-1`); treat those as primary so drag/snap still work.
+    if (event.button > 0) return
 
     if (activePointerId !== null) {
       const activeThumb =
@@ -292,7 +293,9 @@ export function ScrollAreaRoot(
     }
 
     const thumb = currentOrientation === 'vertical' ? refs.thumbY : refs.thumbX
-    thumb?.setPointerCapture(event.pointerId)
+    if (thumb && typeof thumb.setPointerCapture === 'function') {
+      thumb.setPointerCapture(event.pointerId)
+    }
   }
 
   /**
@@ -316,9 +319,14 @@ export function ScrollAreaRoot(
     }
 
     const thumb = currentOrientation === 'vertical' ? refs.thumbY : refs.thumbX
-    if (!thumb) return
-
-    thumb.releasePointerCapture(event.pointerId)
+    if (
+      thumb &&
+      typeof thumb.hasPointerCapture === 'function' &&
+      thumb.hasPointerCapture(event.pointerId) &&
+      typeof thumb.releasePointerCapture === 'function'
+    ) {
+      thumb.releasePointerCapture(event.pointerId)
+    }
   }
 
   /**

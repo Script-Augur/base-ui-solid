@@ -246,7 +246,9 @@ export function ScrollAreaScrollbar(
    * @param event - Pointer down on the scrollbar track (primary button only).
    */
   function handlePointerDown(event: PointerEvent) {
-    if (event.button !== 0) return
+    // Primary is `0`. jsdom `fireEvent.pointerDown` often yields an Event with
+    // `button` undefined (or `-1`); treat those as primary so track press still works.
+    if (event.button > 0) return
 
     const target = getTarget(event) as Element | null
     const isVertical = vertical()
