@@ -1,4 +1,4 @@
-import { mergeProps, splitProps } from 'solid-js'
+import { children, mergeProps, splitProps } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
 import { getStateAttributesProps } from './getStateAttributesProps'
@@ -145,6 +145,9 @@ function renderInner<
     if (renderProp === 'div') {
       return renderStableDiv(outProps())
     }
+    if (renderProp === 'input') {
+      return renderStableInput(outProps())
+    }
     return <Dynamic component={renderProp as ValidComponent} {...outProps()} />
   }
 
@@ -153,11 +156,18 @@ function renderInner<
     if (renderProp.component === 'div') {
       return renderStableDiv(merged)
     }
+    if (renderProp.component === 'input') {
+      return renderStableInput(merged)
+    }
     return <Dynamic component={renderProp.component} {...merged} />
   }
 
   if (options.defaultElement === 'div') {
     return renderStableDiv(renderDefaultElementProps('div', outProps()))
+  }
+
+  if (options.defaultElement === 'input') {
+    return renderStableInput(renderDefaultElementProps('input', outProps()))
   }
 
   return (
@@ -174,9 +184,28 @@ function renderInner<
  *
  * Solid's `Dynamic` remounts when reactive props change (its memo tracks
  * `spread` reads), which resets `scrollTop` and breaks Scroll Area.
+ *
+ * Children are resolved with Solid's `children()` helper and rendered outside
+ * the reactive attribute spread. Re-reading a raw `children` getter on every
+ * `data-*` update would otherwise remount the entire subtree.
  */
 function renderStableDiv(props: Record<string, unknown>): JSX.Element {
-  return <div {...props} />
+  const resolved = children(() => props.children as JSX.Element)
+  const [, others] = splitProps(props, ['children'])
+  return <div {...others}>{resolved()}</div>
+}
+
+/**
+ * `input` host that stays mounted across reactive prop updates (same Dynamic
+ * remount issue as {@link renderStableDiv}).
+ *
+ * Children are excluded from the reactive spread for the same reason as
+ * {@link renderStableDiv}.
+ */
+function renderStableInput(props: Record<string, unknown>): JSX.Element {
+  const resolved = children(() => props.children as JSX.Element)
+  const [, others] = splitProps(props, ['children'])
+  return <input {...others}>{resolved()}</input>
 }
 function computeRenderElementProps<
   TState extends Record<string, unknown>,
