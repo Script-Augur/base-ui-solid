@@ -167,7 +167,7 @@ describe('<Field.Root />', () => {
 
       const control = screen.getByRole('textbox')
       fireEvent.focus(control)
-      fireEvent.change(control, { target: { value: 'a' } })
+      fireEvent.input(control, { target: { value: 'a' } })
       fireEvent.blur(control)
 
       expect(validate).not.toHaveBeenCalled()
@@ -188,7 +188,7 @@ describe('<Field.Root />', () => {
 
       const control = screen.getByRole('textbox')
       fireEvent.focus(control)
-      fireEvent.change(control, { target: { value: 'bad' } })
+      fireEvent.input(control, { target: { value: 'bad' } })
       fireEvent.blur(control)
 
       await waitFor(() => {
@@ -206,7 +206,7 @@ describe('<Field.Root />', () => {
 
       const control = screen.getByRole('textbox')
       fireEvent.focus(control)
-      fireEvent.change(control, { target: { value: 'a' } })
+      fireEvent.input(control, { target: { value: 'a' } })
       expect(control).not.toHaveAttribute('aria-invalid')
       fireEvent.blur(control)
 
@@ -253,14 +253,14 @@ describe('<Field.Root />', () => {
         ))
 
         const control = screen.getByRole('textbox')
-        fireEvent.change(control, { target: { value: 't' } })
+        fireEvent.input(control, { target: { value: 't' } })
 
         await waitFor(() => {
           expect(control).toHaveAttribute('aria-invalid', 'true')
           expect(screen.getByText('error')).toBeTruthy()
         })
 
-        fireEvent.change(control, { target: { value: 'tes' } })
+        fireEvent.input(control, { target: { value: 'tes' } })
         await waitFor(() => {
           expect(control).not.toHaveAttribute('aria-invalid')
           expect(screen.queryByText('error')).toBe(null)
@@ -282,7 +282,7 @@ describe('<Field.Root />', () => {
 
         const control = screen.getByRole('textbox')
         fireEvent.focus(control)
-        fireEvent.change(control, { target: { value: 't' } })
+        fireEvent.input(control, { target: { value: 't' } })
         expect(screen.queryByText('error')).toBe(null)
         fireEvent.blur(control)
 
@@ -318,8 +318,8 @@ describe('<Field.Root />', () => {
 
         const control = screen.getByRole('textbox')
         fireEvent.focus(control)
-        fireEvent.change(control, { target: { value: 'a' } })
-        fireEvent.change(control, { target: { value: '' } })
+        fireEvent.input(control, { target: { value: 'a' } })
+        fireEvent.input(control, { target: { value: '' } })
         fireEvent.blur(control)
 
         await waitFor(() => {
@@ -344,7 +344,7 @@ describe('<Field.Root />', () => {
 
         const control = screen.getByRole('textbox')
         fireEvent.focus(control)
-        fireEvent.change(control, { target: { value: 'bad' } })
+        fireEvent.input(control, { target: { value: 'bad' } })
         fireEvent.blur(control)
 
         await waitFor(() => {
@@ -375,11 +375,11 @@ describe('<Field.Root />', () => {
 
         const control = screen.getByRole('textbox')
         fireEvent.focus(control)
-        fireEvent.change(control, { target: { value: 'a' } })
+        fireEvent.input(control, { target: { value: 'a' } })
         fireEvent.blur(control)
 
         fireEvent.focus(control)
-        fireEvent.change(control, { target: { value: 'b' } })
+        fireEvent.input(control, { target: { value: 'b' } })
         fireEvent.blur(control)
 
         await waitFor(() => {
@@ -406,7 +406,7 @@ describe('<Field.Root />', () => {
 
         const control = screen.getByTestId('control')
         fireEvent.focus(control)
-        fireEvent.change(control, { target: { value: 'a' } })
+        fireEvent.input(control, { target: { value: 'a' } })
         fireEvent.blur(control)
 
         await waitFor(() => {
@@ -430,15 +430,15 @@ describe('<Field.Root />', () => {
 
           const control = screen.getByRole('textbox')
           fireEvent.focus(control)
-          fireEvent.change(control, { target: { value: 'a' } })
-          fireEvent.change(control, { target: { value: '' } })
+          fireEvent.input(control, { target: { value: 'a' } })
+          fireEvent.input(control, { target: { value: '' } })
           fireEvent.blur(control)
 
           await waitFor(() => {
             expect(screen.getByText('Required')).toBeTruthy()
           })
 
-          fireEvent.change(control, { target: { value: 'ok' } })
+          fireEvent.input(control, { target: { value: 'ok' } })
           await waitFor(() => {
             expect(screen.queryByText('Required')).toBe(null)
             expect(control).not.toHaveAttribute('aria-invalid')
@@ -455,12 +455,140 @@ describe('<Field.Root />', () => {
 
           const control = screen.getByRole('textbox')
           fireEvent.focus(control)
-          fireEvent.change(control, { target: { value: 'not-an-email' } })
+          fireEvent.input(control, { target: { value: 'not-an-email' } })
           fireEvent.blur(control)
 
           await waitFor(() => {
             expect(control).toHaveAttribute('aria-invalid', 'true')
             expect(screen.getByText('Bad email')).toBeTruthy()
+          })
+        })
+
+        it('handles both `required` and `typeMismatch`', async () => {
+          render(() => (
+            <Field.Root validationMode="onBlur">
+              <Field.Control type="email" required />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          ))
+
+          const control = screen.getByRole('textbox')
+          expect(screen.queryByTestId('error')).toBe(null)
+
+          fireEvent.focus(control)
+          fireEvent.blur(control)
+          expect(control).not.toHaveAttribute('aria-invalid')
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: 'tt' } })
+          fireEvent.blur(control)
+          await waitFor(() => {
+            expect(control).toHaveAttribute('aria-invalid', 'true')
+          })
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: '' } })
+          fireEvent.blur(control)
+          await waitFor(() => {
+            expect(control).toHaveAttribute('aria-invalid', 'true')
+          })
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: 'email@email.com' } })
+          fireEvent.blur(control)
+          await waitFor(() => {
+            expect(control).not.toHaveAttribute('aria-invalid')
+          })
+        })
+
+        it('revalidates on change when clearing a type mismatch leaves only `valueMissing`', async () => {
+          render(() => (
+            <Field.Root validationMode="onBlur">
+              <Field.Control type="email" required data-testid="control" />
+              <Field.Error match="typeMismatch" data-testid="type-error">
+                Invalid email
+              </Field.Error>
+              <Field.Error match="valueMissing" data-testid="required-error">
+                Required
+              </Field.Error>
+            </Field.Root>
+          ))
+
+          const control = screen.getByTestId('control')
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: 'invalid' } })
+          fireEvent.blur(control)
+
+          await waitFor(() => {
+            expect(screen.getByTestId('type-error')).toBeTruthy()
+            expect(screen.queryByTestId('required-error')).toBe(null)
+          })
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: '' } })
+
+          await waitFor(() => {
+            expect(screen.queryByTestId('type-error')).toBe(null)
+            expect(screen.getByTestId('required-error')).toBeTruthy()
+          })
+        })
+
+        it('clears valueMissing on change but defers other native errors like typeMismatch until blur when both are active', async () => {
+          render(() => (
+            <Field.Root validationMode="onBlur">
+              <Field.Control type="email" required data-testid="control" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          ))
+
+          const control = screen.getByTestId('control')
+
+          fireEvent.focus(control)
+          fireEvent.blur(control)
+          expect(control).not.toHaveAttribute('aria-invalid', 'true')
+          expect(screen.queryByTestId('error')).toBe(null)
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: 'a' } })
+          fireEvent.input(control, { target: { value: '' } })
+          fireEvent.blur(control)
+
+          await waitFor(() => {
+            expect(control).toHaveAttribute('aria-invalid', 'true')
+            expect(screen.getByTestId('error')).toBeTruthy()
+          })
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: 't' } })
+
+          // Only valueMissing is cleared immediately; typeMismatch waits for blur.
+          await waitFor(() => {
+            expect(control).not.toHaveAttribute('aria-invalid', 'true')
+            expect(screen.queryByTestId('error')).toBe(null)
+          })
+
+          fireEvent.blur(control)
+
+          await waitFor(() => {
+            expect(control).toHaveAttribute('aria-invalid', 'true')
+            expect(screen.getByTestId('error')).toBeTruthy()
+            expect(screen.getByTestId('error').textContent).not.toBe('')
+          })
+
+          fireEvent.focus(control)
+          fireEvent.input(control, { target: { value: 'test@example.com' } })
+
+          await waitFor(() => {
+            expect(control).not.toHaveAttribute('aria-invalid', 'true')
+            expect(screen.queryByTestId('error')).toBe(null)
+          })
+
+          fireEvent.blur(control)
+
+          await waitFor(() => {
+            expect(control).not.toHaveAttribute('aria-invalid', 'true')
+            expect(screen.queryByTestId('error')).toBe(null)
           })
         })
       })
@@ -497,12 +625,12 @@ describe('<Field.Root />', () => {
         ))
 
         const control = screen.getByRole('textbox')
-        fireEvent.change(control, { target: { value: 't' } })
+        fireEvent.input(control, { target: { value: 't' } })
         expect(control).not.toHaveAttribute('aria-invalid')
 
         now = 99
         frames.at(-1)?.(now)
-        fireEvent.change(control, { target: { value: 'te' } })
+        fireEvent.input(control, { target: { value: 'te' } })
 
         now = 198
         frames.at(-1)?.(now)
@@ -563,7 +691,7 @@ describe('<Field.Root />', () => {
         ))
 
         const control = screen.getByTestId('control')
-        fireEvent.change(control, { target: { value: 'a' } })
+        fireEvent.input(control, { target: { value: 'a' } })
 
         await waitFor(() => {
           expect(screen.getByTestId('root')).toHaveAttribute('data-dirty')
@@ -589,7 +717,7 @@ describe('<Field.Root />', () => {
         ))
 
         const control = screen.getByTestId('control')
-        fireEvent.change(control, { target: { value: 'a' } })
+        fireEvent.input(control, { target: { value: 'a' } })
 
         await waitFor(() => {
           expect(screen.getByTestId('root')).toHaveAttribute('data-filled')
@@ -683,7 +811,7 @@ describe('<Field.Root />', () => {
         </Field.Root>
       ))
 
-      fireEvent.change(screen.getByTestId('control'), {
+      fireEvent.input(screen.getByTestId('control'), {
         target: { value: 'a' },
       })
       await flushMicrotasks()
@@ -784,6 +912,24 @@ describe('<Field.Root />', () => {
         expect(validate).toHaveBeenCalled()
         expect(validate.mock.lastCall?.[0]).toBe('ok')
       })
+    })
+
+    it('clears actionsRef on unmount', async () => {
+      const actionsRef: { current: FieldRootActions | null } = {
+        current: null,
+      }
+
+      render(() => (
+        <Field.Root actionsRef={actionsRef}>
+          <Field.Control />
+        </Field.Root>
+      ))
+
+      await flushMicrotasks()
+      expect(actionsRef.current).toBeTruthy()
+
+      cleanup()
+      expect(actionsRef.current).toBe(null)
     })
   })
 })

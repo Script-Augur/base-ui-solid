@@ -25,7 +25,7 @@ describe('<Field.Validity />', () => {
       expect(handleValidity.mock.lastCall?.[0].validity.valid).toBe(null)
 
       fireEvent.focus(input)
-      fireEvent.change(input, { target: { value: 'test' } })
+      fireEvent.input(input, { target: { value: 'test' } })
       fireEvent.blur(input)
 
       await waitFor(() => {

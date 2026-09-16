@@ -35,8 +35,8 @@ describe('<Field.Error />', () => {
 
     const input = screen.getByRole<HTMLInputElement>('textbox')
     fireEvent.focus(input)
-    fireEvent.change(input, { target: { value: 'a' } })
-    fireEvent.change(input, { target: { value: '' } })
+    fireEvent.input(input, { target: { value: 'a' } })
+    fireEvent.input(input, { target: { value: '' } })
     fireEvent.blur(input)
 
     await waitFor(() => {
@@ -56,14 +56,14 @@ describe('<Field.Error />', () => {
       expect(screen.queryByText('Message')).toBe(null)
 
       const input = screen.getByRole<HTMLInputElement>('textbox')
-      fireEvent.change(input, { target: { value: 'a' } })
-      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.input(input, { target: { value: 'a' } })
+      fireEvent.input(input, { target: { value: '' } })
 
       await waitFor(() => {
         expect(screen.getByText('Message')).toBeTruthy()
       })
 
-      fireEvent.change(input, { target: { value: 'ab' } })
+      fireEvent.input(input, { target: { value: 'ab' } })
       await waitFor(() => {
         expect(screen.queryByText('Message')).toBe(null)
       })
@@ -79,7 +79,7 @@ describe('<Field.Error />', () => {
 
       const input = screen.getByRole<HTMLInputElement>('textbox')
       fireEvent.focus(input)
-      fireEvent.change(input, { target: { value: 'a' } })
+      fireEvent.input(input, { target: { value: 'a' } })
       fireEvent.blur(input)
 
       await waitFor(() => {

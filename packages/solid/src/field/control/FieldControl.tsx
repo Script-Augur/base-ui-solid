@@ -5,7 +5,6 @@ import {
   REASONS,
   createChangeEventDetails,
 } from '../../internals/createChangeEventDetails'
-import { createControlled } from '../../internals/createControlled'
 import { createRender } from '../../internals/createRender'
 import { fieldValidityMapping } from '../../internals/field-constants/constants'
 import { createRegisterFieldControl } from '../../internals/field-register-control/createRegisterFieldControl'
@@ -31,7 +30,7 @@ export function FieldControl(componentProps: FieldControlProps): JSX.Element {
 
   const field = useFieldRootContext()
   const { clearErrors } = useFormContext()
-  const { labelId, getDescriptionProps } = useLabelableContext()
+  const { labelId } = useLabelableContext()
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -73,14 +72,10 @@ export function FieldControl(componentProps: FieldControlProps): JSX.Element {
       return field.state.focused
     },
   }
-  const [valueUnwrapped] = createControlled({
-    name: () => name(),
-    value: () => local.value,
-    defaultValue: (local.defaultValue as string | undefined) ?? '',
-  })
-
+  // Uncontrolled mode lets the DOM own the value (`attr:value` + ref seeding).
+  // Controlled mode reads `local.value` directly — no createControlled needed.
   const isControlled = () => local.value !== undefined
-  const value = () => (isControlled() ? valueUnwrapped() : undefined)
+  const value = () => (isControlled() ? local.value : undefined)
   const getValueFromInput = () =>
     field.validation.inputRef.current?.value ??
     (inputRef.current as HTMLInputElement | null)?.value
@@ -138,16 +133,18 @@ export function FieldControl(componentProps: FieldControlProps): JSX.Element {
       get 'aria-labelledby'() {
         return labelId()
       },
+      // Call getValidationProps inside getters so description ids stay reactive.
       get 'aria-describedby'() {
         const external = (elementProps as Record<string, unknown>)[
           'aria-describedby'
         ]
-        return getDescriptionProps(
+        return field.validation.getValidationProps(
+          disabled(),
           external != null ? { 'aria-describedby': external } : {}
         )['aria-describedby']
       },
       get 'aria-invalid'() {
-        return field.state.valid === false && !disabled() ? true : undefined
+        return field.validation.getValidationProps(disabled())['aria-invalid']
       },
       get autofocus() {
         return autoFocus() || undefined
@@ -158,10 +155,9 @@ export function FieldControl(componentProps: FieldControlProps): JSX.Element {
       get 'attr:value'() {
         return isControlled() ? undefined : local.defaultValue
       },
+      // React Field.Control uses a single onChange (≈ input). Solid must use
+      // onInput only — native change also fires on blur and would double-fire.
       onInput(event: InputEvent & { currentTarget: HTMLInputElement }) {
-        handleControlValueEvent(event)
-      },
-      onChange(event: Event & { currentTarget: HTMLInputElement }) {
         handleControlValueEvent(event)
       },
       onFocus() {

@@ -3,6 +3,7 @@ import {
   createEffect,
   createSignal,
   mergeProps,
+  onCleanup,
   splitProps,
 } from 'solid-js'
 
@@ -297,6 +298,9 @@ function FieldRootInner(componentProps: FieldRootProps): JSX.Element {
     const actionsRef = local.actionsRef
     if (!actionsRef) return
     actionsRef.current = { validate: validateFieldControl }
+    onCleanup(() => {
+      actionsRef.current = null
+    })
   })
 
   const contextValue: FieldRootContextValue = {

@@ -18,7 +18,7 @@ describe('<Field.Control />', () => {
       </Field.Root>
     ))
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a' } })
+    fireEvent.input(screen.getByRole('textbox'), { target: { value: 'a' } })
 
     await waitFor(() => {
       expect(validate).toHaveBeenCalledTimes(1)
@@ -64,11 +64,31 @@ describe('<Field.Control />', () => {
     ))
 
     const control = screen.getByTestId('control')
-    fireEvent.change(control, { target: { value: '' } })
+    fireEvent.input(control, { target: { value: '' } })
 
     await waitFor(() => {
       expect(control).toHaveAttribute('aria-invalid', 'true')
       expect(screen.getByText('Required')).toBeTruthy()
     })
+  })
+
+  it('does not fire onValueChange again on blur after typing (input-only, not change)', () => {
+    const handleValueChange = vi.fn()
+
+    render(() => (
+      <Field.Root>
+        <Field.Control onValueChange={handleValueChange} />
+      </Field.Root>
+    ))
+
+    const control = screen.getByRole('textbox')
+    fireEvent.focus(control)
+    fireEvent.input(control, { target: { value: 'a' } })
+    expect(handleValueChange).toHaveBeenCalledTimes(1)
+
+    // Native change fires on blur after edits; Solid must not treat that as a value event.
+    fireEvent.change(control, { target: { value: 'a' } })
+    fireEvent.blur(control)
+    expect(handleValueChange).toHaveBeenCalledTimes(1)
   })
 })
