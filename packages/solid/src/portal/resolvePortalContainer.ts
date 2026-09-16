@@ -14,9 +14,11 @@ export function isPortalContainer(value: unknown): value is PortalContainer {
  * Resolves the portal mount target the way upstream `useFloatingPortalNode`
  * does, with Solid-friendly deferred accessors:
  *
+ * - `container` omitted → parent portal host / `document.body`
  * - `container={null}` → wait
  * - accessor / value `null` → wait (Solid deferred container)
- * - otherwise → prop node / parent portal host / `document.body`
+ * - provided but not `HTMLElement`/`ShadowRoot` → wait (no silent body mount)
+ * - otherwise → prop node
  *
  * @param containerProp - Portal `container` prop (`null` = wait).
  * @param parentPortalNode - Host node from a parent {@link Portal}, if any.
@@ -41,18 +43,22 @@ export function resolvePortalContainer(
       if (isPortalContainer(resolved)) {
         return resolved
       }
-    } else {
-      const resolved = readMaybeAccessor<PortalContainer | null | undefined>(
-        containerProp,
-        undefined
-      )
-      if (resolved == null) {
-        return null
-      }
-      if (isPortalContainer(resolved)) {
-        return resolved
-      }
+      warnInvalidContainer(resolved)
+      return null
     }
+
+    const resolved = readMaybeAccessor<PortalContainer | null | undefined>(
+      containerProp,
+      undefined
+    )
+    if (resolved == null) {
+      return null
+    }
+    if (isPortalContainer(resolved)) {
+      return resolved
+    }
+    warnInvalidContainer(resolved)
+    return null
   }
 
   if (parentPortalNode) {
@@ -77,3 +83,11 @@ export type PortalContainer = HTMLElement | ShadowRoot
 export type PortalContainerProp = MaybeAccessor<
   PortalContainer | null | undefined
 > | null
+
+function warnInvalidContainer(value: unknown): void {
+  if (process.env.NODE_ENV === 'production') return
+  console.warn(
+    '[base-ui-solid] Portal `container` resolved to a non-HTMLElement/ShadowRoot value; deferring mount instead of falling back to document.body.',
+    value
+  )
+}

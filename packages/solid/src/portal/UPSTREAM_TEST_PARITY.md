@@ -13,11 +13,15 @@ Upstream reference: `@base-ui/react@1.7.0` internal `FloatingPortalLite` /
 | Reactive container assignment    | covered |
 | Nested portal → parent host      | covered |
 | Host `data-base-ui-portal` + ref | covered |
+| Host attr add/remove + handlers  | covered |
+| Invalid container does not body  | covered |
+| Unmount removes portal host      | covered |
 
 ## Deferred (Dialog / full `FloatingPortal`)
 
 | Behavior                                         | Notes                                                                                          |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Host `render` prop                               | Accepted for FloatingPortalLite API parity; not applied (Solid owns the host `<div>`)          |
 | Non-modal focus guards (`FocusGuard`, tab order) | Full `FloatingPortal` path; overlays should use `createFocusTrap` / add guards in Dialog slice |
 | `aria-owns` visually-hidden span                 | Tied to focus-guard path                                                                       |
 | ShadowRoot container cases                       | API accepts `ShadowRoot`; jsdom coverage limited                                               |
