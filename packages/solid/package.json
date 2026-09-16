@@ -84,6 +84,11 @@
       "import": "./dist/portal.js",
       "default": "./dist/portal.js"
     },
+    "./dialog": {
+      "types": "./dist/dialog.d.ts",
+      "import": "./dist/dialog.js",
+      "default": "./dist/dialog.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

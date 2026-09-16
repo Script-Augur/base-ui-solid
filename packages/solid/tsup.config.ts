@@ -25,6 +25,7 @@ export default defineConfig({
     avatar: 'src/avatar/index.ts',
     'scroll-area': 'src/scroll-area/index.ts',
     portal: 'src/portal/index.ts',
+    dialog: 'src/dialog/index.ts',
   },
   format: ['esm'],
   dts: true,

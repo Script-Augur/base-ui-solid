@@ -9,6 +9,11 @@ export const REASONS = {
   disabled: 'disabled',
   missing: 'missing',
   listNavigation: 'list-navigation',
+  outsidePress: 'outside-press',
+  escapeKey: 'escape-key',
+  closePress: 'close-press',
+  focusOut: 'focus-out',
+  imperativeAction: 'imperative-action',
 } as const
 
 /**
