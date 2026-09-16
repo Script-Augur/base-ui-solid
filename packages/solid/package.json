@@ -89,6 +89,11 @@
       "import": "./dist/dialog.js",
       "default": "./dist/dialog.js"
     },
+    "./alert-dialog": {
+      "types": "./dist/alert-dialog.d.ts",
+      "import": "./dist/alert-dialog.js",
+      "default": "./dist/alert-dialog.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
