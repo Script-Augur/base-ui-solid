@@ -133,6 +133,13 @@ export {
   ScrollAreaCorner,
 } from './scroll-area'
 export {
+  Portal,
+  PortalContext,
+  usePortalContext,
+  isPortalContainer,
+  resolvePortalContainer,
+} from './portal'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -284,6 +291,14 @@ export type {
   ScrollAreaCornerProps,
   ScrollAreaCornerState,
 } from './scroll-area'
+export type {
+  PortalProps,
+  PortalState,
+  PortalContextValue,
+  PortalFocusManagerState,
+  PortalContainer,
+  PortalContainerProp,
+} from './portal'
 export type {
   CreateControlledOptions,
   ControlledSetter,
