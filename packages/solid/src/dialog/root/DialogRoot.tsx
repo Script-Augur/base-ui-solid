@@ -93,6 +93,12 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
   const [ownNestedOpenDialogs, ownNestedOpenDialogsAssign] = createSignal(0)
   const [preventUnmountOnClose, preventUnmountOnCloseAssign] =
     createSignal(false)
+  const [popupInitialFocus, popupInitialFocusAssign] = createSignal<
+    boolean | HTMLElement | null | undefined
+  >(undefined)
+  const [popupFinalFocus, popupFinalFocusAssign] = createSignal<
+    boolean | HTMLElement | null | undefined
+  >(undefined)
 
   const portalId = generateId('base-ui-dialog-portal')
 
@@ -102,7 +108,11 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
     nextOpen: boolean,
     eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
   ) => {
-    local.onOpenChange?.(nextOpen, eventDetails as DialogRootChangeEventDetails)
+    const details = eventDetails as DialogRootChangeEventDetails
+    details.preventUnmountOnClose = () => {
+      preventUnmountOnCloseAssign(true)
+    }
+    local.onOpenChange?.(nextOpen, details)
     if (eventDetails.isCanceled) return
     openAssign(nextOpen)
   }
@@ -155,7 +165,20 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
     enabled: () =>
       Boolean(open() && mounted() && modal() !== false && isTopmost()),
     container: popupElement,
-    restoreFocus: triggerElement,
+    initialFocus: () => {
+      const value = popupInitialFocus()
+      if (value === false) return false
+      if (value instanceof HTMLElement) return value
+      // `true` / `null` / `undefined` → default first-tabbable / container.
+      return undefined
+    },
+    restoreFocus: () => {
+      const value = popupFinalFocus()
+      if (value === false) return false
+      if (value instanceof HTMLElement) return value
+      // Default: restore to trigger (upstream `returnFocus` default).
+      return triggerElement()
+    },
   })
 
   // Escape dismiss (topmost only).
@@ -245,6 +268,10 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
     portalId: () => portalId,
     preventUnmountOnClose,
     preventUnmountOnCloseAssign,
+    popupInitialFocus,
+    popupInitialFocusAssign,
+    popupFinalFocus,
+    popupFinalFocusAssign,
     onOpenChangeComplete: local.onOpenChangeComplete,
     role: 'dialog',
   }

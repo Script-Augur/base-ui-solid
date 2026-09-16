@@ -68,6 +68,12 @@ export interface DialogRootContextValue {
   portalId: Accessor<string>
   preventUnmountOnClose: Accessor<boolean>
   preventUnmountOnCloseAssign: Setter<boolean>
+  /** Popup `initialFocus` prop (published by {@link DialogPopup}). */
+  popupInitialFocus: Accessor<boolean | HTMLElement | null | undefined>
+  popupInitialFocusAssign: Setter<boolean | HTMLElement | null | undefined>
+  /** Popup `finalFocus` prop (published by {@link DialogPopup}). */
+  popupFinalFocus: Accessor<boolean | HTMLElement | null | undefined>
+  popupFinalFocusAssign: Setter<boolean | HTMLElement | null | undefined>
   onOpenChangeComplete?: (open: boolean) => void
   role: 'dialog'
 }

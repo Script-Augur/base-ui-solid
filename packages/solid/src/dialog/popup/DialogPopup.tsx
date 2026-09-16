@@ -1,5 +1,5 @@
 import { generateId } from '@script-augur/base-ui-utils'
-import { mergeProps, splitProps } from 'solid-js'
+import { createEffect, mergeProps, splitProps } from 'solid-js'
 
 import { createRender } from '../../internals/createRender'
 import { useDialogPortalContext } from '../portal/DialogPortalContext'
@@ -40,6 +40,12 @@ export function DialogPopup(componentProps: DialogPopupProps): JSX.Element {
   const popupId = local.id ?? generateId('base-ui-dialog')
 
   const nestedDialogOpen = () => context.nestedOpenDialogCount() > 0
+
+  // Publish focus targets to Root so `createFocusTrap` can honor them.
+  createEffect(() => {
+    context.popupInitialFocusAssign(local.initialFocus)
+    context.popupFinalFocusAssign(local.finalFocus)
+  })
 
   const state: DialogPopupState = {
     get open() {
@@ -102,14 +108,6 @@ export function DialogPopup(componentProps: DialogPopupProps): JSX.Element {
       ref(element: HTMLElement) {
         context.popupElementAssign(element)
 
-        // Optional initial focus override (element / false).
-        const initial = local.initialFocus
-        if (initial === false) {
-          // Focus trap still may focus container; skip explicit override.
-        } else if (initial instanceof HTMLElement) {
-          queueMicrotask(() => initial.focus())
-        }
-
         const userRef = local.ref
         if (typeof userRef === 'function') {
           userRef(element as HTMLDivElement)
@@ -131,16 +129,16 @@ export interface DialogPopupState extends Record<string, unknown> {
 export type DialogPopupProps = JSX.HTMLAttributes<HTMLDivElement> & {
   /**
    * Element to focus when the dialog opens.
-   * - `false`: do not move focus (beyond default trap behavior)
+   * - `false`: do not move focus
+   * - `true` / omitted / `null`: first tabbable / popup (via focus trap)
    * - `HTMLElement`: focus that element
-   * - omitted: first tabbable / popup (via focus trap)
    */
   initialFocus?: boolean | HTMLElement | null
   /**
    * Element to focus when the dialog closes.
    * - `false`: do not restore focus
+   * - `true` / omitted / `null`: restore to trigger (via focus trap)
    * - `HTMLElement`: focus that element
-   * - omitted: restore to trigger (via focus trap)
    */
   finalFocus?: boolean | HTMLElement | null
   render?: RenderProp<DialogPopupState, Record<string, unknown>>

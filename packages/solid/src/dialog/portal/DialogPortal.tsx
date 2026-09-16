@@ -14,6 +14,7 @@ import { Portal } from '../../portal/Portal'
 import { usePortalContext } from '../../portal/PortalContext'
 import { useDialogRootContext } from '../root/DialogRootContext'
 import { FocusGuard } from '../utils/FocusGuard'
+import { getNextTabbable } from '../utils/getNextTabbable'
 import { InternalBackdrop } from '../utils/InternalBackdrop'
 import { visuallyHiddenStyle } from '../utils/visuallyHidden'
 
@@ -51,7 +52,8 @@ export function DialogPortal(componentProps: DialogPortalProps): JSX.Element {
           <FocusGuard
             data-type="outside"
             onFocus={() => {
-              // Tabbing from before the portal: move into the popup.
+              // Lite: always move into the popup (upstream may use prev-tabbable
+              // / inside-guard paths — see UPSTREAM_TEST_PARITY.md).
               const popup = context.popupElement()
               popup?.focus()
             }}
@@ -85,11 +87,14 @@ export function DialogPortal(componentProps: DialogPortalProps): JSX.Element {
           <FocusGuard
             data-type="outside"
             onFocus={event => {
-              // Tabbing past the portal: restore to next page tabbable or close.
-              const trigger = context.triggerElement()
-              if (trigger) {
-                trigger.focus()
-              }
+              // Tabbing past the portal: continue page order (next tabbable
+              // after this guard), then optionally close — matches FloatingPortal
+              // after-guard intent (next after reference / portal edge).
+              const from =
+                (event.currentTarget as HTMLElement | null) ??
+                context.triggerElement()
+              const nextTabbable = getNextTabbable(from)
+              nextTabbable?.focus()
               if (!context.disablePointerDismissal()) {
                 context.setOpen(
                   false,
