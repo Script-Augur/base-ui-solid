@@ -1,18 +1,20 @@
-import { DialogRoot } from "../../dialog/root/DialogRoot"
-
+import { useRenderDialogRoot } from "../../dialog/root/DialogRoot"
 import type {
   DialogRootActions,
   DialogRootChangeEventDetails,
   DialogRootChangeEventReason,
   DialogRootProps,
 } from "../../dialog/root/DialogRoot"
+
 import type { JSX } from "solid-js"
 
 /**
  * Groups all parts of the alert dialog.
  * Doesn't render its own HTML element.
  *
- * Forces modal behavior and disables pointer dismissal (upstream Alert Dialog).
+ * Thin wrapper over Dialog via `useRenderDialogRoot('alert-dialog')` — forces
+ * modal behavior, disables pointer dismissal, and sets popup role `alertdialog`
+ * (matches upstream `@base-ui/react` Alert Dialog).
  *
  * Documentation: [Base UI Alert Dialog](https://base-ui.com/react/components/alert-dialog)
  *
@@ -38,14 +40,7 @@ import type { JSX } from "solid-js"
 export function AlertDialogRoot(
   componentProps: AlertDialogRootProps,
 ): JSX.Element {
-  return (
-    <DialogRoot
-      {...componentProps}
-      modal={true}
-      disablePointerDismissal={true}
-      role="alertdialog"
-    />
-  )
+  return useRenderDialogRoot("alert-dialog", componentProps)
 }
 
 /**
@@ -53,10 +48,11 @@ export function AlertDialogRoot(
  *
  * Omits `modal` and `disablePointerDismissal` — Alert Dialog always uses
  * modal + no outside-press dismiss (matches `@base-ui/react@1.7.0`).
+ * Role is internal via root mode (not a public Dialog prop).
  */
 export type AlertDialogRootProps = Omit<
   DialogRootProps,
-  "modal" | "disablePointerDismissal" | "role"
+  "modal" | "disablePointerDismissal"
 >
 
 /** Imperative actions exposed via `actionsRef`. */

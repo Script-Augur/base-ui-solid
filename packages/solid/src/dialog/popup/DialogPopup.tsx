@@ -1,17 +1,17 @@
-import { generateId } from '@script-augur/base-ui-utils'
-import { createEffect, mergeProps, splitProps } from 'solid-js'
+import { generateId } from "@script-augur/base-ui-utils"
+import { createEffect, mergeProps, splitProps } from "solid-js"
 
-import { createRender } from '../../internals/createRender'
-import { useDialogPortalContext } from '../portal/DialogPortalContext'
-import { useDialogRootContext } from '../root/DialogRootContext'
-import { dialogStateAttributesMapping } from '../utils/stateAttributesMapping'
+import { createRender } from "../../internals/createRender"
+import { useDialogPortalContext } from "../portal/DialogPortalContext"
+import { useDialogRootContext } from "../root/DialogRootContext"
+import { dialogStateAttributesMapping } from "../utils/stateAttributesMapping"
 
-import { DialogPopupCssVars } from './DialogPopupCssVars'
-import { DialogPopupDataAttributes } from './DialogPopupDataAttributes'
+import { DialogPopupCssVars } from "./DialogPopupCssVars"
+import { DialogPopupDataAttributes } from "./DialogPopupDataAttributes"
 
-import type { RenderProp } from '../../internals/createRender'
-import type { TransitionStatus } from '../../internals/createTransitionStatus'
-import type { JSX } from 'solid-js'
+import type { RenderProp } from "../../internals/createRender"
+import type { TransitionStatus } from "../../internals/createTransitionStatus"
+import type { JSX } from "solid-js"
 
 /**
  * A container for the dialog contents.
@@ -27,17 +27,17 @@ export function DialogPopup(componentProps: DialogPopupProps): JSX.Element {
   const context = useDialogRootContext()
 
   const [local, elementProps] = splitProps(componentProps, [
-    'render',
-    'class',
-    'style',
-    'children',
-    'initialFocus',
-    'finalFocus',
-    'ref',
-    'id',
+    "render",
+    "class",
+    "style",
+    "children",
+    "initialFocus",
+    "finalFocus",
+    "ref",
+    "id",
   ])
 
-  const popupId = local.id ?? generateId('base-ui-dialog')
+  const popupId = local.id ?? generateId("base-ui-dialog")
 
   const nestedDialogOpen = () => context.nestedOpenDialogCount() > 0
 
@@ -63,7 +63,7 @@ export function DialogPopup(componentProps: DialogPopupProps): JSX.Element {
   }
 
   return createRender<DialogPopupState, Record<string, unknown>>({
-    defaultElement: 'div',
+    defaultElement: "div",
     state,
     render: local.render,
     mapStateToDataAttributes: true,
@@ -72,18 +72,20 @@ export function DialogPopup(componentProps: DialogPopupProps): JSX.Element {
       get id() {
         return popupId
       },
-      role: context.role,
+      get role() {
+        return context.role()
+      },
       tabindex: -1,
-      get 'aria-modal'() {
+      get "aria-modal"() {
         return context.modal() === true ? true : undefined
       },
-      get 'aria-labelledby'() {
+      get "aria-labelledby"() {
         return context.titleElementId()
       },
-      get 'aria-describedby'() {
+      get "aria-describedby"() {
         return context.descriptionElementId()
       },
-      get ['attr:hidden']() {
+      get ["attr:hidden"]() {
         return context.mounted() ? undefined : true
       },
       get class() {
@@ -92,24 +94,24 @@ export function DialogPopup(componentProps: DialogPopupProps): JSX.Element {
       get style() {
         const base: JSX.CSSProperties = {
           [DialogPopupCssVars.nestedDialogs]: String(
-            context.nestedOpenDialogCount()
+            context.nestedOpenDialogCount(),
           ),
         }
         const user = local.style
-        if (user && typeof user === 'object' && !Array.isArray(user)) {
+        if (user && typeof user === "object" && !Array.isArray(user)) {
           return { ...base, ...user }
         }
         return base
       },
       get [DialogPopupDataAttributes.nested]() {
-        return context.nested() ? '' : undefined
+        return context.nested() ? "" : undefined
       },
       children: local.children,
       ref(element: HTMLElement) {
         context.popupElementAssign(element)
 
         const userRef = local.ref
-        if (typeof userRef === 'function') {
+        if (typeof userRef === "function") {
           userRef(element as HTMLDivElement)
         }
       },

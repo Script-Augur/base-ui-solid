@@ -22,32 +22,26 @@ import type {
 } from "../../internals/createChangeEventDetails"
 import type { JSX } from "solid-js"
 
+/** Root mode — matches upstream `useRenderDialogRoot(mode)`. */
+export type DialogRootMode = "dialog" | "alert-dialog"
+
 /**
- * Groups all parts of the dialog.
- * Doesn't render its own HTML element.
+ * Shared dialog root implementation (upstream `useRenderDialogRoot`).
  *
- * Documentation: [Base UI Dialog](https://base-ui.com/react/components/dialog)
+ * Mode `'alert-dialog'` forces `modal={true}`, `disablePointerDismissal={true}`,
+ * and popup role `'alertdialog'`. Role is **not** a public Dialog prop — Alert
+ * Dialog is the only supported way to get `alertdialog` semantics.
  *
+ * @internal Exported for Alert Dialog; not part of the public Dialog API.
+ *
+ * @param mode - `'dialog'` or `'alert-dialog'`.
  * @param componentProps - Root props (`open`, `defaultOpen`, `modal`, …).
  * @returns A Solid JSX fragment wrapping children in context.
- *
- * @example
- * ```tsx
- * import { Dialog } from "@script-augur/base-ui-solid/dialog"
- *
- * <Dialog.Root>
- *   <Dialog.Trigger>Open</Dialog.Trigger>
- *   <Dialog.Portal>
- *     <Dialog.Backdrop />
- *     <Dialog.Popup>
- *       <Dialog.Title>Title</Dialog.Title>
- *       <Dialog.Close>Close</Dialog.Close>
- *     </Dialog.Popup>
- *   </Dialog.Portal>
- * </Dialog.Root>
- * ```
  */
-export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
+export function useRenderDialogRoot(
+  mode: DialogRootMode,
+  componentProps: DialogRootProps,
+): JSX.Element {
   const [local] = splitProps(componentProps, [
     "children",
     "open",
@@ -57,8 +51,9 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
     "modal",
     "disablePointerDismissal",
     "actionsRef",
-    "role",
   ])
+
+  const isAlertDialog = mode === "alert-dialog"
 
   const parentContext = useDialogRootContext(true)
   const nested = () => parentContext != null
@@ -68,8 +63,11 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
     defaultValue: local.defaultOpen ?? false,
   })
 
-  const modal = () => local.modal ?? true
-  const disablePointerDismissal = () => local.disablePointerDismissal ?? false
+  const modal = () => (isAlertDialog ? true : (local.modal ?? true))
+  const disablePointerDismissal = () =>
+    isAlertDialog ? true : (local.disablePointerDismissal ?? false)
+  const role = (): "dialog" | "alertdialog" =>
+    isAlertDialog ? "alertdialog" : "dialog"
 
   const { mounted, mountedAssign, transitionStatus } =
     createTransitionStatus(open)
@@ -274,7 +272,7 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
     popupFinalFocus,
     popupFinalFocusAssign,
     onOpenChangeComplete: local.onOpenChangeComplete,
-    role: local.role ?? "dialog",
+    role,
   }
 
   return (
@@ -285,7 +283,38 @@ export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
 }
 
 /**
+ * Groups all parts of the dialog.
+ * Doesn't render its own HTML element.
+ *
+ * Documentation: [Base UI Dialog](https://base-ui.com/react/components/dialog)
+ *
+ * @param componentProps - Root props (`open`, `defaultOpen`, `modal`, …).
+ * @returns A Solid JSX fragment wrapping children in context.
+ *
+ * @example
+ * ```tsx
+ * import { Dialog } from "@script-augur/base-ui-solid/dialog"
+ *
+ * <Dialog.Root>
+ *   <Dialog.Trigger>Open</Dialog.Trigger>
+ *   <Dialog.Portal>
+ *     <Dialog.Backdrop />
+ *     <Dialog.Popup>
+ *       <Dialog.Title>Title</Dialog.Title>
+ *       <Dialog.Close>Close</Dialog.Close>
+ *     </Dialog.Popup>
+ *   </Dialog.Portal>
+ * </Dialog.Root>
+ * ```
+ */
+export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
+  return useRenderDialogRoot("dialog", componentProps)
+}
+
+/**
  * Props for {@link DialogRoot}.
+ *
+ * Role is not public — use Alert Dialog for `alertdialog` (matches upstream).
  */
 export type DialogRootProps = {
   children?: JSX.Element
@@ -323,12 +352,6 @@ export type DialogRootProps = {
    * mounted until `actionsRef.unmount()` runs.
    */
   actionsRef?: DialogRootActions
-  /**
-   * ARIA role for the popup.
-   * Alert Dialog forces `'alertdialog'`; regular Dialog defaults to `'dialog'`.
-   * @default 'dialog'
-   */
-  role?: "dialog" | "alertdialog"
 }
 
 /** Imperative actions exposed via `actionsRef`. */

@@ -22,10 +22,14 @@ Upstream reference: `@base-ui/react@1.7.0` `AlertDialog` (thin wrapper over
 
 ## Deferred / partial
 
+Alert Dialog **inherits Dialog Lite gaps** (focus-manager Lite, no handle
+store, Lite transitions, etc.) in addition to the Alert-specific rows below.
+
 | Behavior                                                          | Notes                                                                     |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | `AlertDialog.createHandle` / detached triggers / payload children | Same as Dialog — requires popup-handle store; follow-up with Menu/Popover |
 | Multi-trigger ARIA sync (`triggerId` / `defaultTriggerId`)        | Deferred with handle store                                                |
 | Full `onOpenChangeComplete` animation matrix                      | Inherited from Dialog Lite transitions                                    |
+| Focus-manager / floating-ui depth                                 | Inherited Dialog Lite gap                                                 |
 | `popupConformanceTests` suite                                     | Not ported; key ARIA / open-close cases covered above                     |
 | Intentional vs sloppy outside-press                               | N/A — pointer dismissal forced off                                        |

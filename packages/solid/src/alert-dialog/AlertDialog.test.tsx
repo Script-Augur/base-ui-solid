@@ -15,6 +15,7 @@ import { AlertDialog } from "./index"
 import type {
   AlertDialogRootActions,
   AlertDialogRootChangeEventDetails,
+  AlertDialogRootProps,
 } from "./root/AlertDialogRoot"
 
 afterEach(() => {
@@ -207,6 +208,36 @@ describe("AlertDialog", () => {
       "dialog",
     )
   })
+
+  it("ignores cast modal / disablePointerDismissal overrides", () => {
+    const onOpenChange = vi.fn()
+    render(() => (
+      <AlertDialog.Root
+        defaultOpen
+        onOpenChange={onOpenChange}
+        {...({
+          modal: false,
+          disablePointerDismissal: false,
+        } as AlertDialogRootProps)}
+      >
+        <AlertDialogState data-testid="state" />
+        <AlertDialog.Portal>
+          <AlertDialog.Backdrop data-testid="backdrop" />
+          <AlertDialog.Popup data-testid="popup">Content</AlertDialog.Popup>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+    ))
+
+    const state = screen.getByTestId("state")
+    expect(state).toHaveAttribute("data-modal", "true")
+    expect(state).toHaveAttribute("data-disable-pointer-dismissal", "true")
+    expect(state).toHaveAttribute("data-role", "alertdialog")
+    expect(document.body.style.overflow).toBe("hidden")
+
+    fireEvent.pointerDown(screen.getByTestId("backdrop"), { button: 0 })
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(screen.getByRole("alertdialog")).toBeVisible()
+  })
 })
 
 function BasicAlertDialog(props: {
@@ -239,7 +270,7 @@ function AlertDialogState(props: { "data-testid"?: string }) {
       data-testid={props["data-testid"]}
       data-modal={String(context.modal())}
       data-disable-pointer-dismissal={String(context.disablePointerDismissal())}
-      data-role={context.role}
+      data-role={context.role()}
     />
   )
 }

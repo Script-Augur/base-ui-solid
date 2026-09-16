@@ -75,6 +75,6 @@ export interface DialogRootContextValue {
   popupFinalFocus: Accessor<boolean | HTMLElement | null | undefined>
   popupFinalFocusAssign: Setter<boolean | HTMLElement | null | undefined>
   onOpenChangeComplete?: (open: boolean) => void
-  /** Popup ARIA role — `'alertdialog'` when used by Alert Dialog. */
-  role: "dialog" | "alertdialog"
+  /** Popup ARIA role — `'alertdialog'` when rooted via alert-dialog mode. */
+  role: Accessor<"dialog" | "alertdialog">
 }
