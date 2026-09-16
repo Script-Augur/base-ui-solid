@@ -1,5 +1,11 @@
 # @script-augur/base-ui-solid
 
+## 0.3.0
+
+### Minor Changes
+
+- e695b61: Add Scroll Area compound component (`Root`, `Viewport`, `Content`, `Scrollbar`, `Thumb`, `Corner`) ported from `@base-ui/react@1.7.0`.
+
 ## 0.2.0
 
 ### Minor Changes
