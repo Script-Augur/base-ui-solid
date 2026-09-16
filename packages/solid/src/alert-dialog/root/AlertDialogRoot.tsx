@@ -1,11 +1,11 @@
 import { useRenderDialogRoot } from "../../dialog/root/DialogRoot"
+
 import type {
   DialogRootActions,
   DialogRootChangeEventDetails,
   DialogRootChangeEventReason,
   DialogRootProps,
 } from "../../dialog/root/DialogRoot"
-
 import type { JSX } from "solid-js"
 
 /**
