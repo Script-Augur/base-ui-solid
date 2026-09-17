@@ -24,28 +24,28 @@ Sources under `/tmp/base-ui-field/field/`.
 
 ## Skipped
 
-| Upstream test                                                                                       | Reason                                                                                                                     |
-| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `describeConformance` (all parts)                                                                   | Not used in this package                                                                                                   |
-| `FieldRoot.react17.test.tsx`                                                                        | React 17-only                                                                                                              |
-| `FieldControl.spec.tsx` / type-level `.spec.tsx`                                                    | Type-level                                                                                                                 |
-| SSR / `isJSDOM` Select+Checkbox aria-labelledby cases                                               | Browser-only + Select/Checkbox not ported                                                                                  |
-| React 19 `Activity` remount case                                                                    | React-only API                                                                                                             |
-| Form submit orchestration (`onSubmit` mode via `<Form>`, `onFormSubmit`, multi-field validate args) | Deferred to Form slice                                                                                                     |
-| `validate` runs after native validations (Form submit click)                                        | Needs Form submit orchestration; Field-local native/custom order is covered via `onBlur`/`onChange` + `actionsRef` instead |
-| Checkbox / CheckboxGroup / Radio / RadioGroup / NumberField / Select integration                    | Deferred to those component slices                                                                                         |
-| debounce for Checkbox / RadioGroup                                                                  | Needs those controls                                                                                                       |
-| Select/Radio dirty remount baselines                                                                | Needs those controls                                                                                                       |
-| Field.Error animation `describe.skipIf(isJSDOM)`                                                    | Browser-only                                                                                                               |
-| Field.Validity Form-submit + badInput browser case                                                  | Form slice / browser-only                                                                                                  |
-| Field.Item Checkbox/Radio disable + parent checkbox label                                           | Deferred to Checkbox/Radio                                                                                                 |
-| Field.Control SSR autofocus focused sync                                                            | Browser-only (`isJSDOM`)                                                                                                   |
-| Field.Control uncontrolled rerender-count StrictMode case                                           | React render-count / StrictMode N/A                                                                                        |
+| Upstream test                                                                                       | Reason                                                       |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `describeConformance` (all parts)                                                                   | Not used in this package                                     |
+| `FieldRoot.react17.test.tsx`                                                                        | React 17-only                                                |
+| `FieldControl.spec.tsx` / type-level `.spec.tsx`                                                    | Type-level                                                   |
+| SSR / `isJSDOM` Select+Checkbox aria-labelledby cases                                               | Browser-only + Select/Checkbox not ported                    |
+| React 19 `Activity` remount case                                                                    | React-only API                                               |
+| Form submit orchestration (`onSubmit` mode via `<Form>`, `onFormSubmit`, multi-field validate args) | Covered by `form/Form.test.tsx`                              |
+| `validate` runs after native validations (Form submit click)                                        | Covered by Form submit orchestration in `form/Form.test.tsx` |
+| Checkbox / CheckboxGroup / Radio / RadioGroup / NumberField / Select integration                    | Deferred to those component slices                           |
+| debounce for Checkbox / RadioGroup                                                                  | Needs those controls                                         |
+| Select/Radio dirty remount baselines                                                                | Needs those controls                                         |
+| Field.Error animation `describe.skipIf(isJSDOM)`                                                    | Browser-only                                                 |
+| Field.Validity Form-submit + badInput browser case                                                  | Form slice / browser-only                                    |
+| Field.Item Checkbox/Radio disable + parent checkbox label                                           | Deferred to Checkbox/Radio                                   |
+| Field.Control SSR autofocus focused sync                                                            | Browser-only (`isJSDOM`)                                     |
+| Field.Control uncontrolled rerender-count StrictMode case                                           | React render-count / StrictMode N/A                          |
 
 ## Solid divergences
 
-- **Form errors in tests** use `FormErrorsProvider` (FormContext) instead of `<Form>`.
+- **Form errors in tests** may use either `<Form errors={...}>` or `FormErrorsProvider` (FormContext) for Field-only suites.
 - **Input value events** use Solid `onInput` only (React Field.Control `onChange` ≈ input). Native `change` on blur must not re-fire `onValueChange` / `validation.change`.
 - **Signal naming** uses `fooAssign` internally per `AGENTS.md`.
-- **FormContext.errors** is an `Accessor` for Solid reactivity (Form slice will provide the same shape).
+- **FormContext.errors** is an `Accessor` for Solid reactivity; public `<Form>` provides the same shape.
 - **Field.Root children** are memoized with Solid's `children()` under the context Provider so reactive `data-*` updates do not remount controls (would break held DOM refs / mid-blur validation). `createRender`'s stable `div`/`input` hosts also keep children outside the attribute spread for the same reason.

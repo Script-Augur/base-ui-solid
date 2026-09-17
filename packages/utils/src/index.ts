@@ -23,6 +23,7 @@ export { inertValue } from './inertValue'
 export { isElementDisabled } from './isElementDisabled'
 export { mergeObjects } from './mergeObjects'
 export { dispatchClickWithModifiers } from './dispatchClickWithModifiers'
+export { getDefaultFormSubmitter } from './getDefaultFormSubmitter'
 export { createStore } from './store'
 export {
   SCROLL_EDGE_TOLERANCE_PX,
@@ -30,4 +31,5 @@ export {
   normalizeScrollOffset,
 } from './scrollEdges'
 export { platform, isWebkitEngine } from './platform'
+export type { DefaultFormSubmitter } from './getDefaultFormSubmitter'
 export type { Store, Listener } from './store'

@@ -113,10 +113,7 @@ function mutablyMergeInto(
 
     switch (propName) {
       case 'style': {
-        mergedProps.style = mergeObjects(
-          mergedProps.style as Record<string, unknown> | undefined,
-          externalPropValue as Record<string, unknown> | undefined
-        )
+        mergedProps.style = mergeObjects(mergedProps.style, externalPropValue)
         break
       }
       case 'class':

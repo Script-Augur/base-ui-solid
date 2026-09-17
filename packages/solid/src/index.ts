@@ -182,9 +182,11 @@ export {
   useFieldsetRootContext,
   FieldsetLegend,
 } from './fieldset'
+export { Form } from './form'
 export {
   createControlled,
   createChangeEventDetails,
+  createGenericEventDetails,
   REASONS,
   createRender,
   splitRenderProps,
@@ -386,10 +388,18 @@ export type {
   FieldsetLegendState,
 } from './fieldset'
 export type {
+  FormProps,
+  FormState,
+  FormActions,
+  FormSubmitEventDetails,
+  FormSubmitEventReason,
+} from './form'
+export type {
   CreateControlledOptions,
   ControlledSetter,
   ControlledSignal,
   BaseUIChangeEventDetails,
+  BaseUIGenericEventDetails,
   ChangeEventReason,
   CreateRenderOptions,
   RenderProp,
