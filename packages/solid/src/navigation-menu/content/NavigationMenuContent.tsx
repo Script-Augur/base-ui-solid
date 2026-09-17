@@ -117,12 +117,7 @@ export function NavigationMenuContent(
       focusInsideAssign(true)
     },
     onBlur(event: FocusEvent) {
-      if (
-        !contains(
-          event.currentTarget as Element,
-          event.relatedTarget as Element | null
-        )
-      ) {
+      if (!contains(event.currentTarget, event.relatedTarget)) {
         focusInsideAssign(false)
       }
     },
