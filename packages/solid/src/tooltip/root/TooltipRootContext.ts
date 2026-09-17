@@ -45,8 +45,6 @@ export interface TooltipRootContextValue {
   disabled: Accessor<boolean>
   disableHoverablePopup: Accessor<boolean>
   trackCursorAxis: Accessor<TooltipTrackCursorAxis>
-  cursorPoint: Accessor<{ x: number; y: number } | null>
-  cursorPointAssign: Setter<{ x: number; y: number } | null>
   mounted: Accessor<boolean>
   mountedAssign: Setter<boolean>
   transitionStatus: Accessor<TransitionStatus>

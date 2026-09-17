@@ -5,6 +5,7 @@ import { createRender } from '../../internals/createRender'
 import { useTooltipPortalContext } from '../portal/TooltipPortalContext'
 import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext'
 import { useTooltipRootContext } from '../root/TooltipRootContext'
+import { FOCUSABLE_POPUP_PROPS } from '../utils/focusablePopupProps'
 import { tooltipPopupStateAttributesMapping } from '../utils/stateAttributesMapping'
 
 import type { RenderProp } from '../../internals/createRender'
@@ -19,8 +20,10 @@ import type { JSX } from 'solid-js'
  *
  * Must be rendered inside `<Tooltip.Positioner>`.
  *
- * Unlike `Popover.Popup` / `Dialog.Popup`, this never receives focus — there
- * is no `initialFocus` / `finalFocus`, matching upstream tooltip semantics.
+ * There is no `initialFocus` / `finalFocus` (tooltips do not steal focus on
+ * open). The popup is still marked focusable (`tabIndex={-1}` +
+ * `data-base-ui-focusable`) so focus can move into interactive children
+ * without the trigger blur path closing the tooltip.
  *
  * Documentation: [Base UI Tooltip](https://base-ui.com/react/components/tooltip)
  *
@@ -71,37 +74,41 @@ export function TooltipPopup(componentProps: TooltipPopupProps): JSX.Element {
     mapStateToDataAttributes: true,
     stateAttributesMapping:
       tooltipPopupStateAttributesMapping as StateAttributesMapping<TooltipPopupState>,
-    props: mergeProps(elementProps as Record<string, unknown>, {
-      get id() {
-        return popupId
-      },
-      role: 'tooltip',
-      get ['attr:hidden']() {
-        return context.mounted() ? undefined : true
-      },
-      get class() {
-        return local.class
-      },
-      get style() {
-        return local.style
-      },
-      onPointerEnter() {
-        if (context.disableHoverablePopup()) return
-        context.cancelScheduledClose()
-      },
-      onPointerLeave(event: PointerEvent) {
-        if (context.disableHoverablePopup()) return
-        context.scheduleClose(event)
-      },
-      children: local.children,
-      ref(element: HTMLElement) {
-        context.popupElementAssign(element)
-        const userRef = local.ref
-        if (typeof userRef === 'function') {
-          userRef(element as HTMLDivElement)
-        }
-      },
-    }),
+    props: mergeProps(
+      FOCUSABLE_POPUP_PROPS,
+      elementProps as Record<string, unknown>,
+      {
+        get id() {
+          return popupId
+        },
+        role: 'tooltip',
+        get ['attr:hidden']() {
+          return context.mounted() ? undefined : true
+        },
+        get class() {
+          return local.class
+        },
+        get style() {
+          return local.style
+        },
+        onPointerEnter() {
+          if (context.disableHoverablePopup()) return
+          context.cancelScheduledClose()
+        },
+        onPointerLeave(event: PointerEvent) {
+          if (context.disableHoverablePopup()) return
+          context.scheduleClose(event)
+        },
+        children: local.children,
+        ref(element: HTMLElement) {
+          context.popupElementAssign(element)
+          const userRef = local.ref
+          if (typeof userRef === 'function') {
+            userRef(element as HTMLDivElement)
+          }
+        },
+      }
+    ),
   })
 }
 

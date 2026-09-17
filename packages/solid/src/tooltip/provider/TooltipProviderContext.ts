@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'solid-js'
 
+import type { ChangeEventReason } from '../../internals/createChangeEventDetails'
 import type { Accessor } from 'solid-js'
 
 /**
@@ -34,6 +35,15 @@ export function useTooltipProviderContext(
 }
 
 /**
+ * A Root registered with the provider for sibling exclusive-open.
+ */
+export interface TooltipProviderRegisteredRoot {
+  id: string
+  isOpen: () => boolean
+  closeFromProvider: (reason: ChangeEventReason) => void
+}
+
+/**
  * Context value published by {@link TooltipProvider}.
  */
 export interface TooltipProviderContextValue {
@@ -42,13 +52,20 @@ export interface TooltipProviderContextValue {
   /** Group close delay (ms), or `undefined` to defer to `0`. */
   closeDelay: Accessor<number | undefined>
   /**
-   * `true` while an adjacent tooltip in the group is open or was closed less
-   * than `timeout` ms ago — the next tooltip to open should skip its open
-   * delay and instant-transition (`instantType: 'delay'`).
+   * `true` while any tooltip in the group is open, or was closed less than
+   * `timeout` ms ago with no other member open — the next tooltip to open
+   * should skip its open delay and instant-transition (`instantType: 'delay'`).
    */
   instantPhase: Accessor<boolean>
-  /** Called by a Root when its tooltip opens. */
-  notifyOpen: () => void
-  /** Called by a Root when its tooltip closes; starts the reset timer. */
-  notifyClose: () => void
+  /**
+   * Registers a Root for sibling exclusive-open.
+   * @returns The assigned `id` and an `unregister` cleanup.
+   */
+  registerRoot: (
+    root: Omit<TooltipProviderRegisteredRoot, 'id'>
+  ) => { id: string; unregister: () => void }
+  /** Called by a Root when its tooltip opens (`id` from registration). */
+  notifyOpen: (id: string) => void
+  /** Called by a Root when its tooltip closes (`id` from registration). */
+  notifyClose: (id: string) => void
 }

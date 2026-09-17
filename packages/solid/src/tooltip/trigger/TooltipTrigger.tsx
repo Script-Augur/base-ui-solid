@@ -1,3 +1,4 @@
+import { contains } from '@script-augur/base-ui-utils'
 import { createEffect, mergeProps, onCleanup, splitProps } from 'solid-js'
 
 import {
@@ -9,6 +10,7 @@ import { useButton } from '../../internals/useButton'
 import { useTooltipProviderContext } from '../provider/TooltipProviderContext'
 import { useTooltipRootContext } from '../root/TooltipRootContext'
 import { OPEN_DELAY } from '../utils/constants'
+import { ensureFocusModalityListeners, isFocusVisibleOpenAllowed } from '../utils/isFocusVisibleOpenAllowed'
 import { triggerOpenStateMapping } from '../utils/stateAttributesMapping'
 
 import { TooltipTriggerDataAttributes } from './TooltipTriggerDataAttributes'
@@ -21,8 +23,9 @@ import type { JSX } from 'solid-js'
  * Renders a `<button>` element.
  *
  * Unlike `Popover.Trigger` / `Dialog.Trigger`, clicking alone never opens the
- * tooltip — only hover (mouse only) and focus do. By default, pressing the
- * trigger cancels a pending open or closes an open tooltip (`closeOnClick`).
+ * tooltip — only hover (mouse only) and keyboard / `:focus-visible` focus do.
+ * By default, pressing the trigger cancels a pending open or closes an open
+ * tooltip (`closeOnClick`).
  *
  * Documentation: [Base UI Tooltip](https://base-ui.com/react/components/tooltip)
  *
@@ -49,11 +52,16 @@ export function TooltipTrigger(
 
   const disabled = () => (local.disabled ?? false) || context.disabled()
 
+  // Bind modality listeners before any pointerdown → focus sequence.
+  ensureFocusModalityListeners()
+
   createEffect(() => {
     context.openDelayAssign(
       local.delay ?? providerContext?.delay() ?? OPEN_DELAY
     )
-    context.closeDelayAssign(local.closeDelay ?? providerContext?.closeDelay() ?? 0)
+    context.closeDelayAssign(
+      local.closeDelay ?? providerContext?.closeDelay() ?? 0
+    )
     context.closeOnClickAssign(local.closeOnClick ?? true)
   })
 
@@ -67,6 +75,7 @@ export function TooltipTrigger(
   })
 
   let openTimeout: ReturnType<typeof setTimeout> | undefined
+  let blurCloseTimeout: ReturnType<typeof setTimeout> | undefined
 
   const clearOpenTimer = () => {
     if (openTimeout) {
@@ -75,8 +84,16 @@ export function TooltipTrigger(
     }
   }
 
+  const clearBlurCloseTimer = () => {
+    if (blurCloseTimeout) {
+      clearTimeout(blurCloseTimeout)
+      blurCloseTimeout = undefined
+    }
+  }
+
   onCleanup(() => {
     clearOpenTimer()
+    clearBlurCloseTimer()
     context.cancelScheduledClose()
   })
 
@@ -139,7 +156,11 @@ export function TooltipTrigger(
           },
           onFocus(event: FocusEvent) {
             if (disabled()) return
+            const target = event.currentTarget
+            if (!(target instanceof Element)) return
+            if (!isFocusVisibleOpenAllowed(target)) return
             clearOpenTimer()
+            clearBlurCloseTimer()
             context.cancelScheduledClose()
             if (!context.open()) {
               context.setOpen(
@@ -150,16 +171,51 @@ export function TooltipTrigger(
           },
           onBlur(event: FocusEvent) {
             if (disabled()) return
-            if (event.relatedTarget === event.currentTarget) return
             if (
-              context.open() &&
-              context.openChangeReason() === REASONS.triggerFocus
+              !context.open() ||
+              context.openChangeReason() !== REASONS.triggerFocus
             ) {
+              return
+            }
+
+            // Defer so focus can land in the popup / a focusable child first.
+            clearBlurCloseTimer()
+            const nativeEvent = event
+            blurCloseTimeout = setTimeout(() => {
+              blurCloseTimeout = undefined
+              if (
+                !context.open() ||
+                context.openChangeReason() !== REASONS.triggerFocus
+              ) {
+                return
+              }
+
+              const related = nativeEvent.relatedTarget as Node | null
+              const active = document.activeElement
+              const popup = context.popupElement()
+              const positioner = context.positionerElement()
+              const viewport = context.viewportElement()
+              const trigger = context.triggerElement()
+
+              if (contains(popup, related) || contains(popup, active)) return
+              if (
+                contains(positioner, related) ||
+                contains(positioner, active)
+              ) {
+                return
+              }
+              if (contains(viewport, related) || contains(viewport, active)) {
+                return
+              }
+              if (contains(trigger, related) || contains(trigger, active)) {
+                return
+              }
+
               context.setOpen(
                 false,
-                createChangeEventDetails(REASONS.triggerFocus, event)
+                createChangeEventDetails(REASONS.triggerFocus, nativeEvent)
               )
-            }
+            }, 0)
           },
         }) as Record<string, unknown>
       ),
@@ -212,7 +268,8 @@ export type TooltipTriggerProps = Omit<
    */
   nativeButton?: boolean
   /**
-   * How long to wait before opening after hover / focus rest, in ms.
+   * How long to wait before opening after hover, in ms.
+   * Focus-open ignores this delay (opens immediately when focus-visible).
    * @default 600
    */
   delay?: number

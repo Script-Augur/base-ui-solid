@@ -118,14 +118,14 @@ export function TooltipPositioner(
     return styles
   })
 
-  // Not hoverable / cursor-tracking / closed positioners must not intercept
-  // pointer events — Lite: also skips real client-point positioning (the
-  // trigger stays the reference) when tracking an axis; see
-  // UPSTREAM_TEST_PARITY.md.
+  // Not hoverable / both-axis cursor-tracking / closed positioners must not
+  // intercept pointer events. Matches upstream: only `'both'` forces inert
+  // for trackCursorAxis (Lite still does not follow the pointer — see
+  // UPSTREAM_TEST_PARITY.md).
   const inert = () =>
     !context.open() ||
     context.disableHoverablePopup() ||
-    context.trackCursorAxis() !== 'none'
+    context.trackCursorAxis() === 'both'
 
   const state: TooltipPositionerState = {
     get open() {
@@ -141,7 +141,7 @@ export function TooltipPositioner(
       return false
     },
     get instant() {
-      return context.trackCursorAxis() !== 'none'
+      return context.trackCursorAxis() === 'both'
         ? 'tracking-cursor'
         : context.instantType()
     },

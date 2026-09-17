@@ -90,10 +90,6 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
   const [arrowElement, arrowElementAssign] = createSignal<HTMLElement | null>(
     null
   )
-  const [cursorPoint, cursorPointAssign] = createSignal<{
-    x: number
-    y: number
-  } | null>(null)
   const [preventUnmountOnClose, preventUnmountOnCloseAssign] =
     createSignal(false)
   const [openChangeReason, openChangeReasonAssign] =
@@ -104,6 +100,9 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
   const [closeOnClick, closeOnClickAssign] = createSignal(true)
 
   const portalId = generateId('base-ui-tooltip-portal')
+
+  let providerRootId: string | null = null
+  let skipProviderNotify = false
 
   const setOpen = (
     nextOpen: boolean,
@@ -117,6 +116,7 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
     if (eventDetails.isCanceled) return
 
     const reason = eventDetails.reason
+    const wasOpen = open()
 
     if (nextOpen) {
       if (reason === REASONS.triggerFocus) {
@@ -126,10 +126,14 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
         (providerContext?.instantPhase() ?? false)
       ) {
         instantTypeAssign('delay')
+      } else if (reason === REASONS.none) {
+        instantTypeAssign('delay')
       } else {
         instantTypeAssign(undefined)
       }
-      providerContext?.notifyOpen()
+      if (!skipProviderNotify && providerContext && providerRootId) {
+        providerContext.notifyOpen(providerRootId)
+      }
     } else {
       if (
         reason === REASONS.escapeKey ||
@@ -140,7 +144,14 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
       } else {
         instantTypeAssign(undefined)
       }
-      providerContext?.notifyClose()
+      if (
+        !skipProviderNotify &&
+        providerContext &&
+        providerRootId &&
+        wasOpen
+      ) {
+        providerContext.notifyClose(providerRootId)
+      }
     }
 
     openAssign(nextOpen)
@@ -148,6 +159,34 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
       openChangeReasonAssign(reason)
     }
   }
+
+  const closeFromProvider = (reason: ChangeEventReason) => {
+    if (!open()) return
+    skipProviderNotify = true
+    try {
+      setOpen(false, createChangeEventDetails(reason))
+    } finally {
+      skipProviderNotify = false
+    }
+  }
+
+  createEffect(() => {
+    if (!providerContext) {
+      providerRootId = null
+      return
+    }
+    const { id, unregister } = providerContext.registerRoot({
+      isOpen: open,
+      closeFromProvider,
+    })
+    providerRootId = id
+    onCleanup(() => {
+      unregister()
+      if (providerRootId === id) {
+        providerRootId = null
+      }
+    })
+  })
 
   let closeTimeout: ReturnType<typeof setTimeout> | undefined
 
@@ -158,13 +197,18 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
     }
   }
 
+  /**
+   * Schedules a hover-out close. Closes for hover-opened tooltips and for
+   * initially-open (`defaultOpen` / controlled) tooltips whose reason is
+   * still `null`. Does not close focus-opened tooltips (blur handles that).
+   */
   const scheduleClose = (event?: Event) => {
     cancelScheduledClose()
     closeTimeout = setTimeout(() => {
       closeTimeout = undefined
-      if (open() && openChangeReason() === REASONS.triggerHover) {
-        setOpen(false, createChangeEventDetails(REASONS.triggerHover, event))
-      }
+      if (!open()) return
+      if (openChangeReason() === REASONS.triggerFocus) return
+      setOpen(false, createChangeEventDetails(REASONS.triggerHover, event))
     }, closeDelay())
   }
 
@@ -230,8 +274,6 @@ export function TooltipRoot(componentProps: TooltipRootProps): JSX.Element {
     disabled,
     disableHoverablePopup,
     trackCursorAxis,
-    cursorPoint,
-    cursorPointAssign,
     mounted,
     mountedAssign,
     transitionStatus,
@@ -288,8 +330,8 @@ export type TooltipRootProps = {
   /** Called after open/close animations complete. */
   onOpenChangeComplete?: (open: boolean) => void
   /**
-   * Whether the popup remains open while the pointer is over it (not just
-   * the trigger).
+   * When `true`, the popup does not stay open while the pointer is over it
+   * (only the trigger keeps it open). The positioner also becomes inert.
    * @default false
    */
   disableHoverablePopup?: boolean
@@ -297,9 +339,10 @@ export type TooltipRootProps = {
    * Whether (and which axis) the popup should follow the pointer instead of
    * anchoring to the trigger.
    *
-   * Lite: the cursor point is tracked on the context, but the positioner
-   * still anchors to the trigger and goes inert on any axis other than
-   * `'none'` — see `UPSTREAM_TEST_PARITY.md`.
+   * Lite: accepted for API parity. Cursor-point tracking is not wired yet —
+   * the positioner still anchors to the trigger. When the axis is `'both'`,
+   * the positioner goes inert (matches upstream); `'x'` / `'y'` remain
+   * interactive. See `UPSTREAM_TEST_PARITY.md`.
    * @default 'none'
    */
   trackCursorAxis?: TooltipTrackCursorAxis
