@@ -104,6 +104,11 @@
       "import": "./dist/popover.js",
       "default": "./dist/popover.js"
     },
+    "./preview-card": {
+      "types": "./dist/preview-card.d.ts",
+      "import": "./dist/preview-card.js",
+      "default": "./dist/preview-card.js"
+    },
     "./fieldset": {
       "types": "./dist/fieldset.d.ts",
       "import": "./dist/fieldset.js",
