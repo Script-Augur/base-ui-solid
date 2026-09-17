@@ -15,7 +15,7 @@ import { List } from './utils/test-utils'
 
 import { Toast } from './index'
 
-import type { ToastObject } from './useToastManager'
+import type { ToastObject } from './types'
 
 afterEach(() => {
   cleanup()

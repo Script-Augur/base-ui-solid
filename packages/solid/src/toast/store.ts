@@ -16,7 +16,7 @@ import type {
   ToastManagerPromiseOptions,
   ToastManagerUpdateOptions,
   ToastObject,
-} from './useToastManager'
+} from './types'
 import type { Accessor } from 'solid-js'
 /** Named selectors over {@link State}. */
 export const selectors = {

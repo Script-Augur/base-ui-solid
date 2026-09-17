@@ -72,6 +72,6 @@ export type {
   ToastManagerPromiseOptions,
   ToastManagerPositionerProps,
   UseToastManagerReturnValue,
-} from './useToastManager'
+} from './types'
 export type { ToastManager, ToastManagerEvent } from './createToastManager'
 export type { StoredToast, State as ToastStoreState } from './store'

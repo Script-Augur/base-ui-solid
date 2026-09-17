@@ -1,4 +1,4 @@
-import type { ToastManagerUpdateOptions } from '../useToastManager'
+import type { ToastManagerUpdateOptions } from '../types'
 
 /**
  * Resolves promise toast options (string, object, or result callback) into update options.

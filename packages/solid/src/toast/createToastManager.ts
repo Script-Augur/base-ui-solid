@@ -5,7 +5,7 @@ import type {
   ToastManagerPromiseOptions,
   ToastManagerUpdateOptions,
   ToastObject,
-} from './useToastManager'
+} from './types'
 
 /**
  * Creates a new toast manager for use outside of components.

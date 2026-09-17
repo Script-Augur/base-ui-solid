@@ -33,7 +33,7 @@ import { ToastRootCssVars } from './ToastRootCssVars'
 import type { RenderProp } from '../../internals/createRender'
 import type { TransitionStatus } from '../../internals/createTransitionStatus'
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps.types'
-import type { ToastObject } from '../useToastManager'
+import type { ToastObject } from '../types'
 import type { JSX } from 'solid-js'
 
 const SWIPE_THRESHOLD = 40

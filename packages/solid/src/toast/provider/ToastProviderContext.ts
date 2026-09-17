@@ -2,8 +2,11 @@ import { createContext, useContext } from 'solid-js'
 
 import type { ToastStore } from '../store'
 
-const ToastContextValue = createContext<ToastContext | undefined>(undefined)
-export { ToastContextValue as ToastContext }
+/**
+ * Toast provider context — holds the {@link ToastStore}.
+ */
+export const ToastContext = createContext<ToastStore>()
+
 /**
  * Reads the toast store from the nearest Provider.
  *
@@ -11,7 +14,7 @@ export { ToastContextValue as ToastContext }
  * @throws When used outside `<Toast.Provider>`.
  */
 export function useToastProviderContext(): ToastStore {
-  const context = useContext(ToastContextValue)
+  const context = useContext(ToastContext)
   if (!context) {
     throw new Error(
       'Base UI: useToastManager must be used within <Toast.Provider>.'
@@ -19,5 +22,3 @@ export function useToastProviderContext(): ToastStore {
   }
   return context
 }
-/** Provider context value — the toast store. */
-export type ToastContext = ToastStore

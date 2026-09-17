@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'solid-js'
 
-import type { ToastObject } from '../useToastManager'
+import type { ToastObject } from '../types'
 import type { Accessor } from 'solid-js'
 
 const ToastRootContext = createContext<ToastRootContextValue | undefined>(

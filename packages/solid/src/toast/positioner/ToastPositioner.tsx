@@ -16,7 +16,7 @@ import { ToastPositionerCssVars } from './ToastPositionerCssVars'
 import type { RenderProp } from '../../internals/createRender'
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps.types'
 import type { Align, Side } from '../../popover/positioner/placement'
-import type { ToastObject } from '../useToastManager'
+import type { ToastObject } from '../types'
 import type { JSX } from 'solid-js'
 
 const EMPTY_OBJECT = Object.freeze({}) as Record<string, never>
