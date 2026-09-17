@@ -1,4 +1,5 @@
-import { createSignal } from 'solid-js'
+import { isElementDisabled } from '@script-augur/base-ui-utils'
+import { createEffect, createSignal } from 'solid-js'
 
 import { readMaybeAccessor } from '../../readMaybeAccessor'
 import {
@@ -16,6 +17,7 @@ import {
   getMinListIndex,
   isIndexOutOfListBounds,
   isListIndexDisabled,
+  isNativeInput,
 } from '../composite'
 
 import type { ModifierKey } from '../composite'
@@ -37,6 +39,30 @@ export function useCompositeRoot(
   const [internalHighlightedIndex, internalHighlightedIndexAssign] =
     createSignal(0)
   let hasSetDefaultIndex = false
+
+  // `disabledIndices` can resolve a render after the initial map population
+  // (e.g. Toolbar derives it from item metadata through a signal update), so the
+  // default tab stop at index 0 may now point at a disabled item. Re-validate
+  // and move it to the first enabled item when `disabledIndices` is provided.
+  createEffect(function revalidateDisabledDefaultIndex() {
+    const disabledIndices = params.disabledIndices?.()
+    if (
+      disabledIndices == null ||
+      params.highlightedIndex?.() !== undefined ||
+      !hasSetDefaultIndex
+    ) {
+      return
+    }
+    const elements = params.elementsRef.current
+    if (isListIndexDisabled(elements, getHighlightedIndex(), disabledIndices)) {
+      const firstEnabledIndex = findNonDisabledListIndex(elements, {
+        disabledIndices,
+      })
+      if (!isIndexOutOfListBounds(elements, firstEnabledIndex)) {
+        onHighlightedIndexChange(firstEnabledIndex)
+      }
+    }
+  })
 
   return {
     highlightedIndex: getHighlightedIndex,
@@ -133,6 +159,38 @@ export function useCompositeRoot(
 
     const horizontalForwardKey = isRtl ? ARROW_LEFT : ARROW_RIGHT
     const horizontalBackwardKey = isRtl ? ARROW_RIGHT : ARROW_LEFT
+    const forwardKey =
+      orientation === 'vertical' ? ARROW_DOWN : horizontalForwardKey
+    const backwardKey =
+      orientation === 'vertical' ? ARROW_UP : horizontalBackwardKey
+
+    const target = event.target
+    if (
+      target != null &&
+      isNativeInput(target) &&
+      !isElementDisabled(target)
+    ) {
+      const selectionStart = target.selectionStart
+      const selectionEnd = target.selectionEnd
+      const textContent = target.value
+      // Return to native textbox behavior when:
+      // 1 - Shift is held to make a text selection, or if there already is a text selection
+      if (
+        selectionStart == null ||
+        event.shiftKey ||
+        selectionStart !== selectionEnd
+      ) {
+        return
+      }
+      // 2 - arrowing forward and not in the last position of the text
+      if (event.key !== backwardKey && selectionStart < textContent.length) {
+        return
+      }
+      // 3 - arrowing backward and not in the first position of the text
+      if (event.key !== forwardKey && selectionStart > 0) {
+        return
+      }
+    }
 
     let nextIndex = highlightedIndex
     const minIndex = getMinListIndex(elements, disabledIndices)

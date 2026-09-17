@@ -9,7 +9,6 @@ import type { RenderProp } from '../../createRender'
 import type { StateAttributesMapping } from '../../getStateAttributesProps.types'
 import type { MaybeAccessor } from '../../readMaybeAccessor'
 import type { JSX } from 'solid-js'
-
 /**
  * Renders a composite list item with roving tabindex wiring.
  *
@@ -41,6 +40,8 @@ export function CompositeItem<
     metadata: local.metadata,
   })
 
+  const itemProps = (local.props ?? []).map(p => readMaybeAccessor(p, {}))
+
   return createRender<TState, Record<string, unknown>>({
     defaultElement: local.tag ?? 'div',
     state: (local.state ?? {}) as TState,
@@ -55,17 +56,30 @@ export function CompositeItem<
     props: mergeProps(
       // Item props first (includes useButton). Composite tabindex must win
       // afterward — mirrors React getButtonProps(otherExternalProps) last.
-      ...(local.props ?? []).map(p => readMaybeAccessor(p, {})),
+      ...itemProps,
       elementProps as Record<string, unknown>,
       {
         get tabIndex() {
           return compositeProps().tabIndex
         },
-        get onFocus() {
-          return compositeProps().onFocus
+        onFocus(event: FocusEvent) {
+          const fromItem = findHandler(itemProps, 'onFocus')
+          fromItem?.(event)
+          const compositeFocus = compositeProps().onFocus as
+            | ((event: FocusEvent) => void)
+            | undefined
+          compositeFocus?.(event)
         },
-        get onMouseMove() {
-          return compositeProps().onMouseMove
+        onMouseMove(event: MouseEvent) {
+          const fromItem = findHandler(itemProps, 'onMouseMove')
+          fromItem?.(event)
+          const fromElement = (elementProps as Record<string, unknown>)
+            .onMouseMove as ((event: MouseEvent) => void) | undefined
+          fromElement?.(event)
+          const compositeMove = compositeProps().onMouseMove as
+            | ((event: MouseEvent) => void)
+            | undefined
+          compositeMove?.(event)
         },
         get class() {
           return local.class
@@ -80,7 +94,6 @@ export function CompositeItem<
     ),
   })
 }
-
 /**
  * Props for {@link CompositeItem}.
  *
@@ -120,4 +133,23 @@ export interface CompositeItemProps<
    */
   tag?: string
   [key: string]: unknown
+}
+/**
+ * Finds an event handler on one of the item prop bags.
+ *
+ * @param bags - Merged item prop objects.
+ * @param name - Handler prop name.
+ * @returns The first matching handler, if any.
+ */
+function findHandler(
+  bags: Array<Record<string, unknown>>,
+  name: string
+): ((event: never) => void) | undefined {
+  for (let index = bags.length - 1; index >= 0; index -= 1) {
+    const handler = bags[index]?.[name]
+    if (typeof handler === 'function') {
+      return handler as (event: never) => void
+    }
+  }
+  return undefined
 }

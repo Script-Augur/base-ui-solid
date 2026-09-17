@@ -120,6 +120,27 @@ export function isIndexOutOfListBounds(
 ): boolean {
   return index < 0 || index >= list.length
 }
+/**
+ * Whether `element` is a native text input that supports caret navigation.
+ *
+ * @param element - Event target to inspect.
+ * @returns `true` for `<input>` with a selection API or `<textarea>`.
+ */
+export function isNativeInput(
+  element: EventTarget
+): element is HTMLElement & (HTMLInputElement | HTMLTextAreaElement) {
+  if (
+    element instanceof HTMLInputElement &&
+    element.selectionStart != null
+  ) {
+    return true
+  }
+  if (element instanceof HTMLElement && element.tagName === 'TEXTAREA') {
+    return true
+  }
+  return false
+}
+
 /** A modifier key name from {@link MODIFIER_KEYS}. */
 export type ModifierKey = (typeof MODIFIER_KEYS)[number]
 /**

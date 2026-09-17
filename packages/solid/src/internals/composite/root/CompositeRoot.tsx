@@ -75,7 +75,8 @@ export function CompositeRoot<
       readMaybeAccessor(local.enableHomeAndEndKeys, false),
     stopEventPropagation: () =>
       readMaybeAccessor(local.stopEventPropagation, true),
-    disabledIndices: () => local.disabledIndices,
+    disabledIndices: () =>
+      readMaybeAccessor(local.disabledIndices, undefined),
     direction,
     elementsRef,
     modifierKeys: () => readMaybeAccessor(local.modifierKeys, undefined),
@@ -233,7 +234,7 @@ export interface CompositeRootProps<
    */
   stopEventPropagation?: MaybeAccessor<boolean>
   /** List indexes skipped by keyboard navigation. */
-  disabledIndices?: Array<number>
+  disabledIndices?: MaybeAccessor<Array<number> | null | undefined>
   /**
    * When `true`, hovering an item updates the highlighted index.
    *

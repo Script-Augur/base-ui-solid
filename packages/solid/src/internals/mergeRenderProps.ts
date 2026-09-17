@@ -140,7 +140,15 @@ function mutablyMergeInto(
             externalPropValue as (...args: Array<unknown>) => void
           )
         } else {
-          mergedProps[propName] = externalPropValue
+          const descriptor = Object.getOwnPropertyDescriptor(
+            externalProps,
+            propName
+          )
+          if (descriptor?.get || descriptor?.set) {
+            Object.defineProperty(mergedProps, propName, descriptor)
+          } else {
+            mergedProps[propName] = externalPropValue
+          }
         }
       }
     }

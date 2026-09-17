@@ -149,6 +149,11 @@
       "import": "./dist/radio-group.js",
       "default": "./dist/radio-group.js"
     },
+    "./toolbar": {
+      "types": "./dist/toolbar.d.ts",
+      "import": "./dist/toolbar.js",
+      "default": "./dist/toolbar.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
