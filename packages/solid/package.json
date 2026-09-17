@@ -79,6 +79,11 @@
       "import": "./dist/scroll-area.js",
       "default": "./dist/scroll-area.js"
     },
+    "./portal": {
+      "types": "./dist/portal.d.ts",
+      "import": "./dist/portal.js",
+      "default": "./dist/portal.js"
+    },
     "./field": {
       "types": "./dist/field.d.ts",
       "import": "./dist/field.js",

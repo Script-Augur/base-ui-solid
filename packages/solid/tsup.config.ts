@@ -24,6 +24,7 @@ export default defineConfig({
     meter: 'src/meter/index.ts',
     avatar: 'src/avatar/index.ts',
     'scroll-area': 'src/scroll-area/index.ts',
+    portal: 'src/portal/index.ts',
     field: 'src/field/index.ts',
   },
   format: ['esm'],

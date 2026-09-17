@@ -133,6 +133,13 @@ export {
   ScrollAreaCorner,
 } from './scroll-area'
 export {
+  Portal,
+  PortalContext,
+  usePortalContext,
+  isPortalContainer,
+  resolvePortalContainer,
+} from './portal'
+export {
   Field,
   FieldRoot,
   FieldRootDataAttributes,
@@ -321,6 +328,14 @@ export type {
   ScrollAreaCornerProps,
   ScrollAreaCornerState,
 } from './scroll-area'
+export type {
+  PortalProps,
+  PortalState,
+  PortalContextValue,
+  PortalFocusManagerState,
+  PortalContainer,
+  PortalContainerProp,
+} from './portal'
 export type {
   FieldRootProps,
   FieldRootState,
