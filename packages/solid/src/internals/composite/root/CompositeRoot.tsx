@@ -16,7 +16,9 @@ import { CompositeRootContext } from './CompositeRootContext'
 import { useCompositeRoot } from './useCompositeRoot'
 
 import type { RenderProp } from '../../createRender'
+import type { StateAttributesMapping } from '../../getStateAttributesProps.types'
 import type { MaybeAccessor } from '../../readMaybeAccessor'
+import type { ModifierKey } from '../composite'
 import type { CompositeMetadata } from '../list/CompositeList'
 import type { JSX } from 'solid-js'
 
@@ -50,6 +52,8 @@ export function CompositeRoot<
     'stopEventPropagation',
     'disabledIndices',
     'highlightItemOnHover',
+    'modifierKeys',
+    'stateAttributesMapping',
     'tag',
   ])
 
@@ -74,6 +78,7 @@ export function CompositeRoot<
     disabledIndices: () => local.disabledIndices,
     direction,
     elementsRef,
+    modifierKeys: () => readMaybeAccessor(local.modifierKeys, undefined),
   })
 
   const contextValue = {
@@ -100,6 +105,7 @@ export function CompositeRoot<
             defaultElement: local.tag ?? 'div',
             state: (local.state ?? {}) as TState,
             render: local.render,
+            stateAttributesMapping: local.stateAttributesMapping,
             props: mergeProps(mergedProps() as Record<string, unknown>, {
               get children() {
                 return local.children
@@ -234,6 +240,15 @@ export interface CompositeRootProps<
    * @default false
    */
   highlightItemOnHover?: boolean
+  /**
+   * Modifier keys allowed during arrow navigation (e.g. `['Shift']` for
+   * Radio Group). Any other active modifier blocks the key.
+   */
+  modifierKeys?: MaybeAccessor<ReadonlyArray<ModifierKey> | undefined>
+  /** Custom mapping for converting state fields to `data-*` attributes. */
+  stateAttributesMapping?: StateAttributesMapping<
+    TState & Record<string, unknown>
+  >
   /** Host tag when `render` is omitted.
    *
    * @default 'div'

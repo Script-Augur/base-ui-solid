@@ -275,6 +275,21 @@ export {
   SwitchThumbDataAttributes,
 } from './switch'
 export {
+  Radio,
+  RadioRoot,
+  RadioRootDataAttributes,
+  RadioRootContext,
+  useRadioRootContext,
+  RadioIndicator,
+  RadioIndicatorDataAttributes,
+} from './radio'
+export {
+  RadioGroup,
+  RadioGroupDataAttributes,
+  RadioGroupContext,
+  useRadioGroupContext,
+} from './radio-group'
+export {
   createControlled,
   createChangeEventDetails,
   createGenericEventDetails,
@@ -582,6 +597,20 @@ export type {
   SwitchThumbProps,
   SwitchThumbState,
 } from './switch'
+export type {
+  RadioRootProps,
+  RadioRootState,
+  RadioRootContextValue,
+  RadioIndicatorProps,
+  RadioIndicatorState,
+} from './radio'
+export type {
+  RadioGroupProps,
+  RadioGroupState,
+  RadioGroupChangeEventReason,
+  RadioGroupChangeEventDetails,
+  RadioGroupContextValue,
+} from './radio-group'
 export type {
   CreateControlledOptions,
   ControlledSetter,

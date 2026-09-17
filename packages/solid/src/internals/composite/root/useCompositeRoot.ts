@@ -1,3 +1,5 @@
+import { createSignal } from 'solid-js'
+
 import { readMaybeAccessor } from '../../readMaybeAccessor'
 import {
   ACTIVE_COMPOSITE_ITEM,
@@ -8,6 +10,7 @@ import {
   COMPOSITE_KEYS,
   END,
   HOME,
+  MODIFIER_KEYS,
   findNonDisabledListIndex,
   getMaxListIndex,
   getMinListIndex,
@@ -15,8 +18,10 @@ import {
   isListIndexDisabled,
 } from '../composite'
 
+import type { ModifierKey } from '../composite'
 import type { Accessor } from 'solid-js'
 
+const EMPTY_MODIFIER_KEYS: ReadonlyArray<ModifierKey> = []
 /**
  * Keyboard highlight and default-index logic for a composite list.
  *
@@ -29,7 +34,8 @@ import type { Accessor } from 'solid-js'
 export function useCompositeRoot(
   params: UseCompositeRootParameters
 ): UseCompositeRootReturnValue {
-  let internalHighlightedIndex = 0
+  const [internalHighlightedIndex, internalHighlightedIndexAssign] =
+    createSignal(0)
   let hasSetDefaultIndex = false
 
   return {
@@ -47,7 +53,7 @@ export function useCompositeRoot(
    */
   function getHighlightedIndex(): number {
     const external = params.highlightedIndex?.()
-    return external !== undefined ? external : internalHighlightedIndex
+    return external !== undefined ? external : internalHighlightedIndex()
   }
 
   /**
@@ -57,7 +63,9 @@ export function useCompositeRoot(
    * @param index - Newly highlighted list index.
    */
   function onHighlightedIndexChange(index: number): void {
-    internalHighlightedIndex = index
+    if (params.highlightedIndex?.() === undefined) {
+      internalHighlightedIndexAssign(index)
+    }
     params.onHighlightedIndexChange?.(index)
   }
 
@@ -111,7 +119,8 @@ export function useCompositeRoot(
       return
     }
 
-    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+    const modifierKeys = params.modifierKeys?.() ?? EMPTY_MODIFIER_KEYS
+    if (isModifierKeySet(event, modifierKeys)) {
       return
     }
 
@@ -171,7 +180,6 @@ export function useCompositeRoot(
     }
   }
 }
-
 /**
  * Parameters for {@link useCompositeRoot}.
  */
@@ -214,8 +222,12 @@ export interface UseCompositeRootParameters {
   direction?: Accessor<'ltr' | 'rtl'>
   /** Mutable array of item elements in list index order. */
   elementsRef: { current: Array<HTMLElement | null> }
+  /**
+   * Modifier keys that are allowed during navigation (e.g. Shift for
+   * Radio Group). Any other active modifier blocks the key.
+   */
+  modifierKeys?: Accessor<ReadonlyArray<ModifierKey> | undefined>
 }
-
 /**
  * Return value of {@link useCompositeRoot}.
  */
@@ -240,4 +252,25 @@ export interface UseCompositeRootReturnValue {
    * @param event - Native keyboard event from the composite root.
    */
   onKeyDown: (event: KeyboardEvent) => void
+}
+/**
+ * Whether a disallowed modifier is held for this keyboard event.
+ *
+ * @param event - Native keyboard event.
+ * @param ignoredModifierKeys - Modifiers that are allowed (not blocking).
+ * @returns `true` when navigation should be skipped.
+ */
+function isModifierKeySet(
+  event: KeyboardEvent,
+  ignoredModifierKeys: ReadonlyArray<ModifierKey>
+): boolean {
+  for (const key of MODIFIER_KEYS) {
+    if (ignoredModifierKeys.includes(key)) {
+      continue
+    }
+    if (event.getModifierState(key)) {
+      return true
+    }
+  }
+  return false
 }

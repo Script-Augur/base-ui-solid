@@ -21,7 +21,10 @@ export const COMPOSITE_KEYS = new Set([
   HOME,
   END,
 ])
-
+/** `KeyboardEvent.key` / modifier name for Shift. */
+export const SHIFT = 'Shift' as const
+/** Modifier keys that may block composite navigation unless allowlisted. */
+export const MODIFIER_KEYS = [SHIFT, 'Control', 'Alt', 'Meta'] as const
 /**
  * Whether `list[index]` should be skipped during keyboard navigation.
  *
@@ -46,7 +49,6 @@ export function isListIndexDisabled(
     'disabled' in element && Boolean((element as HTMLInputElement).disabled)
   )
 }
-
 /**
  * Walks `list` from `startingIndex` and returns the next enabled index.
  *
@@ -75,7 +77,6 @@ export function findNonDisabledListIndex(
 
   return -1
 }
-
 /**
  * First enabled index in `list`.
  *
@@ -89,7 +90,6 @@ export function getMinListIndex(
 ): number {
   return findNonDisabledListIndex(list, { startingIndex: -1, disabledIndices })
 }
-
 /**
  * Last enabled index in `list`.
  *
@@ -120,7 +120,8 @@ export function isIndexOutOfListBounds(
 ): boolean {
   return index < 0 || index >= list.length
 }
-
+/** A modifier key name from {@link MODIFIER_KEYS}. */
+export type ModifierKey = (typeof MODIFIER_KEYS)[number]
 /**
  * Options for {@link findNonDisabledListIndex}.
  */
