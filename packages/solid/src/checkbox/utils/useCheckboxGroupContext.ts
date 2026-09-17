@@ -1,9 +1,7 @@
 /**
- * Optional Checkbox Group context stub.
+ * Optional Checkbox Group context for Checkbox.Root.
  *
- * Full Checkbox Group lands in a later slice. Until then, Checkbox.Root treats
- * itself as ungrouped (this hook always returns `undefined`).
+ * Re-exports the real hook from `checkbox-group` so Root can stay decoupled
+ * from the package entry while Group is present.
  */
-export function useCheckboxGroupContext(): undefined {
-  return undefined
-}
+export { useCheckboxGroupContext } from '../../checkbox-group/CheckboxGroupContext'
