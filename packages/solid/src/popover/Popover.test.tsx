@@ -47,8 +47,8 @@ describe('Popover', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open' }))
     expect(onOpenChange).toHaveBeenCalled()
-    expect(onOpenChange.mock.calls[0][0]).toBe(true)
-    expect(onOpenChange.mock.calls[0][1].reason).toBe('trigger-press')
+    expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+    expect(onOpenChange.mock.calls[0]?.[1]?.reason).toBe('trigger-press')
   })
 
   it('wires aria-labelledby / aria-describedby to Title and Description', () => {

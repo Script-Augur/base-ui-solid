@@ -80,7 +80,7 @@ export class PopoverStore<TPayload = unknown> extends SolidStore<
     const shouldPreventUnmountOnClose = attachPreventUnmountOnClose(
       eventDetails as { preventUnmountOnClose: () => void }
     )
-    const activeTriggerId = this.select('activeTriggerId') as string | null
+    const activeTriggerId = this.select('activeTriggerId')
     if (
       !nextOpen &&
       eventDetails.reason === REASONS.closePress &&
@@ -89,7 +89,7 @@ export class PopoverStore<TPayload = unknown> extends SolidStore<
     ) {
       eventDetails.trigger =
         this.context.triggerElements.getById(activeTriggerId) ??
-        (this.select('activeTriggerElement') as Element | null) ??
+        this.select('activeTriggerElement') ??
         undefined
     }
     this.context.onOpenChange?.(nextOpen, eventDetails)
