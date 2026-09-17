@@ -29,6 +29,8 @@ export default defineConfig({
     dialog: 'src/dialog/index.ts',
     'alert-dialog': 'src/alert-dialog/index.ts',
     popover: 'src/popover/index.ts',
+    fieldset: 'src/fieldset/index.ts',
+    form: 'src/form/index.ts',
   },
   format: ['esm'],
   dts: true,

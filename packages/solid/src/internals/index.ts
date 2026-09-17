@@ -4,7 +4,11 @@
  * scroll lock, direction).
  */
 export { createControlled } from './createControlled'
-export { createChangeEventDetails, REASONS } from './createChangeEventDetails'
+export {
+  createChangeEventDetails,
+  createGenericEventDetails,
+  REASONS,
+} from './createChangeEventDetails'
 export { createRender, splitRenderProps } from './createRender'
 export { useRender, mergeAttrs, dataAttr, callHandler } from './useRender'
 export { useButton } from './useButton'
@@ -72,6 +76,7 @@ export type {
 } from './createControlled'
 export type {
   BaseUIChangeEventDetails,
+  BaseUIGenericEventDetails,
   ChangeEventReason,
 } from './createChangeEventDetails'
 export type {

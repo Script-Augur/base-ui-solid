@@ -142,7 +142,13 @@ describe('<Field.Root />', () => {
 
     it('inherits disabled from Fieldset context', () => {
       render(() => (
-        <FieldsetRootContext.Provider value={{ disabled: () => true }}>
+        <FieldsetRootContext.Provider
+          value={{
+            disabled: () => true,
+            legendId: () => undefined,
+            legendIdAssign: () => undefined,
+          }}
+        >
           <Field.Root data-testid="root">
             <Field.Control data-testid="control" />
           </Field.Root>

@@ -104,6 +104,16 @@
       "import": "./dist/popover.js",
       "default": "./dist/popover.js"
     },
+    "./fieldset": {
+      "types": "./dist/fieldset.d.ts",
+      "import": "./dist/fieldset.js",
+      "default": "./dist/fieldset.js"
+    },
+    "./form": {
+      "types": "./dist/form.d.ts",
+      "import": "./dist/form.js",
+      "default": "./dist/form.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

@@ -175,7 +175,14 @@ export {
   DEFAULT_FIELD_ROOT_CONTEXT,
   useFieldRootContext,
 } from './internals/field-root-context'
-export { FieldsetRootContext, useFieldsetRootContext } from './fieldset'
+export {
+  Fieldset,
+  FieldsetRoot,
+  FieldsetRootContext,
+  useFieldsetRootContext,
+  FieldsetLegend,
+} from './fieldset'
+export { Form } from './form'
 export {
   Dialog,
   DialogRoot,
@@ -250,6 +257,7 @@ export {
 export {
   createControlled,
   createChangeEventDetails,
+  createGenericEventDetails,
   REASONS,
   createRender,
   splitRenderProps,
@@ -443,7 +451,20 @@ export type {
   CreateLabelableIdParameters,
 } from './internals/labelable-provider'
 export type { FieldRootContextValue } from './internals/field-root-context'
-export type { FieldsetRootContextValue } from './fieldset'
+export type {
+  FieldsetRootProps,
+  FieldsetRootState,
+  FieldsetRootContextValue,
+  FieldsetLegendProps,
+  FieldsetLegendState,
+} from './fieldset'
+export type {
+  FormProps,
+  FormState,
+  FormActions,
+  FormSubmitEventDetails,
+  FormSubmitEventReason,
+} from './form'
 export type {
   DialogRootProps,
   DialogRootActions,
@@ -522,6 +543,7 @@ export type {
   ControlledSetter,
   ControlledSignal,
   BaseUIChangeEventDetails,
+  BaseUIGenericEventDetails,
   ChangeEventReason,
   CreateRenderOptions,
   RenderProp,
