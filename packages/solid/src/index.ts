@@ -266,6 +266,15 @@ export {
   CheckboxIndicatorDataAttributes,
 } from './checkbox'
 export {
+  Switch,
+  SwitchRoot,
+  SwitchRootDataAttributes,
+  SwitchRootContext,
+  useSwitchRootContext,
+  SwitchThumb,
+  SwitchThumbDataAttributes,
+} from './switch'
+export {
   createControlled,
   createChangeEventDetails,
   createGenericEventDetails,
@@ -564,6 +573,15 @@ export type {
   CheckboxIndicatorProps,
   CheckboxIndicatorState,
 } from './checkbox'
+export type {
+  SwitchRootProps,
+  SwitchRootState,
+  SwitchRootChangeEventReason,
+  SwitchRootChangeEventDetails,
+  SwitchRootContextValue,
+  SwitchThumbProps,
+  SwitchThumbState,
+} from './switch'
 export type {
   CreateControlledOptions,
   ControlledSetter,
