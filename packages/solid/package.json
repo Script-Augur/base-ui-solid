@@ -1,6 +1,6 @@
 {
   "name": "@script-augur/base-ui-solid",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Solid-idiomatic port of Base UI headless components",
   "type": "module",
   "license": "MIT",
@@ -83,6 +83,11 @@
       "types": "./dist/portal.d.ts",
       "import": "./dist/portal.js",
       "default": "./dist/portal.js"
+    },
+    "./field": {
+      "types": "./dist/field.d.ts",
+      "import": "./dist/field.js",
+      "default": "./dist/field.js"
     },
     "./package.json": "./package.json"
   },

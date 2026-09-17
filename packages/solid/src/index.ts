@@ -140,6 +140,43 @@ export {
   resolvePortalContainer,
 } from './portal'
 export {
+  Field,
+  FieldRoot,
+  FieldRootDataAttributes,
+  FieldLabel,
+  FieldLabelDataAttributes,
+  FieldDescription,
+  FieldDescriptionDataAttributes,
+  FieldError,
+  FieldErrorDataAttributes,
+  FieldControl,
+  FieldControlDataAttributes,
+  FieldValidity,
+  FieldItem,
+  FieldItemDataAttributes,
+  FieldItemContext,
+  useFieldItemContext,
+} from './field'
+export {
+  FormContext,
+  DEFAULT_FORM_CONTEXT,
+  useFormContext,
+} from './internals/form-context'
+export {
+  LabelableProvider,
+  LabelableContext,
+  useLabelableContext,
+  createLabel,
+  createLabelableId,
+  createAriaLabelledBy,
+} from './internals/labelable-provider'
+export {
+  FieldRootContext,
+  DEFAULT_FIELD_ROOT_CONTEXT,
+  useFieldRootContext,
+} from './internals/field-root-context'
+export { FieldsetRootContext, useFieldsetRootContext } from './fieldset'
+export {
   createControlled,
   createChangeEventDetails,
   REASONS,
@@ -299,6 +336,43 @@ export type {
   PortalContainer,
   PortalContainerProp,
 } from './portal'
+export type {
+  FieldRootProps,
+  FieldRootState,
+  FieldRootActions,
+  FieldValidityData,
+  FieldLabelProps,
+  FieldLabelState,
+  FieldDescriptionProps,
+  FieldDescriptionState,
+  FieldErrorProps,
+  FieldErrorState,
+  FieldControlProps,
+  FieldControlState,
+  FieldControlChangeEventDetails,
+  FieldControlChangeEventReason,
+  FieldValidityProps,
+  FieldValidityState,
+  FieldItemProps,
+  FieldItemState,
+  FieldItemContextValue,
+} from './field'
+export type {
+  Errors,
+  ValidationMode,
+  FormValues,
+  FormContextValue,
+  FormFieldRegistration,
+} from './internals/form-context'
+export type {
+  LabelableContextValue,
+  LabelableProviderProps,
+  CreateLabelParameters,
+  CreateLabelReturnValue,
+  CreateLabelableIdParameters,
+} from './internals/labelable-provider'
+export type { FieldRootContextValue } from './internals/field-root-context'
+export type { FieldsetRootContextValue } from './fieldset'
 export type {
   CreateControlledOptions,
   ControlledSetter,
