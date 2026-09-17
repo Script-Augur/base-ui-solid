@@ -27,18 +27,14 @@ export function createLabelableId(
   let hadExplicitId = id() != null
 
   const unregisterControlId = () => {
-    if (!hasRegistered || registerControlId === NOOP) {
-      return
-    }
+    if (!hasRegistered || registerControlId === NOOP) return
 
     hasRegistered = false
     registerControlId(controlSource, undefined)
   }
 
   createEffect(() => {
-    if (registerControlId === NOOP) {
-      return
-    }
+    if (registerControlId === NOOP) return
 
     let nextId: string | null | undefined
     const explicitId = id()

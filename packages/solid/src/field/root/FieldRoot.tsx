@@ -162,10 +162,10 @@ function FieldRootInner(componentProps: FieldRootProps): JSX.Element {
 
   const fieldset = useFieldsetRootContext(true)
 
-  const validate = (
+  function validate(
     value: unknown,
     formValues: FormValues
-  ): string | Array<string> | null | Promise<string | Array<string> | null> => {
+  ): string | Array<string> | null | Promise<string | Array<string> | null> {
     const fn = local.validate
     if (!fn) return null
     return fn(value, formValues)
@@ -192,15 +192,13 @@ function FieldRootInner(componentProps: FieldRootProps): JSX.Element {
   const effectiveName = () => local.name ?? registeredFieldName()
 
   createEffect(() => {
-    if (local.dirty !== undefined) {
-      markedDirtyRef.current = local.dirty
-    }
+    if (local.dirty === undefined) return
+
+    markedDirtyRef.current = local.dirty
   })
 
-  const dirtyAssign = (value: boolean | ((prev: boolean) => boolean)) => {
-    if (local.dirty !== undefined) {
-      return
-    }
+  function dirtyAssign(value: boolean | ((prev: boolean) => boolean)) {
+    if (local.dirty !== undefined) return
     const resolved = typeof value === 'function' ? value(dirtyState()) : value
     if (resolved) {
       markedDirtyRef.current = true
@@ -208,10 +206,8 @@ function FieldRootInner(componentProps: FieldRootProps): JSX.Element {
     dirtyStateAssign(resolved)
   }
 
-  const touchedAssign = (value: boolean | ((prev: boolean) => boolean)) => {
-    if (local.touched !== undefined) {
-      return
-    }
+  function touchedAssign(value: boolean | ((prev: boolean) => boolean)) {
+    if (local.touched !== undefined) return
     const resolved = typeof value === 'function' ? value(touchedState()) : value
     touchedStateAssign(resolved)
   }

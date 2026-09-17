@@ -47,13 +47,11 @@ export function createLabel(
     }
 
     const controlIdValue = resolvedControlId()
-    if (!controlIdValue) {
-      return
-    }
+    if (!controlIdValue) return
 
-    const controlElement = ownerDocument(
-      event.currentTarget as Node
-    ).getElementById(controlIdValue)
+    const controlElement = ownerDocument(event.currentTarget).getElementById(
+      controlIdValue
+    )
     if (controlElement instanceof HTMLElement) {
       focusElementWithVisible(controlElement)
     }
@@ -61,18 +59,14 @@ export function createLabel(
 
   function handleInteraction(event: MouseEvent) {
     const target = getTarget(event) as HTMLElement | null
-    if (target?.closest('button,input,select,textarea')) {
-      return
-    }
+    if (target?.closest('button,input,select,textarea')) return
 
     // Prevent text selection when double clicking label.
     if (!event.defaultPrevented && event.detail > 1) {
       event.preventDefault()
     }
 
-    if (native()) {
-      return
-    }
+    if (native()) return
 
     focusControl(event)
   }

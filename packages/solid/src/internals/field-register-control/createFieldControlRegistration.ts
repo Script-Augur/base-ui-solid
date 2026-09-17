@@ -23,9 +23,7 @@ export function createFieldControlRegistration(
 
   const getValueForForm = () => {
     const registration = registrationCurrent
-    if (!registration) {
-      return undefined
-    }
+    if (!registration) return undefined
 
     if (registration.getValue) {
       return registration.getValue()
@@ -54,9 +52,7 @@ export function createFieldControlRegistration(
 
   function refreshRegistration() {
     const registration = registrationCurrent
-    if (!registration || !registration.id) {
-      return
-    }
+    if (!registration || !registration.id) return
 
     formRef.current.fields.set(registration.id, {
       getValue: getValueForForm,
@@ -77,9 +73,7 @@ export function createFieldControlRegistration(
   }
 
   function captureInitialValue(registration: FieldControlRegistration) {
-    if (initialValueCaptured) {
-      return
-    }
+    if (initialValueCaptured) return
 
     initialValueCaptured = true
     const initialValue = getRegistrationValue(registration)
@@ -95,9 +89,7 @@ export function createFieldControlRegistration(
     const invalid = params.invalid()
     const validityData = params.validityData()
 
-    if (!registration || !registration.id) {
-      return
-    }
+    if (!registration || !registration.id) return
 
     params.registeredFieldNameAssign(name ? undefined : registration.name)
 

@@ -67,13 +67,9 @@ export function FieldError(componentProps: FieldErrorProps): JSX.Element {
   }
   const hasSpecificMatch = () => typeof local.match === 'string'
 
-  const rendered = () => {
-    if (local.match === true) {
-      return true
-    }
-    if (field.state.disabled) {
-      return false
-    }
+  function rendered() {
+    if (local.match === true) return true
+    if (field.state.disabled) return false
     if (hasSpecificMatch()) {
       const validityState = field.validityData().state as Record<
         string,
@@ -89,9 +85,7 @@ export function FieldError(componentProps: FieldErrorProps): JSX.Element {
 
   createEffect(() => {
     const currentId = id()
-    if (!rendered() || !currentId) {
-      return
-    }
+    if (!rendered() || !currentId) return
 
     messageIdsAssign(v => v.concat(currentId))
     onCleanup(() => {
@@ -106,33 +100,28 @@ export function FieldError(componentProps: FieldErrorProps): JSX.Element {
     string | null
   >(null)
 
-  const error = (): string | Array<string> | null | undefined => {
+  function error(): string | Array<string> | null | undefined {
     if (!hasSpecificMatch() && hasFormError()) {
       return formError()
     }
     const data = field.validityData()
-    if (data.errors.length > 1) {
-      return data.errors
-    }
-    return data.error
+    return data.errors.length > 1 ? data.errors : data.error
   }
 
-  const errorMessage = (): JSXElement => {
+  function errorMessage(): JSXElement {
     const err = error()
-    if (Array.isArray(err)) {
-      if (err.length > 1) {
-        return (
-          <ul>
-            <For each={err}>{message => <li>{message}</li>}</For>
-          </ul>
-        )
-      }
-      return err[0]
-    }
-    return err
+    if (!Array.isArray(err)) return err
+    // Keep single-message path as text; list only when multiple.
+    if (err.length <= 1) return err[0]
+
+    return (
+      <ul>
+        <For each={err}>{message => <li>{message}</li>}</For>
+      </ul>
+    )
   }
 
-  const errorKey = () => {
+  function errorKey() {
     const err = error()
     return Array.isArray(err) ? JSON.stringify(err) : (err ?? null)
   }

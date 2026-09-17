@@ -22,13 +22,9 @@ export function isEligibleInput(
   input: HTMLInputElement,
   formElement: HTMLFormElement | null
 ) {
-  if (input.matches(':disabled')) {
-    return false
-  }
+  if (input.matches(':disabled')) return false
 
-  if (!formElement || input.form === formElement) {
-    return true
-  }
+  if (!formElement || input.form === formElement) return true
 
   return input.form === null && !input.hasAttribute('form')
 }
@@ -49,17 +45,17 @@ export function createFieldValidation(
   const registeredInputs: RegisteredInputs = new Map()
   let validationCommitId = 0
 
-  const registerInput = (
+  function registerInput(
     element: HTMLInputElement,
     registration: RegisteredInput
-  ) => {
+  ) {
     registeredInputs.set(element, registration)
     return () => {
       registeredInputs.delete(element)
     }
   }
 
-  const getInputControl = () => {
+  function getInputControl() {
     const element = findRepresentativeInput(
       registeredInputs,
       elementRef.current
@@ -69,7 +65,7 @@ export function createFieldValidation(
     )
   }
 
-  const commit = async (value: unknown, revalidate = false) => {
+  async function commit(value: unknown, revalidate = false) {
     validationCommitId += 1
     const thisCommitId = validationCommitId
 
@@ -78,14 +74,10 @@ export function createFieldValidation(
       externalInvalid = params.invalid()
     ) {
       const fieldId = params.registeredFieldIdRef.current ?? controlId()
-      if (fieldId == null) {
-        return
-      }
+      if (fieldId == null) return
 
       const currentFieldData = formRef.current.fields.get(fieldId)
-      if (!currentFieldData) {
-        return
-      }
+      if (!currentFieldData) return
 
       const validityDataWithFormErrors = getCombinedFieldValidityData(
         nextValidityData,
@@ -120,9 +112,7 @@ export function createFieldValidation(
         : inputRef.current
 
     if (revalidate) {
-      if (params.state.valid !== false || !element) {
-        return
-      }
+      if (params.state.valid !== false || !element) return
 
       const currentNativeValidity = element.validity
 
@@ -155,9 +145,7 @@ export function createFieldValidation(
       let hasOnlyValueMissingError = false
 
       for (const key of validityKeys) {
-        if (key === 'valid') {
-          continue
-        }
+        if (key === 'valid') continue
         if (key === 'valueMissing' && computedState[key]) {
           hasOnlyValueMissingError = true
         } else if (computedState[key]) {
@@ -250,7 +238,7 @@ export function createFieldValidation(
     params.validityDataAssign(nextValidityData)
   }
 
-  const change = (value: unknown) => {
+  function change(value: unknown) {
     timeout.clear()
     const validateOnChange = params.shouldValidateOnChange()
     const debounceMs = params.validationDebounceTime()
@@ -265,10 +253,10 @@ export function createFieldValidation(
     }
   }
 
-  const getValidationProps = (
+  function getValidationProps(
     controlDisabled: boolean,
     externalProps: HTMLProps = EMPTY_OBJECT
-  ) => {
+  ) {
     const described = getDescriptionProps(externalProps)
     return {
       ...described,

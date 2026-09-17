@@ -60,9 +60,7 @@ export function FieldLabel(componentProps: FieldLabelProps): JSX.Element {
   })
 
   createEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      return
-    }
+    if (process.env.NODE_ENV === 'production') return
     const el = labelRef.current
     if (!el) return
 

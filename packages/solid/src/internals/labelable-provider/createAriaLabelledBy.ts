@@ -49,9 +49,7 @@ function getAriaLabelledBy(
   generatedLabelId?: string
 ) {
   const label = findAssociatedLabel(labelSource)
-  if (!label) {
-    return undefined
-  }
+  if (!label) return undefined
 
   if (!label.id && generatedLabelId) {
     label.id = generatedLabelId
@@ -60,9 +58,7 @@ function getAriaLabelledBy(
   return label.id || undefined
 }
 function findAssociatedLabel(labelSource?: LabelSource | null) {
-  if (!labelSource) {
-    return undefined
-  }
+  if (!labelSource) return undefined
 
   const parent = labelSource.parentElement
   if (parent && parent.tagName === 'LABEL') {
