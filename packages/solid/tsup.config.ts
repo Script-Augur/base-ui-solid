@@ -38,6 +38,7 @@ export default defineConfig({
     switch: 'src/switch/index.ts',
     radio: 'src/radio/index.ts',
     'radio-group': 'src/radio-group/index.ts',
+    toast: 'src/toast/index.ts',
   },
   format: ['esm'],
   dts: true,
