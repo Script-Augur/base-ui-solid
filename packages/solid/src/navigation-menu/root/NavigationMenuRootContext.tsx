@@ -73,6 +73,20 @@ export interface NavigationMenuRootContextValue {
   onOpenChangeComplete?: (open: boolean) => void
   closeReason: Accessor<ChangeEventReason | null>
   closeReasonAssign: Setter<ChangeEventReason | null>
+  /** Reason the menu was most recently opened (drives hover bridge / stickIfOpen). */
+  openChangeReason: Accessor<ChangeEventReason | null>
+  openChangeReasonAssign: Setter<ChangeEventReason | null>
+  /** Clears pending hover open/close timers owned by Root. */
+  clearHoverTimers: () => void
+  /**
+   * Arms a delayed hover close when the open reason is `trigger-hover`.
+   * Cleared by {@link onPopupPointerEnter} when the pointer reaches the popup.
+   */
+  scheduleHoverClose: (event?: Event) => void
+  /** Lite hover bridge: cancel close when pointer enters popup/positioner/viewport. */
+  onPopupPointerEnter: () => void
+  /** Lite hover bridge: re-arm close when pointer leaves the floating surface. */
+  onPopupPointerLeave: (event: PointerEvent) => void
 }
 
 /** Direction of activation when switching between triggers. */

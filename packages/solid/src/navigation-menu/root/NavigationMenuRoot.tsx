@@ -1,6 +1,15 @@
-import { createEffect, createSignal, mergeProps, splitProps } from 'solid-js'
+import {
+  createEffect,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  splitProps,
+} from 'solid-js'
 
-import { REASONS } from '../../internals/createChangeEventDetails'
+import {
+  REASONS,
+  createChangeEventDetails,
+} from '../../internals/createChangeEventDetails'
 import { createControlled } from '../../internals/createControlled'
 import { createOpenChangeComplete } from '../../internals/createOpenChangeComplete'
 import { createRender } from '../../internals/createRender'
@@ -89,6 +98,19 @@ export function NavigationMenuRoot(
   >(null)
   const [closeReason, closeReasonAssign] =
     createSignal<ChangeEventReason | null>(null)
+  const [openChangeReason, openChangeReasonAssign] =
+    createSignal<ChangeEventReason | null>(null)
+
+  let hoverCloseTimeout: ReturnType<typeof setTimeout> | undefined
+
+  const clearHoverTimers = () => {
+    if (hoverCloseTimeout) {
+      clearTimeout(hoverCloseTimeout)
+      hoverCloseTimeout = undefined
+    }
+  }
+
+  onCleanup(clearHoverTimers)
 
   const setValue = (
     nextValue: unknown,
@@ -109,6 +131,10 @@ export function NavigationMenuRoot(
 
     if (nextValue == null) {
       activationDirectionAssign(null)
+      openChangeReasonAssign(null)
+      clearHoverTimers()
+    } else {
+      openChangeReasonAssign(eventDetails.reason)
     }
 
     valueAssign(nextValue)
@@ -122,6 +148,25 @@ export function NavigationMenuRoot(
     ) {
       parentContext.setValue(null, eventDetails)
     }
+  }
+
+  const scheduleHoverClose = (event?: Event) => {
+    clearHoverTimers()
+    if (openChangeReason() !== REASONS.triggerHover) return
+    hoverCloseTimeout = setTimeout(() => {
+      if (open() && openChangeReason() === REASONS.triggerHover) {
+        setValue(null, createChangeEventDetails(REASONS.triggerHover, event))
+      }
+    }, closeDelay())
+  }
+
+  const onPopupPointerEnter = () => {
+    clearHoverTimers()
+  }
+
+  const onPopupPointerLeave = (event: PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    scheduleHoverClose(event)
   }
 
   const handleUnmount = () => {
@@ -200,6 +245,12 @@ export function NavigationMenuRoot(
     onOpenChangeComplete: local.onOpenChangeComplete,
     closeReason,
     closeReasonAssign,
+    openChangeReason,
+    openChangeReasonAssign,
+    clearHoverTimers,
+    scheduleHoverClose,
+    onPopupPointerEnter,
+    onPopupPointerLeave,
   }
 
   const state: NavigationMenuRootState = {

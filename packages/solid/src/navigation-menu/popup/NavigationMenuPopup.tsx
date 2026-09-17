@@ -83,6 +83,12 @@ export function NavigationMenuPopup(
         return local.style
       },
       children: local.children,
+      onPointerEnter() {
+        context.onPopupPointerEnter()
+      },
+      onPointerLeave(event: PointerEvent) {
+        context.onPopupPointerLeave(event)
+      },
       ref(element: HTMLElement) {
         context.popupElementAssign(element)
         const userRef = local.ref

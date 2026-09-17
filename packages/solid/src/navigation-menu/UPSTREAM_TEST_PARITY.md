@@ -4,45 +4,57 @@ Upstream reference: `@base-ui/react@1.7.0` `NavigationMenu` (`Root`, `List`,
 `Item`, `Content`, `Trigger`, `Portal`, `Positioner`, `Viewport`, `Backdrop`,
 `Popup`, `Arrow`, `Link`, `Icon`).
 
-This port is a **Lite** Navigation Menu (same approach as Popover): no
-`FloatingTree` / `useHover` / `useClick` / `safePolygon` from floating-ui-react.
+This port is a **Lite** Navigation Menu (same approach as Popover / Preview
+Card): no `FloatingTree` / `useHover` / `useClick` / `safePolygon` from
+floating-ui-react. Status rows below match what `NavigationMenu.test.tsx`
+actually asserts unless marked deferred / untested.
 
-## Covered here
+## Covered here (asserted)
 
-| Behavior                                              | Status          |
-| ----------------------------------------------------- | --------------- |
-| Controlled / uncontrolled `value` + `onValueChange`   | covered         |
-| `onValueChange` `cancel()`                            | covered         |
-| Open derived from `value != null`                     | covered         |
-| Trigger click toggle                                  | covered         |
-| Trigger hover open/close with `delay` / `closeDelay`  | covered (Lite)  |
-| Patient click / `stickIfOpen` after hover-open        | covered (Lite)  |
-| Escape dismiss via List                               | covered         |
-| Outside-press dismiss (ignores triggers)              | covered         |
-| Link `closeOnClick` with `link-press` reason          | covered         |
-| Content portals into Viewport when active             | covered         |
-| Content `keepMounted`                                 | covered (basic) |
-| Positioner `useFloating` against active trigger       | covered         |
-| Portal / Popup / Backdrop / Arrow / Viewport / Icon   | covered         |
-| List `CompositeRoot` orientation + arrow-key list nav | covered         |
-| Nested root via parent `NavigationMenuRootContext`    | covered (Lite)  |
-| Basic popup size CSS vars on item switch              | covered (Lite)  |
-| Lite MutationObserver content auto-size               | covered (Lite)  |
+| Behavior                                                                  | Status         |
+| ------------------------------------------------------------------------- | -------------- |
+| Controlled / uncontrolled `value` + `onValueChange`                       | covered        |
+| `onValueChange` `cancel()`                                                | covered        |
+| Open derived from `value != null`                                         | covered        |
+| Trigger click toggle                                                      | covered        |
+| Trigger `aria-controls` → popup id when active                            | covered        |
+| Escape dismiss via List                                                   | covered        |
+| Outside-press dismiss (trigger-only ignore; list chrome dismisses)        | covered        |
+| Link `closeOnClick` with `link-press` reason                              | covered        |
+| Trigger hover open after `delay`                                          | covered (Lite) |
+| Lite hover bridge: popup/positioner/viewport `pointerenter` cancels close | covered (Lite) |
+| Hover leave closes when pointer never reaches popup                       | covered (Lite) |
+| Patient click / `stickIfOpen` after hover-open                            | covered (Lite) |
+| Horizontal open key `ArrowDown`                                           | covered        |
+| Vertical open key `ArrowRight` / RTL `ArrowLeft`                          | covered        |
+| Nested triggers do not intercept arrow-open keys                          | covered        |
+| Trigger blur → `focusOut` via Lite `isOutsideMenuEvent`                   | covered        |
 
-## Deferred / partial
+## Present but untested / partial
 
-| Behavior                                                                    | Notes                                                              |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Full `FloatingTree` / `FloatingNode` nesting                                | Nested detection uses optional parent Root context only            |
-| `safePolygon` hover close                                                   | Lite pointerenter/leave + delay on Trigger                         |
-| Full floating-ui `useHover` / `useClick` interaction stack                  | Manual click + hover timers                                        |
-| Nested `FloatingNode` content trees                                         | Content uses Solid `Portal` into Viewport only                     |
-| Full auto-size matrix (interrupted mutation resize, animation finish reset) | Lite CSS vars + MutationObserver; not full upstream matrix         |
-| Focus guards inside Viewport / Popup                                        | Deferred (Popover-style guards not fully wired)                    |
-| `viewportInert` / viewport target element split                             | Deferred                                                           |
-| Close transition fixed-size freeze on positioner                            | Deferred                                                           |
-| Direction-aware `inline-start` / `inline-end` remapping                     | Maps to left/right (LTR)                                           |
-| `collisionAvoidance` / sticky / boundary matrix                             | Accepted for API parity; Floating UI flip/shift defaults           |
-| Intentional vs sloppy outside-press                                         | Solid uses `pointerdown` via Lite dismiss                          |
-| Shadow DOM outside-press matrix                                             | jsdom coverage limited                                             |
-| Full `onOpenChangeComplete` animation matrix                                | Wired via `createOpenChangeComplete`; CSS animation cases deferred |
+| Behavior                                                 | Notes                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------- |
+| Content portals into Viewport when active                | Wired; exercised indirectly by open tests                  |
+| Content `keepMounted`                                    | Wired; no dedicated assertion                              |
+| Positioner `useFloating` against active trigger          | Wired; no placement matrix tests                           |
+| Portal / Backdrop / Arrow / Icon                         | Exported / rendered; no dedicated assertions               |
+| List `CompositeRoot` arrow-key roving                    | Wired for top-level lists; no dedicated assertion          |
+| Nested root via parent context + nested link-press close | Nested arrow skip tested; link-press parent close untested |
+| Basic popup size CSS vars / MutationObserver auto-size   | Wired Lite; untested                                       |
+
+## Deferred
+
+| Behavior                                                                    | Notes                                                                  |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Full `FloatingTree` / `FloatingNode` nesting                                | Nested detection uses optional parent Root context only                |
+| `safePolygon` hover close                                                   | Lite bridge cancels close on floating `pointerenter`; no polygon       |
+| Full floating-ui `useHover` / `useClick` interaction stack                  | Manual timers + click toggle                                           |
+| Nested `FloatingNode` content trees                                         | Content uses Solid `Portal` into Viewport only                         |
+| Full auto-size matrix (interrupted mutation resize, animation finish reset) | Lite CSS vars + MutationObserver                                       |
+| Focus guards inside Viewport / Popup                                        | Deferred — keyboard open leaves focus on Trigger (no focus-into-popup) |
+| `viewportInert` / viewport target element split                             | Deferred                                                               |
+| Close transition fixed-size freeze on positioner                            | Deferred                                                               |
+| `collisionAvoidance` / sticky / boundary matrix                             | Accepted for API parity; Floating UI flip/shift defaults               |
+| Intentional vs sloppy outside-press                                         | Solid uses `pointerdown`                                               |
+| Shadow DOM outside-press matrix                                             | jsdom coverage limited                                                 |
+| Full `onOpenChangeComplete` animation matrix                                | Wired via `createOpenChangeComplete`; CSS cases deferred               |

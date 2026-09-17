@@ -46,7 +46,6 @@ export function NavigationMenuList(
       context.popupElement(),
       context.positionerElement(),
       context.viewportElement(),
-      context.rootElement(),
     ],
     onDismiss: event => {
       context.setValue(null, createChangeEventDetails(REASONS.escapeKey, event))
@@ -56,6 +55,7 @@ export function NavigationMenuList(
   })
 
   // Outside press: ignore presses on Navigation Menu triggers (they toggle).
+  // Do not treat the whole Root as inside — list chrome / gaps dismiss (upstream).
   listenerEffect(
     () => {
       if (!context.open() || !context.mounted()) return null
@@ -77,8 +77,6 @@ export function NavigationMenuList(
       if (positioner && contains(positioner, target)) return
       const viewport = context.viewportElement()
       if (viewport && contains(viewport, target)) return
-      const root = context.rootElement()
-      if (root && contains(root, target)) return
 
       context.setValue(
         null,

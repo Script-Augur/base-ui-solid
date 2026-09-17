@@ -43,6 +43,12 @@ export function NavigationMenuViewport(
         return local.style
       },
       children: local.children,
+      onPointerEnter() {
+        context.onPopupPointerEnter()
+      },
+      onPointerLeave(event: PointerEvent) {
+        context.onPopupPointerLeave(event)
+      },
       ref(element: HTMLElement) {
         context.viewportElementAssign(element)
         const userRef = local.ref

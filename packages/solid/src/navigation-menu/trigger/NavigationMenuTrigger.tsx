@@ -11,6 +11,7 @@ import {
   REASONS,
   createChangeEventDetails,
 } from '../../internals/createChangeEventDetails'
+import { useDirection } from '../../internals/direction'
 import { useButton } from '../../internals/useButton'
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext'
 import { NavigationMenuPopupCssVars } from '../popup/NavigationMenuPopupCssVars'
@@ -20,9 +21,11 @@ import {
   NAVIGATION_MENU_TRIGGER_IDENTIFIER,
   PATIENT_CLICK_THRESHOLD,
 } from '../utils/constants'
+import { isOutsideMenuEvent } from '../utils/isOutsideMenuEvent'
 import { pressableTriggerOpenStateMapping } from '../utils/stateAttributesMapping'
 
 import type { RenderProp } from '../../internals/createRender'
+import type { NavigationMenuRootChangeEventReason } from '../root/NavigationMenuRoot'
 import type { JSX } from 'solid-js'
 
 /**
@@ -39,6 +42,7 @@ export function NavigationMenuTrigger(
 ): JSX.Element {
   const context = useNavigationMenuRootContext()
   const item = useNavigationMenuItemContext()
+  const direction = useDirection()
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -55,30 +59,22 @@ export function NavigationMenuTrigger(
   const isActiveItem = () => context.open() && context.value() === itemValue()
 
   const [stickIfOpen, stickIfOpenAssign] = createSignal(true)
-  const [openChangeReason, openChangeReasonAssign] = createSignal<
-    string | null
-  >(null)
   const [localTrigger, localTriggerAssign] = createSignal<HTMLElement | null>(
     null
   )
 
   let openTimeout: ReturnType<typeof setTimeout> | undefined
-  let closeTimeout: ReturnType<typeof setTimeout> | undefined
   let stickTimeout: ReturnType<typeof setTimeout> | undefined
 
-  const clearHoverTimers = () => {
+  const clearOpenTimer = () => {
     if (openTimeout) {
       clearTimeout(openTimeout)
       openTimeout = undefined
     }
-    if (closeTimeout) {
-      clearTimeout(closeTimeout)
-      closeTimeout = undefined
-    }
   }
 
   onCleanup(() => {
-    clearHoverTimers()
+    clearOpenTimer()
     if (stickTimeout) clearTimeout(stickTimeout)
   })
 
@@ -110,9 +106,14 @@ export function NavigationMenuTrigger(
     if (open) {
       el.setAttribute('data-popup-open', '')
       el.setAttribute('data-pressed', '')
+      const popupId = context.popupElement()?.id
+      if (popupId) {
+        el.setAttribute('aria-controls', popupId)
+      }
     } else {
       el.removeAttribute('data-popup-open')
       el.removeAttribute('data-pressed')
+      el.removeAttribute('aria-controls')
     }
   })
 
@@ -202,7 +203,10 @@ export function NavigationMenuTrigger(
     }
   }
 
-  const openItem = (event: Event, reason: string) => {
+  const openItem = (
+    event: Event,
+    reason: NavigationMenuRootChangeEventReason
+  ) => {
     if (disabled()) return
     const triggerEl = localTrigger()
     if (triggerEl) setActivationDirectionFromTrigger(triggerEl)
@@ -215,18 +219,16 @@ export function NavigationMenuTrigger(
       }, PATIENT_CLICK_THRESHOLD)
     }
 
-    openChangeReasonAssign(reason)
-    context.setValue(
-      itemValue(),
-      createChangeEventDetails(reason as never, event)
-    )
+    context.setValue(itemValue(), createChangeEventDetails(reason, event))
   }
 
-  const closeItem = (event: Event, reason: string) => {
+  const closeItem = (
+    event: Event,
+    reason: NavigationMenuRootChangeEventReason
+  ) => {
     if (disabled()) return
     if (context.value() !== itemValue()) return
-    openChangeReasonAssign(reason)
-    context.setValue(null, createChangeEventDetails(reason as never, event))
+    context.setValue(null, createChangeEventDetails(reason, event))
   }
 
   const state: NavigationMenuTriggerState = {
@@ -252,7 +254,7 @@ export function NavigationMenuTrigger(
               if (
                 isActiveItem() &&
                 stickIfOpen() &&
-                openChangeReason() === REASONS.triggerHover
+                context.openChangeReason() === REASONS.triggerHover
               ) {
                 return
               }
@@ -265,7 +267,8 @@ export function NavigationMenuTrigger(
             onPointerEnter(event: PointerEvent) {
               if (disabled()) return
               if (event.pointerType === 'touch') return
-              clearHoverTimers()
+              clearOpenTimer()
+              context.clearHoverTimers()
               openTimeout = setTimeout(() => {
                 openItem(event, REASONS.triggerHover)
               }, context.delay())
@@ -273,28 +276,50 @@ export function NavigationMenuTrigger(
             onPointerLeave(event: PointerEvent) {
               if (disabled()) return
               if (event.pointerType === 'touch') return
-              clearHoverTimers()
-              closeTimeout = setTimeout(() => {
-                if (
-                  isActiveItem() &&
-                  openChangeReason() === REASONS.triggerHover
-                ) {
-                  closeItem(event, REASONS.triggerHover)
-                }
-              }, context.closeDelay())
+              clearOpenTimer()
+              // Root owns the close timer so Popup/Positioner/Viewport can
+              // cancel it when the pointer reaches the floating surface.
+              context.scheduleHoverClose(event)
             },
             onKeyDown(event: KeyboardEvent) {
               if (disabled()) return
-              if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                if (
-                  (context.orientation() === 'horizontal' &&
-                    event.key === 'ArrowDown') ||
-                  (context.orientation() === 'vertical' &&
-                    event.key === 'ArrowUp')
-                ) {
-                  event.preventDefault()
-                  openItem(event, REASONS.listNavigation)
-                }
+              // Nested triggers participate in parent Content composite nav.
+              if (context.nested()) return
+
+              const verticalOpenKey =
+                direction() === 'rtl' ? 'ArrowLeft' : 'ArrowRight'
+              const openHorizontal =
+                context.orientation() === 'horizontal' &&
+                event.key === 'ArrowDown'
+              const openVertical =
+                context.orientation() === 'vertical' &&
+                event.key === verticalOpenKey
+
+              if (openHorizontal || openVertical) {
+                event.preventDefault()
+                openItem(event, REASONS.listNavigation)
+              }
+            },
+            onBlur(event: FocusEvent) {
+              if (disabled()) return
+              if (!isActiveItem()) return
+              const positioner = context.positionerElement()
+              const popup = context.popupElement()
+              if (!positioner || !popup) return
+              if (
+                isOutsideMenuEvent(
+                  {
+                    currentTarget: event.currentTarget as HTMLElement,
+                    relatedTarget:
+                      (event.relatedTarget as HTMLElement | null) ?? null,
+                  },
+                  {
+                    popupElement: popup,
+                    rootElement: context.rootElement(),
+                  }
+                )
+              ) {
+                closeItem(event, REASONS.focusOut)
               }
             },
           })
@@ -305,6 +330,11 @@ export function NavigationMenuTrigger(
           },
           get 'aria-haspopup'() {
             return 'dialog' as const
+          },
+          get 'aria-controls'() {
+            return isActiveItem()
+              ? (context.popupElement()?.id ?? undefined)
+              : undefined
           },
         },
       ]}
