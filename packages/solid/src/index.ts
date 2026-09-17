@@ -206,6 +206,16 @@ export {
   NumberFieldScrubAreaCursorDataAttributes,
 } from './number-field'
 export {
+  OTPField,
+  OTPFieldRoot,
+  OTPFieldRootDataAttributes,
+  OTPFieldRootContext,
+  useOTPFieldRootContext,
+  getOTPFieldInputState,
+  OTPFieldInput,
+  OTPFieldInputDataAttributes,
+} from './otp-field'
+export {
   Dialog,
   DialogRoot,
   DialogRootContext,
@@ -627,6 +637,18 @@ export type {
   NumberFieldScrubAreaCursorProps,
   NumberFieldScrubAreaCursorState,
 } from './number-field'
+export type {
+  OTPFieldRootProps,
+  OTPFieldRootState,
+  OTPFieldRootChangeEventDetails,
+  OTPFieldRootChangeEventReason,
+  OTPFieldRootInvalidEventDetails,
+  OTPFieldRootInvalidEventReason,
+  OTPFieldRootCompleteEventDetails,
+  OTPFieldRootCompleteEventReason,
+  OTPFieldInputProps,
+  OTPFieldInputState,
+} from './otp-field'
 export type {
   CheckboxRootProps,
   CheckboxRootState,
