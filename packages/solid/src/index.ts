@@ -256,6 +256,16 @@ export {
   PopoverHandle,
 } from './popover'
 export {
+  Checkbox,
+  CheckboxRoot,
+  PARENT_CHECKBOX,
+  CheckboxRootDataAttributes,
+  CheckboxRootContext,
+  useCheckboxRootContext,
+  CheckboxIndicator,
+  CheckboxIndicatorDataAttributes,
+} from './checkbox'
+export {
   createControlled,
   createChangeEventDetails,
   createGenericEventDetails,
@@ -545,6 +555,15 @@ export type {
   InputChangeEventDetails,
   InputChangeEventReason,
 } from './input'
+export type {
+  CheckboxRootProps,
+  CheckboxRootState,
+  CheckboxRootChangeEventReason,
+  CheckboxRootChangeEventDetails,
+  CheckboxRootContextValue,
+  CheckboxIndicatorProps,
+  CheckboxIndicatorState,
+} from './checkbox'
 export type {
   CreateControlledOptions,
   ControlledSetter,

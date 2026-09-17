@@ -23,6 +23,7 @@ export { inertValue } from './inertValue'
 export { isElementDisabled } from './isElementDisabled'
 export { mergeObjects } from './mergeObjects'
 export { dispatchClickWithModifiers } from './dispatchClickWithModifiers'
+export { visuallyHidden, visuallyHiddenInput } from './visuallyHidden'
 export { getDefaultFormSubmitter } from './getDefaultFormSubmitter'
 export { createStore } from './store'
 export {

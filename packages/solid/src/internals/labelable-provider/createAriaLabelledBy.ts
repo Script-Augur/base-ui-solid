@@ -9,10 +9,16 @@ export function createAriaLabelledBy(params: {
   explicitAriaLabelledBy: Accessor<string | undefined>
   labelId: Accessor<string | undefined>
   labelSourceRef: { current: LabelSource | null }
-  enableFallback?: boolean
+  enableFallback?: boolean | Accessor<boolean>
   labelSourceId?: Accessor<string | undefined>
 }): Accessor<string | undefined> {
-  const enableFallback = () => params.enableFallback ?? true
+  const enableFallback = () => {
+    const value = params.enableFallback
+    if (typeof value === 'function') {
+      return value()
+    }
+    return value ?? true
+  }
   const generatedLabelId = createUniqueId()
   const generatedFallbackId = () => {
     const sourceId = params.labelSourceId?.()
