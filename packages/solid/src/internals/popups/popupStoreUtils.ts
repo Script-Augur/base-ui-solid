@@ -1,3 +1,4 @@
+import { contains } from '@script-augur/base-ui-utils'
 import { createEffect, createSignal, onCleanup } from 'solid-js'
 
 import {
@@ -15,9 +16,67 @@ import type {
   PopupStoreState,
   PopupTriggerDataStore,
 } from './store'
-import type { Accessor } from 'solid-js'
+import type { Accessor, Setter } from 'solid-js'
 
 export { NOOP }
+/**
+ * Keeps the Root `triggerElement` signal aligned with the store's
+ * `activeTriggerElement` so detached triggers share the same channel as nested
+ * ones (Portal focus restore, Positioner reference, outside-press exclusion).
+ *
+ * Only writes when the store holds an `HTMLElement` — never clears the signal
+ * on unrelated store updates, so a nested trigger's legacy assign is not wiped
+ * before the popup opens.
+ *
+ * @param store - Popup store that owns `activeTriggerElement`.
+ * @param triggerElementAssign - Root context setter for the trigger element.
+ */
+export function createActiveTriggerElementSync(
+  store: {
+    state: { activeTriggerElement: Element | null }
+    subscribe: (
+      fn: (state: { activeTriggerElement: Element | null }) => void
+    ) => () => void
+  },
+  triggerElementAssign: Setter<HTMLElement | null>
+): void {
+  createEffect(() => {
+    const sync = (state: { activeTriggerElement: Element | null }) => {
+      const el = state.activeTriggerElement
+      if (el instanceof HTMLElement) {
+        triggerElementAssign(el)
+      }
+    }
+    sync(store.state)
+    const unsub = store.subscribe(sync)
+    onCleanup(unsub)
+  })
+}
+/**
+ * Whether a pointer event target is on a registered popup trigger (or the
+ * legacy single `triggerElement` fallback).
+ *
+ * Outside-press dismiss must ignore presses on triggers so click-to-toggle and
+ * detached anchors do not immediately close the popup.
+ *
+ * @param triggerElements - Registered trigger map from the popup store.
+ * @param target - Event target element.
+ * @param fallbackTrigger - Optional Root `triggerElement` when the map is empty.
+ * @returns `true` when the press is on a trigger.
+ */
+export function isEventOnPopupTrigger(
+  triggerElements: PopupTriggerMap,
+  target: Element | null,
+  fallbackTrigger?: Element | null
+): boolean {
+  if (!target) {
+    return false
+  }
+  if (fallbackTrigger != null && contains(fallbackTrigger, target)) {
+    return true
+  }
+  return triggerElements.hasMatchingElement(el => contains(el, target))
+}
 /**
  * Attaches a Root's store to a handle for the Root's lifetime.
  * Call during Root setup when a handle prop is present.

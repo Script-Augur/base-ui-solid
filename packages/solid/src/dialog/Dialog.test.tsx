@@ -576,6 +576,80 @@ describe('Dialog', () => {
       expect(screen.queryByTestId('popup')).toBeNull()
     })
   })
+
+  it('restores focus to a detached trigger on close', async () => {
+    const handle = Dialog.createHandle()
+    render(() => (
+      <>
+        <Dialog.Trigger handle={handle} id="detached-focus">
+          Detached focus
+        </Dialog.Trigger>
+        <Dialog.Root handle={handle}>
+          <Dialog.Portal>
+            <Dialog.Popup data-testid="popup">
+              <Dialog.Title>Title</Dialog.Title>
+              <Dialog.Close>Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </>
+    ))
+
+    const trigger = screen.getByRole('button', { name: 'Detached focus' })
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+      expect(trigger).toHaveFocus()
+    })
+  })
+
+  it('does not dismiss on outside press targeting a detached trigger', async () => {
+    const handle = Dialog.createHandle()
+    const onOpenChange = vi.fn()
+    render(() => (
+      <>
+        <Dialog.Trigger handle={handle} id="detached-outside">
+          Detached outside
+        </Dialog.Trigger>
+        <Dialog.Root handle={handle} modal={false} onOpenChange={onOpenChange}>
+          <Dialog.Portal>
+            <Dialog.Popup data-testid="popup">
+              <Dialog.Title>Title</Dialog.Title>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </>
+    ))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Detached outside' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+    onOpenChange.mockClear()
+
+    fireEvent.pointerDown(
+      screen.getByRole('button', { name: 'Detached outside' }),
+      { button: 0 }
+    )
+    expect(screen.getByTestId('popup')).toBeVisible()
+    expect(onOpenChange).not.toHaveBeenCalled()
+
+    fireEvent.pointerDown(document.body, { button: 0 })
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+    })
+    expect(onOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: 'outside-press' })
+    )
+  })
 })
 
 function BasicDialog(props: {

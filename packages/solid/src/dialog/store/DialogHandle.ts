@@ -43,9 +43,15 @@ export class DialogHandle<TPayload = unknown> extends BasePopupHandle<
   /**
    * Opens the dialog with the given payload, without associating it with any trigger.
    *
+   * Writes `payload` onto the attached root store. Root render-prop children that
+   * consume `store.payload` are **not** implemented yet (see Dialog
+   * `UPSTREAM_TEST_PARITY.md`); until then callers may still set payload for
+   * future consumers / imperative reads of the store, but the UI will not
+   * re-render from it via children-as-function.
+   *
    * This method should only be called in an event handler or an effect (not during rendering).
    *
-   * @param payload - Payload exposed to the root's render-prop children.
+   * @param payload - Payload stored on the attached root's popup store.
    */
   openWithPayload(payload: TPayload): void {
     const attachedStore = this.attachedStore

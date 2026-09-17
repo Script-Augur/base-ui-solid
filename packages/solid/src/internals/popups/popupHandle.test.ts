@@ -84,6 +84,17 @@ describe('BasePopupHandle', () => {
     expect(listener).toHaveBeenCalledTimes(2)
     unsubscribe()
   })
+
+  it('observes selector changes via SolidStore.observe', () => {
+    const store = createTestStore(false)
+    const listener = vi.fn()
+    const unsub = store.observe('open', listener)
+    store.setOpen(true)
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener.mock.calls[0]?.[0]).toBe(true)
+    expect(listener.mock.calls[0]?.[1]).toBe(false)
+    unsub()
+  })
 })
 function createTestStore(open = false) {
   const triggerElements = new PopupTriggerMap()

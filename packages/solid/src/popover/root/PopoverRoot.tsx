@@ -12,8 +12,10 @@ import { createDismiss } from '../../internals/dismiss'
 import { createFocusTrap } from '../../internals/focusTrap'
 import { listenerEffect } from '../../internals/listenerEffect'
 import {
+  createActiveTriggerElementSync,
   createImplicitActiveTrigger,
   createPopupHandleAttachment,
+  isEventOnPopupTrigger,
   setPopupOpenState,
 } from '../../internals/popups'
 import { createScrollLock } from '../../internals/scrollLock'
@@ -91,6 +93,12 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
   createPopupHandleAttachment(local.handle, store)
   createImplicitActiveTrigger(store)
 
+  // Open pipeline (Dialog/Popover hybrid — see internals/popups/OPEN_PIPELINE.md):
+  // `createControlled` owns UI `open`; Root `setOpen` is the only writer. Handle /
+  // detached triggers call `store.setOpen`, which Root overwrites below so both
+  // paths share one pipeline. Menu must NOT copy this overwrite — use store +
+  // floating `setOpen` dispatch instead.
+
   createEffect(() => {
     store.set('openProp', local.open)
   })
@@ -129,6 +137,7 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     createSignal<HTMLElement | null>(null)
   const [triggerElement, triggerElementAssign] =
     createSignal<HTMLElement | null>(null)
+  createActiveTriggerElementSync(store, triggerElementAssign)
   const [backdropElement, backdropElementAssign] =
     createSignal<HTMLElement | null>(null)
   const [internalBackdropElement, internalBackdropElementAssign] =
@@ -333,8 +342,15 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
       const positioner = positionerElement()
       if (positioner && contains(positioner, target)) return
 
-      const trigger = triggerElement()
-      if (trigger && contains(trigger, target)) return
+      if (
+        isEventOnPopupTrigger(
+          store.context.triggerElements,
+          target,
+          triggerElement()
+        )
+      ) {
+        return
+      }
 
       const modalMode = modal()
       if (modalMode === true) {

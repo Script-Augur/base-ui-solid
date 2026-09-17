@@ -31,6 +31,7 @@ Upstream reference: `@base-ui/react@1.7.0` `Dialog` (`Root`, `Trigger`,
 | `details.preventUnmountOnClose` + `actionsRef.unmount` | covered |
 | Viewport renders when mounted                          | covered |
 | `createHandle` / detached trigger open/close           | covered |
+| Detached focus restore / outside-press ignores triggers | covered |
 
 ## Deferred / partial
 

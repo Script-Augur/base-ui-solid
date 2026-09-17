@@ -21,6 +21,8 @@ export const popupStoreSelectors = {
   open: openSelector,
   mounted: (state: S) => state.mounted,
   transitionStatus: (state: S) => state.transitionStatus,
+  floatingRootContext: (state: S) => state.floatingRootContext,
+  floatingId: (state: S) => state.floatingId,
   triggerCount: (state: S) => state.triggerCount,
   preventUnmountingOnClose: (state: S) => state.preventUnmountingOnClose,
   payload: (state: S) => state.payload,
@@ -72,6 +74,8 @@ export function createInitialPopupStoreState<
     openProp: undefined,
     mounted: false,
     transitionStatus: undefined,
+    floatingRootContext: null,
+    floatingId: undefined,
     triggerCount: 0,
     preventUnmountingOnClose: false,
     payload: undefined,
@@ -108,6 +112,16 @@ export type PopupStoreState<TPayload = unknown> = {
    * The current enter/exit transition status of the popup.
    */
   transitionStatus: TransitionStatus
+  /**
+   * Floating-ui root context used by Menu (and eventually shared open dispatch).
+   * Dialog/Popover Roots leave this `null` until floating event dispatch is wired;
+   * see `MENU_GAPS.md` in this folder.
+   */
+  floatingRootContext: PopupFloatingRootContext | null
+  /**
+   * Stable floating id (upstream `useId()`). Optional until Menu/floating land.
+   */
+  floatingId: string | undefined
   /**
    * Number of trigger elements currently registered for this popup.
    */
@@ -153,6 +167,21 @@ export type PopupStoreState<TPayload = unknown> = {
    * Props to spread onto the popup element.
    */
   popupProps: HTMLProps
+}
+/**
+ * Minimal typed slot for upstream `FloatingRootContext` / `FloatingRootStore`.
+ * Menu fills this with a real floating root; Dialog/Popover keep `null`.
+ *
+ * Intentionally structural (not imported from floating-ui) so this foundation
+ * can ship without dragging Menu's floating stack into every overlay.
+ */
+export type PopupFloatingRootContext = {
+  context?: {
+    events?: {
+      emit: (event: string, data: unknown) => void
+    }
+  }
+  dispatchOpenChange?: (open: boolean, eventDetails: unknown) => void
 }
 /**
  * Non-reactive context common to popup stores.

@@ -16,6 +16,8 @@ export {
   createTriggerRegistration,
   createTriggerDataForwarding,
   createImplicitActiveTrigger,
+  createActiveTriggerElementSync,
+  isEventOnPopupTrigger,
   setPopupOpenState,
   attachPreventUnmountOnClose,
 } from './popupStoreUtils'
@@ -27,6 +29,7 @@ export type {
   PopupStoreSelectors,
   PopupTriggerStoreKeys,
   PopupTriggerDataStore,
+  PopupFloatingRootContext,
 } from './store'
 export type {
   PopupHandleStoreProvider,

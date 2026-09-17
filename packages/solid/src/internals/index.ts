@@ -22,6 +22,8 @@ export {
   createTriggerRegistration,
   createTriggerDataForwarding,
   createImplicitActiveTrigger,
+  createActiveTriggerElementSync,
+  isEventOnPopupTrigger,
   setPopupOpenState,
   attachPreventUnmountOnClose,
   EMPTY_OBJECT,

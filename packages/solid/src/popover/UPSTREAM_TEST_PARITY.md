@@ -18,6 +18,7 @@ Upstream reference: `@base-ui/react@1.7.0` `Popover` (`Root`, `Trigger`,
 | Portal mount (`data-base-ui-portal`)                   | covered |
 | `aria-labelledby` / `aria-describedby`                 | covered |
 | `createHandle` / `Handle` + detached trigger open/close | covered |
+| Detached Positioner reference / focus restore / outside-press | covered |
 | Nested popovers + Escape targets topmost               | covered |
 
 ## Deferred / partial

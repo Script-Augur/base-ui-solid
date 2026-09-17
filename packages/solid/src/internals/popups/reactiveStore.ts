@@ -191,6 +191,37 @@ export class SolidStore<
       return this.select(key, ...args)
     })
   }
+
+  /**
+   * Observes a selector (or custom projector) and calls `listener` when the
+   * selected value changes. Solid counterpart to upstream `ReactStore.observe`.
+   * Required by Menu (`observe('parent', …)`); Dialog/Popover do not need it yet.
+   *
+   * @param selector - Selector key or `(state) => value` projector.
+   * @param listener - Called with `(next, prev, store)` when the value changes.
+   * @returns Unsubscribe function.
+   */
+  observe(
+    selector: keyof TSelectors | ((state: TState) => unknown),
+    listener: (newValue: unknown, oldValue: unknown, store: this) => void
+  ): () => void {
+    const read = (): unknown => {
+      if (typeof selector === 'function') {
+        return selector(this.state)
+      }
+      return this.select(selector)
+    }
+    let previous = read()
+    return this.subscribe(() => {
+      const next = read()
+      if (Object.is(next, previous)) {
+        return
+      }
+      const oldValue = previous
+      previous = next
+      listener(next, oldValue, this)
+    })
+  }
 }
 /**
  * A {@link SolidStore} whose state never changes.
@@ -220,6 +251,7 @@ export class NullStore<
  */
 export type StoreSelectors<TState> = Record<
   string,
-   
-  (state: TState, ...args: Array<any>) => unknown
+  // Keep args/return loose so component stores can spread `popupStoreSelectors`
+  // (typed on `PopupStoreState`) with their own selectors (typed on a subtype).
+  (state: TState, ...args: Array<any>) => any
 >
