@@ -49,9 +49,9 @@ export function createLabel(
     const controlIdValue = resolvedControlId()
     if (!controlIdValue) return
 
-    const controlElement = ownerDocument(event.currentTarget).getElementById(
-      controlIdValue
-    )
+    const controlElement = ownerDocument(
+      event.currentTarget as Node
+    ).getElementById(controlIdValue)
     if (controlElement instanceof HTMLElement) {
       focusElementWithVisible(controlElement)
     }
