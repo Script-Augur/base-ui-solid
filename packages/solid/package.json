@@ -89,6 +89,11 @@
       "import": "./dist/field.js",
       "default": "./dist/field.js"
     },
+    "./fieldset": {
+      "types": "./dist/fieldset.d.ts",
+      "import": "./dist/fieldset.js",
+      "default": "./dist/fieldset.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
