@@ -79,6 +79,11 @@
       "import": "./dist/scroll-area.js",
       "default": "./dist/scroll-area.js"
     },
+    "./field": {
+      "types": "./dist/field.d.ts",
+      "import": "./dist/field.js",
+      "default": "./dist/field.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
