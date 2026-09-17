@@ -357,6 +357,7 @@ export type PreviewCardRootChangeEventReason =
   | typeof REASONS.triggerPress
   | typeof REASONS.outsidePress
   | typeof REASONS.escapeKey
+  | typeof REASONS.focusOut
   | typeof REASONS.imperativeAction
   | typeof REASONS.none
 

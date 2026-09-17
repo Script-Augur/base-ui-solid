@@ -57,6 +57,66 @@ describe('PreviewCard', () => {
     expect(screen.getByTestId('popup')).toBeVisible()
   })
 
+  it('cancels pending focus-open when blur happens before delay', async () => {
+    vi.useFakeTimers()
+    const onOpenChange = vi.fn()
+    render(() => <BasicPreviewCard delay={100} onOpenChange={onOpenChange} />)
+
+    const trigger = screen.getByRole('link', { name: 'typography' })
+    fireEvent.focus(trigger)
+    fireEvent.blur(trigger)
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('popup')).toBeNull()
+  })
+
+  it('stays open when focus moves from trigger into the popup', async () => {
+    vi.useFakeTimers()
+    render(() => <BasicPreviewCard delay={20} />)
+
+    const trigger = screen.getByRole('link', { name: 'typography' })
+    fireEvent.focus(trigger)
+    await vi.advanceTimersByTimeAsync(20)
+    expect(screen.getByTestId('popup')).toBeVisible()
+
+    const popup = screen.getByTestId('popup')
+    fireEvent.blur(trigger, { relatedTarget: popup })
+    popup.focus()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(screen.getByTestId('popup')).toBeVisible()
+  })
+
+  it('does not focus-open when :focus-visible does not match', async () => {
+    vi.useFakeTimers()
+    const originalUa = navigator.userAgent
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      get: () => 'Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/120.0.0.0',
+    })
+
+    const onOpenChange = vi.fn()
+    render(() => <BasicPreviewCard delay={20} onOpenChange={onOpenChange} />)
+
+    const trigger = screen.getByRole('link', { name: 'typography' })
+    vi.spyOn(trigger, 'matches').mockImplementation((selectors: string) => {
+      if (selectors === ':focus-visible') return false
+      return Element.prototype.matches.call(trigger, selectors)
+    })
+
+    fireEvent.focus(trigger)
+    await vi.advanceTimersByTimeAsync(20)
+
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('popup')).toBeNull()
+
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      get: () => originalUa,
+    })
+  })
+
   it('supports controlled open state', async () => {
     vi.useFakeTimers()
     const [open, openAssign] = createSignal(false)

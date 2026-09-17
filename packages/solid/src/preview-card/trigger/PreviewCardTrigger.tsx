@@ -1,3 +1,8 @@
+import {
+  activeElement,
+  contains,
+  ownerDocument,
+} from '@script-augur/base-ui-utils'
 import { createEffect, mergeProps, onCleanup, splitProps } from 'solid-js'
 
 import {
@@ -7,6 +12,7 @@ import {
 import { createRender } from '../../internals/createRender'
 import { usePreviewCardRootContext } from '../root/PreviewCardRootContext'
 import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants'
+import { matchesFocusVisible } from '../utils/matchesFocusVisible'
 import { triggerOpenStateMapping } from '../utils/stateAttributesMapping'
 
 import { PreviewCardTriggerDataAttributes } from './PreviewCardTriggerDataAttributes'
@@ -42,8 +48,18 @@ export function PreviewCardTrigger(
     context.hoverCloseDelayAssign(local.closeDelay ?? CLOSE_DELAY)
   })
 
+  let blurCloseTimeout: ReturnType<typeof setTimeout> | undefined
+
+  const clearBlurCloseTimeout = () => {
+    if (blurCloseTimeout) {
+      clearTimeout(blurCloseTimeout)
+      blurCloseTimeout = undefined
+    }
+  }
+
   onCleanup(() => {
     context.clearHoverTimers()
+    clearBlurCloseTimeout()
   })
 
   const state: PreviewCardTriggerState = {
@@ -61,6 +77,7 @@ export function PreviewCardTrigger(
     props: mergeProps(elementProps as Record<string, unknown>, {
       onPointerEnter(event: PointerEvent) {
         if (event.pointerType === 'touch') return
+        clearBlurCloseTimeout()
         context.clearHoverTimers()
         context.scheduleOpen(REASONS.triggerHover, event)
       },
@@ -69,20 +86,74 @@ export function PreviewCardTrigger(
         context.scheduleClose(REASONS.triggerHover, event)
       },
       onFocus(event: FocusEvent) {
+        clearBlurCloseTimeout()
         context.clearHoverTimers()
+        const target = (event.currentTarget as Element | null) ?? null
+        // Upstream useFocus gates open on :focus-visible (keyboard modality).
+        if (!matchesFocusVisible(target)) {
+          return
+        }
         context.scheduleOpen(REASONS.triggerFocus, event)
       },
       onBlur(event: FocusEvent) {
-        // Instant close on blur when opened via focus (matches upstream instantType).
+        // Always cancel a pending open — focus then blur before delay must not open.
+        context.clearHoverTimers()
+        clearBlurCloseTimeout()
+
         if (
-          context.open() &&
-          context.openChangeReason() === REASONS.triggerFocus
+          !context.open() ||
+          context.openChangeReason() !== REASONS.triggerFocus
         ) {
+          return
+        }
+
+        const relatedTarget = event.relatedTarget as Element | null
+        const movedToFocusGuard =
+          relatedTarget instanceof Element &&
+          relatedTarget.hasAttribute('data-base-ui-focus-guard') &&
+          relatedTarget.getAttribute('data-type') === 'outside'
+
+        // Defer so Portal focus-guard → popup.focus() can settle (upstream useFocus).
+        blurCloseTimeout = setTimeout(() => {
+          blurCloseTimeout = undefined
+          const trigger = context.triggerElement()
+          const doc = ownerDocument(trigger)
+          const activeEl = activeElement(doc)
+
+          // Focus left the page / window while trigger stayed focused — keep open.
+          if (!relatedTarget && activeEl === trigger) {
+            return
+          }
+
+          const popup = context.popupElement()
+          const positioner = context.positionerElement()
+
+          if (
+            contains(popup, activeEl) ||
+            contains(positioner, activeEl) ||
+            contains(trigger, activeEl) ||
+            contains(popup, relatedTarget) ||
+            contains(positioner, relatedTarget) ||
+            contains(trigger, relatedTarget) ||
+            movedToFocusGuard
+          ) {
+            return
+          }
+
+          // Focus landed on an outside focus-guard after settle.
+          if (
+            activeEl instanceof Element &&
+            activeEl.hasAttribute('data-base-ui-focus-guard') &&
+            activeEl.getAttribute('data-type') === 'outside'
+          ) {
+            return
+          }
+
           context.setOpen(
             false,
             createChangeEventDetails(REASONS.triggerFocus, event)
           )
-        }
+        }, 0)
       },
       get class() {
         return local.class
