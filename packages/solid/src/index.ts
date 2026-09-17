@@ -183,6 +183,7 @@ export {
   FieldsetLegend,
 } from './fieldset'
 export { Form } from './form'
+export { Input, InputDataAttributes } from './input'
 export {
   Dialog,
   DialogRoot,
@@ -538,6 +539,12 @@ export type {
   PopoverViewportProps,
   PopoverViewportState,
 } from './popover'
+export type {
+  InputProps,
+  InputState,
+  InputChangeEventDetails,
+  InputChangeEventReason,
+} from './input'
 export type {
   CreateControlledOptions,
   ControlledSetter,

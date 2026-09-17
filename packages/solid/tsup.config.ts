@@ -31,6 +31,7 @@ export default defineConfig({
     popover: 'src/popover/index.ts',
     fieldset: 'src/fieldset/index.ts',
     form: 'src/form/index.ts',
+    input: 'src/input/index.ts',
   },
   format: ['esm'],
   dts: true,
