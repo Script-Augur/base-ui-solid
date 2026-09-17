@@ -166,7 +166,7 @@ export function OTPFieldRoot(componentProps: OTPFieldRootProps): JSX.Element {
 
   const [inputCount, inputCountAssign] = createSignal(0)
   const [focusedIndex, focusedIndexAssign] = createSignal(
-    Math.min((local.defaultValue ?? local.value ?? '').length, length() - 1)
+    Math.min(value().length, Math.max(length() - 1, 0))
   )
   const [focused, focusedAssign] = createSignal(false)
 
@@ -281,8 +281,17 @@ export function OTPFieldRoot(componentProps: OTPFieldRootProps): JSX.Element {
 
     field.validation.change(value())
 
-    // Controlled external updates still need queued focus/complete handling.
-    flushPendingValueSideEffects(value())
+    // Solid may run createEffect before the rest of the event handler
+    // (including queueFocusInput after setValue). Defer the flush to a
+    // microtask so pending focus/complete are visible — still gated on the
+    // committed value changing, unlike flushing from setValue itself.
+    const committedValue = value()
+    queueMicrotask(() => {
+      if (value() !== committedValue) {
+        return
+      }
+      flushPendingValueSideEffects(committedValue)
+    })
   })
 
   function setValue(
@@ -323,8 +332,6 @@ export function OTPFieldRoot(componentProps: OTPFieldRootProps): JSX.Element {
       return null
     }
 
-    valueAssign(normalizedValue)
-
     if (completeEventDetails != null) {
       pendingCompleteValueRef.current = {
         value: normalizedValue,
@@ -334,12 +341,13 @@ export function OTPFieldRoot(componentProps: OTPFieldRootProps): JSX.Element {
       pendingCompleteValueRef.current = null
     }
 
-    // Callers queue focus after setValue returns; flush on a microtask so both
-    // pending focus and pending complete are visible.
-    queueMicrotask(() => {
-      flushPendingValueSideEffects(normalizedValue)
-    })
+    // Assign after pending complete is recorded so a sync value-change effect
+    // (before the deferred flush microtask) cannot miss it.
+    valueAssign(normalizedValue)
 
+    // Focus / onValueComplete flush only after the committed `value` changes
+    // (createEffectOnValueChange), matching upstream useValueChanged. Do not
+    // flush against an uncommitted controlled request.
     return normalizedValue
   }
 
@@ -640,6 +648,14 @@ export interface OTPFieldRootProps extends Omit<
   validationType?: OTPValidationType | undefined
   /**
    * Function that normalizes the OTP value after whitespace and `validationType` filtering.
+   * It runs whenever OTP Field normalizes a value, including initial/default values, controlled
+   * values, and user edits.
+   *
+   * The returned value is filtered by `validationType` again, then clamped to `length`.
+   * It should be idempotent because OTP Field may normalize the same value more than once while
+   * handling edits, storing state, and rendering controlled or uncontrolled values. Non-idempotent
+   * normalizers can compound across those normalization passes. Characters rejected while
+   * normalizing typed or pasted text are reported through `onValueInvalid`.
    */
   normalizeValue?: ((value: string) => string) | undefined
   /**

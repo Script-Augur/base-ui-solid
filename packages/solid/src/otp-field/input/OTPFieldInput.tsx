@@ -112,48 +112,60 @@ export function OTPFieldInput(componentProps: OTPFieldInputProps): JSX.Element {
     render: local.render,
     stateAttributesMapping: inputStateAttributesMapping,
     ref: assignRef,
-    props: mergeProps(elementProps as Record<string, unknown>, {
+    // Defaults → elementProps (allows per-slot `type` override under mask) →
+    // protected value / handlers / a11y (must not be clobbered by consumers).
+    props: mergeProps(
+      {
+        get type() {
+          return mask() ? 'password' : 'text'
+        },
+        get inputMode() {
+          return inputMode()
+        },
+        get autocomplete() {
+          return index() === 0 ? autoComplete() : 'off'
+        },
+        autocorrect: 'off',
+        spellcheck: false,
+        get enterkeyhint() {
+          return index() === length() - 1 ? 'done' : 'next'
+        },
+        // Only the first slot has a max length to avoid password manager bubbles.
+        get maxlength() {
+          return index() === 0 ? length() : undefined
+        },
+        get tabIndex() {
+          return activeIndex() === index() ? 0 : -1
+        },
+        get disabled() {
+          return disabled()
+        },
+        get form() {
+          return form()
+        },
+        get pattern() {
+          return pattern()
+        },
+        get readOnly() {
+          return readOnly()
+        },
+        get required() {
+          return required()
+        },
+        get class() {
+          return local.class
+        },
+        get style() {
+          return local.style
+        },
+      },
+      elementProps as Record<string, unknown>,
+      {
       get id() {
         return getInputId(index())
       },
       get value() {
         return slotValue()
-      },
-      get type() {
-        return mask() ? 'password' : 'text'
-      },
-      get inputMode() {
-        return inputMode()
-      },
-      get autocomplete() {
-        return index() === 0 ? autoComplete() : 'off'
-      },
-      autocorrect: 'off',
-      spellcheck: false,
-      get enterkeyhint() {
-        return index() === length() - 1 ? 'done' : 'next'
-      },
-      // Only the first slot has a max length to avoid password manager bubbles.
-      get maxlength() {
-        return index() === 0 ? length() : undefined
-      },
-      get tabIndex() {
-        return activeIndex() === index() ? 0 : -1
-      },
-      get disabled() {
-        return disabled()
-      },
-      get form() {
-        return form()
-      },
-      get pattern() {
-        return pattern()
-      },
-      get readOnly() {
-        return readOnly()
-      },
-      get required() {
-        return required()
       },
       get 'aria-labelledby'() {
         return ariaLabel() == null ? inheritedLabel() : undefined
@@ -163,12 +175,6 @@ export function OTPFieldInput(componentProps: OTPFieldInputProps): JSX.Element {
       },
       get 'aria-label'() {
         return ariaLabel()
-      },
-      get class() {
-        return local.class
-      },
-      get style() {
-        return local.style
       },
       onMouseDown(event: MouseEvent & { currentTarget: HTMLInputElement }) {
         if (event.defaultPrevented || disabled()) {
@@ -408,7 +414,8 @@ export function OTPFieldInput(componentProps: OTPFieldInputProps): JSX.Element {
           queueFocusInput(nextInput, committedValue)
         }
       },
-    }),
+    }
+    ),
   })
 }
 export interface OTPFieldInputState extends Omit<
@@ -430,7 +437,7 @@ export interface OTPFieldInputState extends Omit<
 }
 export interface OTPFieldInputProps extends Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'type'
+  'value'
 > {
   /** Base UI-style render prop. */
   render?: RenderProp<OTPFieldInputState, Record<string, unknown>>

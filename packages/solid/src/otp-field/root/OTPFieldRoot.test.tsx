@@ -3,7 +3,11 @@ import { createSignal } from 'solid-js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { Field } from '../../field'
-import { FormErrorsProvider, waitFor } from '../../field/test-utils'
+import {
+  FormErrorsProvider,
+  waitFor,
+} from '../../field/test-utils'
+import { Form } from '../../form'
 import { REASONS } from '../../internals/createChangeEventDetails'
 import { OTPField } from '../index'
 
@@ -130,6 +134,65 @@ describe('<OTPField.Root />', () => {
       fireEvent.input(inputs[0]!, { target: { value: '9' } })
       expect(getValues()).toBe('1')
     })
+
+    it('does not move focus later for a stale controlled change', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+
+      try {
+        const [value, valueAssign] = createSignal('')
+
+        render(() => (
+          <div>
+            <OTPFieldFixture value={value()} onValueChange={() => {}} />
+            <button type="button" onClick={() => valueAssign('9')}>
+              Apply value
+            </button>
+          </div>
+        ))
+
+        const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+        inputs[0]!.focus()
+        fireEvent.input(inputs[0]!, { target: { value: '1' } })
+
+        await vi.runAllTimersAsync()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply value' }))
+        await vi.runAllTimersAsync()
+
+        expect(document.activeElement).toBe(inputs[0])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('moves focus after an asynchronously accepted controlled change', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+
+      try {
+        const [value, valueAssign] = createSignal('')
+
+        render(() => (
+          <OTPFieldFixture
+            value={value()}
+            onValueChange={nextValue => {
+              setTimeout(() => {
+                valueAssign(nextValue)
+              }, 10)
+            }}
+          />
+        ))
+
+        const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+        inputs[0]!.focus()
+        fireEvent.input(inputs[0]!, { target: { value: '1' } })
+
+        await vi.runAllTimersAsync()
+
+        expect(document.activeElement).toBe(inputs[1])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 
   describe('completion', () => {
@@ -158,6 +221,74 @@ describe('<OTPField.Root />', () => {
 
       const root = screen.getByRole('group')
       expect(root).toHaveAttribute('data-complete', '')
+    })
+
+    it('does not fire later for a stale controlled completion attempt', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+
+      try {
+        const onValueComplete = vi.fn()
+        const [value, valueAssign] = createSignal('')
+
+        render(() => (
+          <div>
+            <OTPFieldFixture
+              value={value()}
+              onValueChange={() => {}}
+              onValueComplete={onValueComplete}
+            />
+            <button type="button" onClick={() => valueAssign('654321')}>
+              Apply value
+            </button>
+          </div>
+        ))
+
+        const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+        fireEvent.input(inputs[0]!, { target: { value: '123456' } })
+
+        await vi.runAllTimersAsync()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply value' }))
+        await vi.runAllTimersAsync()
+
+        expect(onValueComplete).not.toHaveBeenCalled()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('fires after an asynchronously accepted controlled completion', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+
+      try {
+        const onValueComplete = vi.fn()
+        const [value, valueAssign] = createSignal('')
+
+        render(() => (
+          <OTPFieldFixture
+            value={value()}
+            onValueChange={nextValue => {
+              setTimeout(() => {
+                valueAssign(nextValue)
+              }, 10)
+            }}
+            onValueComplete={onValueComplete}
+          />
+        ))
+
+        const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+        fireEvent.input(inputs[0]!, { target: { value: '123456' } })
+
+        await vi.runAllTimersAsync()
+
+        expect(onValueComplete).toHaveBeenCalledTimes(1)
+        expect(onValueComplete.mock.calls[0]?.[0]).toBe('123456')
+        expect(onValueComplete.mock.calls[0]?.[1].reason).toBe(
+          REASONS.inputChange
+        )
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 
@@ -226,6 +357,16 @@ describe('<OTPField.Root />', () => {
         expect(input).toHaveAttribute('type', 'password')
       })
     })
+
+    it('allows overriding the input type on individual slots', () => {
+      render(() => (
+        <OTPField.Root length={1} mask>
+          <OTPField.Input type="tel" />
+        </OTPField.Root>
+      ))
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('type', 'tel')
+    })
   })
 
   describe('Field integration', () => {
@@ -263,6 +404,79 @@ describe('<OTPField.Root />', () => {
 
       expect(screen.getAllByRole('textbox')[0]).toHaveAccessibleName('Code')
     })
+
+    it('applies the Field description to the group', () => {
+      render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Verification code</Field.Label>
+          <Field.Description data-testid="description">
+            Enter the code.
+          </Field.Description>
+          <OTPFieldFixture aria-describedby="external-description" />
+        </Field.Root>
+      ))
+
+      const label = screen.getByTestId('label')
+      const description = screen.getByTestId('description')
+      const group = screen.getByRole('group', { name: 'Verification code' })
+
+      expect(group).toHaveAttribute('aria-labelledby', label.id)
+      expect(group).toHaveAttribute(
+        'aria-describedby',
+        `external-description ${description.id}`
+      )
+    })
+
+    it('validates the latest value only after focus leaves the OTP field in onBlur mode', async () => {
+      const validate = vi.fn(() => null)
+
+      render(() => (
+        <div>
+          <Form>
+            <Field.Root name="otp" validationMode="onBlur" validate={validate}>
+              <OTPFieldFixture validationType="none" />
+            </Field.Root>
+          </Form>
+          <button type="button">Outside</button>
+        </div>
+      ))
+
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+
+      inputs[0]!.focus()
+      fireEvent.input(inputs[0]!, { target: { value: '1' } })
+
+      fireEvent.blur(inputs[1]!, { relatedTarget: inputs[2] })
+      expect(validate).not.toHaveBeenCalled()
+
+      fireEvent.blur(inputs[1]!, {
+        relatedTarget: screen.getByRole('button', { name: 'Outside' }),
+      })
+
+      await waitFor(() => {
+        expect(validate).toHaveBeenCalledTimes(1)
+      })
+      expect(validate.mock.calls[0]).toEqual(['1', { otp: '1' }])
+    })
+  })
+
+  describe('accessibility', () => {
+    it('forwards root aria-labelledby to the group only', () => {
+      render(() => (
+        <div>
+          <span id="label-id">Verification code</span>
+          <OTPFieldFixture aria-labelledby="label-id" />
+        </div>
+      ))
+
+      const group = screen.getByRole('group', { name: 'Verification code' })
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+
+      expect(group).toHaveAttribute('aria-labelledby', 'label-id')
+      inputs.forEach(input => {
+        expect(input).not.toHaveAttribute('aria-labelledby', 'label-id')
+      })
+    })
   })
 
   describe('Form integration', () => {
@@ -284,6 +498,129 @@ describe('<OTPField.Root />', () => {
       await waitFor(() => {
         expect(screen.queryByTestId('error')).toBeNull()
       })
+    })
+
+    it('blocks form submission while the code is incomplete', () => {
+      render(() => (
+        <form data-testid="form">
+          <OTPFieldFixture defaultValue="123" name="otp" required />
+          <button type="submit">Submit</button>
+        </form>
+      ))
+
+      expect(screen.getByTestId<HTMLFormElement>('form').checkValidity()).toBe(
+        false
+      )
+    })
+
+    it('allows form submission when the code is complete', () => {
+      render(() => (
+        <form data-testid="form">
+          <OTPFieldFixture defaultValue="123456" name="otp" required />
+          <button type="submit">Submit</button>
+        </form>
+      ))
+
+      expect(screen.getByTestId<HTMLFormElement>('form').checkValidity()).toBe(
+        true
+      )
+    })
+
+    it('redirects hidden validation input focus to the first visible slot', () => {
+      render(() => <OTPFieldFixture name="otp" />)
+
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+      const hiddenInput =
+        document.querySelector<HTMLInputElement>('input[name="otp"]')
+
+      expect(hiddenInput).not.toBeNull()
+      hiddenInput!.focus()
+      expect(inputs[0]).toHaveFocus()
+    })
+
+    it('accepts valid hidden-input autofill and preserves focus when autofill is cleared', async () => {
+      const onValueChange = vi.fn()
+      const onValueInvalid = vi.fn()
+
+      render(() => (
+        <OTPFieldFixture
+          name="otp"
+          onValueChange={onValueChange}
+          onValueInvalid={onValueInvalid}
+        />
+      ))
+
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+      const hiddenInput =
+        document.querySelector<HTMLInputElement>('input[name="otp"]')
+
+      expect(hiddenInput).not.toBeNull()
+
+      fireEvent.input(hiddenInput!, { target: { value: '123456' } })
+
+      expect(getValues()).toBe('123456')
+      await waitFor(() => {
+        expect(inputs[5]).toHaveFocus()
+      })
+      expect(onValueInvalid).not.toHaveBeenCalled()
+
+      fireEvent.input(hiddenInput!, { target: { value: '' } })
+
+      expect(getValues()).toBe('')
+      expect(inputs[5]).toHaveFocus()
+      expect(onValueChange.mock.calls.map(call => call[0])).toEqual([
+        '123456',
+        '',
+      ])
+      expect(onValueInvalid).not.toHaveBeenCalled()
+    })
+
+    it('handles password manager autofill through the hidden input', async () => {
+      const onValueChange = vi.fn()
+      const onValueInvalid = vi.fn()
+      const onValueComplete = vi.fn()
+
+      render(() => (
+        <OTPFieldFixture
+          name="otp"
+          onValueChange={onValueChange}
+          onValueInvalid={onValueInvalid}
+          onValueComplete={onValueComplete}
+        />
+      ))
+
+      const hiddenInput =
+        document.querySelector<HTMLInputElement>('input[name="otp"]')
+
+      expect(hiddenInput).not.toBeNull()
+
+      fireEvent.input(hiddenInput!, { target: { value: '12a34b56' } })
+
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+
+      expect(inputs.map(input => input.value)).toEqual([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ])
+      await waitFor(() => {
+        expect(document.activeElement).toBe(inputs[5])
+      })
+      expect(onValueChange.mock.calls.length).toBe(1)
+      expect(onValueChange.mock.calls[0]?.[0]).toBe('123456')
+      expect(onValueChange.mock.calls[0]?.[1].reason).toBe(REASONS.inputChange)
+      expect(onValueInvalid).toHaveBeenCalledTimes(1)
+      expect(onValueInvalid.mock.calls[0]?.[0]).toBe('12a34b56')
+      expect(onValueInvalid.mock.calls[0]?.[1].reason).toBe(REASONS.inputChange)
+
+      await waitFor(() => {
+        expect(onValueComplete.mock.calls.length).toBe(1)
+      })
+      expect(onValueComplete.mock.calls[0]?.[0]).toBe('123456')
+      expect(onValueComplete.mock.calls[0]?.[1].reason).toBe(REASONS.inputChange)
     })
   })
 
