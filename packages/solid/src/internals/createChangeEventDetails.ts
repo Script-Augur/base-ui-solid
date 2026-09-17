@@ -60,6 +60,30 @@ export function createChangeEventDetails<
 }
 
 /**
+ * Creates non-cancelable event details for callbacks like Form `onFormSubmit`.
+ *
+ * @typeParam TReason - Reason string union for this event.
+ * @typeParam TCustom - Extra properties merged onto the details object.
+ * @param reason - Why the event occurred.
+ * @param event - Optional native event that triggered the callback.
+ * @param customProperties - Optional extra fields merged onto details.
+ */
+export function createGenericEventDetails<
+  TReason extends string = ChangeEventReason,
+  TCustom extends Record<string, unknown> = Record<string, never>,
+>(
+  reason: TReason,
+  event?: Event,
+  customProperties?: TCustom
+): BaseUIGenericEventDetails<TReason> & TCustom {
+  return {
+    reason,
+    event: event ?? new Event('base-ui'),
+    ...(customProperties ?? ({} as TCustom)),
+  }
+}
+
+/**
  * Reason strings from {@link REASONS}.
  */
 export type ChangeEventReason = (typeof REASONS)[keyof typeof REASONS]
@@ -82,4 +106,18 @@ export interface BaseUIChangeEventDetails<
   cancel: () => void
   /** Whether {@link cancel} was called. */
   readonly isCanceled: boolean
+}
+
+/**
+ * Non-cancelable event details passed to Base UI generic callbacks.
+ *
+ * @typeParam TReason - Reason string union for this event.
+ */
+export interface BaseUIGenericEventDetails<
+  TReason extends string = ChangeEventReason,
+> {
+  /** Why the event occurred. */
+  reason: TReason
+  /** Underlying native event when available. */
+  event: Event
 }

@@ -27,6 +27,7 @@ export default defineConfig({
     portal: 'src/portal/index.ts',
     field: 'src/field/index.ts',
     fieldset: 'src/fieldset/index.ts',
+    form: 'src/form/index.ts',
   },
   format: ['esm'],
   dts: true,
