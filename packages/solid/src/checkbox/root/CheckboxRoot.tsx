@@ -93,13 +93,19 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
     useLabelableContext()
 
   const groupContext = useCheckboxGroupContext()
-  // Group parent wiring lands with Checkbox Group; stub is always undefined.
-  void groupContext
+  const parentContext = () =>
+    groupContext?.allValues() === undefined ? undefined : groupContext.parent
+  const isGroupedWithParent = () => parentContext() !== undefined
 
   const disabled = () =>
-    field.disabled() || fieldItemContext.disabled() || Boolean(local.disabled)
+    field.disabled() ||
+    fieldItemContext.disabled() ||
+    Boolean(groupContext?.disabled()) ||
+    Boolean(local.disabled)
 
   const name = () => field.name() ?? local.name
+  // Identity within a group: explicit `value`, else `name`.
+  const groupItemValue = () => local.value ?? local.name
   const parent = () => local.parent ?? false
   const readOnly = () => local.readOnly ?? false
   const required = () => local.required ?? false
@@ -107,9 +113,67 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
   const nativeButton = () => local.nativeButton ?? false
 
   const generatedId = createUniqueId()
+  const generatedInputId = createUniqueId()
   const id = () => generatedId
 
-  const inputId = (): string | undefined => local.id || controlId() || undefined
+  const groupProps = () => {
+    const parentCtx = parentContext()
+    if (!parentCtx) {
+      return {} as {
+        checked?: boolean
+        indeterminate?: boolean
+        onCheckedChange?: (
+          checked: boolean,
+          eventDetails: CheckboxRootChangeEventDetails
+        ) => void
+        id?: string
+        'aria-controls'?: string
+      }
+    }
+    if (parent()) {
+      return parentCtx.getParentProps()
+    }
+    const itemValue = groupItemValue()
+    if (itemValue !== undefined) {
+      return parentCtx.getChildProps(itemValue)
+    }
+    return {}
+  }
+
+  const groupChecked = () => groupProps().checked ?? local.checked
+  const groupIndeterminate = () => {
+    const props = groupProps()
+    if ('indeterminate' in props && props.indeterminate !== undefined) {
+      return props.indeterminate
+    }
+    return indeterminate()
+  }
+  const groupOnChange = () => groupProps().onCheckedChange
+  const otherGroupProps = () => {
+    const props = groupProps()
+    return {
+      get id() {
+        return 'id' in props ? props.id : undefined
+      },
+      get 'aria-controls'() {
+        return 'aria-controls' in props ? props['aria-controls'] : undefined
+      },
+    }
+  }
+
+  const inputId = (): string | undefined => {
+    if (isGroupedWithParent()) {
+      if (parent()) {
+        return generatedInputId
+      }
+      const itemValue = groupItemValue()
+      if (itemValue !== undefined) {
+        return `${parentContext()!.id}-${itemValue}`
+      }
+      return local.id || controlId() || generatedInputId
+    }
+    return local.id || controlId() || undefined
+  }
 
   const controlRef: { current: HTMLElement | null } = { current: null }
   const [inputElement, inputElementAssign] =
@@ -123,15 +187,26 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
     native: nativeButton,
   })
 
-  const validation = field.validation
+  const validation = () => groupContext?.validation ?? field.validation
 
   const [checked, checkedAssign] = createControlled({
-    value: () => local.checked,
+    value: () => {
+      const itemValue = groupItemValue()
+      const groupValue = groupContext?.value()
+      if (itemValue !== undefined && groupValue !== undefined && !parent()) {
+        return groupValue.includes(itemValue)
+      }
+      return groupChecked()
+    },
     defaultValue: local.defaultChecked ?? false,
   })
 
-  const computedChecked = () => checked()
-  const computedIndeterminate = () => indeterminate()
+  const computedChecked = () =>
+    isGroupedWithParent() ? Boolean(groupChecked()) : checked()
+  const computedIndeterminate = () =>
+    isGroupedWithParent()
+      ? Boolean(groupIndeterminate() || indeterminate())
+      : indeterminate()
 
   // Register control id with LabelableProvider (mirrors React's manual path).
   createEffect(() => {
@@ -156,7 +231,7 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
     controlRef,
     id,
     value: checked,
-    enabled: () => !disabled(),
+    enabled: () => !groupContext && !disabled(),
     name: () => local.name,
   })
 
@@ -176,9 +251,10 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
     if (!element || parent()) {
       return
     }
-    const cleanup = validation.registerInput(element, {
+    const registeredInputValue = groupContext ? groupItemValue() : undefined
+    const cleanup = validation().registerInput(element, {
       controlRef,
-      value: undefined,
+      value: registeredInputValue,
     })
     onCleanup(() => {
       cleanup?.()
@@ -206,12 +282,27 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
   createEffect((prev: boolean | undefined) => {
     const next = checked()
     if (prev !== undefined && prev !== next) {
+      if (groupContext) {
+        return next
+      }
       clearErrors(name())
       field.filledAssign(next)
       field.dirtyAssign(next !== field.validityData().initialValue)
-      validation.change(next)
+      validation().change(next)
     }
     return next
+  })
+
+  createEffect(() => {
+    const parentCtx = parentContext()
+    const itemValue = groupItemValue()
+    if (!parentCtx || itemValue === undefined) {
+      return
+    }
+    parentCtx.disabledStatesRef.set(itemValue, disabled())
+    onCleanup(() => {
+      parentCtx.disabledStatesRef.delete(itemValue)
+    })
   })
 
   const state: CheckboxRootState = {
@@ -255,9 +346,13 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
 
   const showUncheckedValue = () =>
     !checked() &&
+    !groupContext &&
     Boolean(name()) &&
     !parent() &&
     local.uncheckedValue !== undefined
+
+  const commitValue = () =>
+    groupContext ? groupContext.value() : Boolean(inputRef.current?.checked)
 
   return (
     <CheckboxRootContext.Provider value={state}>
@@ -268,6 +363,7 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
         class={local.class}
         style={local.style}
         elementProps={elementProps}
+        otherGroupProps={otherGroupProps}
         ref={local.ref}
         buttonRefAssign={buttonRefAssign}
         assignControlRef={assignControlRef}
@@ -284,11 +380,11 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
         ariaLabelledBy={ariaLabelledBy}
         field={field}
         validation={validation}
+        commitValue={commitValue}
         inputRef={inputRef}
       >
         {local.children}
       </CheckboxRootHost>
-
       <Show when={showUncheckedValue()}>
         <input
           type="hidden"
@@ -298,7 +394,6 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
           disabled={disabled()}
         />
       </Show>
-
       <input
         type="checkbox"
         tabIndex={-1}
@@ -313,16 +408,17 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
         style={name() ? visuallyHiddenInput : visuallyHidden}
         {...(local.value !== undefined
           ? {
-              value: local.value || '',
+              value:
+                (groupContext ? checked() && local.value : local.value) || '',
             }
           : {})}
         aria-describedby={
-          validation.getValidationProps(disabled(), getDescriptionProps({}))[
+          validation().getValidationProps(disabled(), getDescriptionProps({}))[
             'aria-describedby'
           ] as string | undefined
         }
         aria-invalid={
-          validation.getValidationProps(disabled())['aria-invalid'] as
+          validation().getValidationProps(disabled())['aria-invalid'] as
             boolean | undefined
         }
         onChange={(event: Event & { currentTarget: HTMLInputElement }) => {
@@ -343,7 +439,32 @@ export function CheckboxRoot(componentProps: CheckboxRootProps): JSX.Element {
             return
           }
 
+          groupOnChange()?.(nextChecked, details)
+          // Getter can flip after groupOnChange; eslint cannot track that.
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- cancelable details
+          if (details.isCanceled) {
+            event.currentTarget.checked = checked()
+            return
+          }
+
           checkedAssign(nextChecked)
+
+          const itemValue = groupItemValue()
+          if (
+            itemValue !== undefined &&
+            groupContext !== undefined &&
+            !parent() &&
+            !isGroupedWithParent()
+          ) {
+            const nextGroupValue = nextChecked
+              ? [...groupContext.value(), itemValue]
+              : groupContext.value().filter(item => item !== itemValue)
+            groupContext.setValue(nextGroupValue, details)
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- cancelable details
+            if (details.isCanceled) {
+              event.currentTarget.checked = checked()
+            }
+          }
         }}
         onClick={(event: MouseEvent) => {
           event.stopPropagation()
@@ -495,6 +616,10 @@ function CheckboxRootHost(props: {
   class: CheckboxRootProps['class']
   style: CheckboxRootProps['style']
   elementProps: Record<string, unknown>
+  otherGroupProps: () => {
+    id?: string | undefined
+    'aria-controls'?: string | undefined
+  }
   ref: CheckboxRootProps['ref']
   buttonRefAssign: (element: HTMLElement | null) => void
   assignControlRef: (element: Element | null) => void
@@ -512,7 +637,8 @@ function CheckboxRootHost(props: {
   parent: () => boolean
   ariaLabelledBy: () => string | undefined
   field: ReturnType<typeof useFieldRootContext>
-  validation: ReturnType<typeof useFieldRootContext>['validation']
+  validation: () => ReturnType<typeof useFieldRootContext>['validation']
+  commitValue: () => unknown
   inputRef: { current: HTMLInputElement | null }
   children?: JSX.Element
 }): JSX.Element {
@@ -539,7 +665,7 @@ function CheckboxRootHost(props: {
           props.field.touchedAssign(true)
           props.field.focusedAssign(false)
           if (props.field.validationMode() === 'onBlur') {
-            void props.validation.commit(inputEl.checked)
+            void props.validation().commit(props.commitValue())
           }
         },
         onKeyDown(event: KeyboardEvent & { currentTarget: HTMLElement }) {
@@ -656,18 +782,30 @@ function CheckboxRootHost(props: {
       // Consumer props before composed a11y so they can override built-ins
       // (e.g. role="switch") without clobbering Field description/validation.
       props.elementProps,
+      // Parent select-all linkage after elementProps (match upstream) so
+      // consumers cannot clobber group `id` / `aria-controls`.
+      {
+        get id() {
+          return props.otherGroupProps().id
+        },
+        get 'aria-controls'() {
+          return props.otherGroupProps()['aria-controls']
+        },
+      },
       {
         // Match FieldControl / upstream: compose after elementProps.
         // getValidationProps already applies getDescriptionProps.
         get 'aria-describedby'() {
           const external = props.elementProps['aria-describedby']
-          return props.validation.getValidationProps(
-            props.disabled(),
-            external != null ? { 'aria-describedby': external } : {}
-          )['aria-describedby']
+          return props
+            .validation()
+            .getValidationProps(
+              props.disabled(),
+              external != null ? { 'aria-describedby': external } : {}
+            )['aria-describedby']
         },
         get 'aria-invalid'() {
-          return props.validation.getValidationProps(props.disabled())[
+          return props.validation().getValidationProps(props.disabled())[
             'aria-invalid'
           ]
         },

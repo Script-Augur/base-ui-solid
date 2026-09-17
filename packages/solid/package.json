@@ -124,6 +124,11 @@
       "import": "./dist/checkbox.js",
       "default": "./dist/checkbox.js"
     },
+    "./checkbox-group": {
+      "types": "./dist/checkbox-group.d.ts",
+      "import": "./dist/checkbox-group.js",
+      "default": "./dist/checkbox-group.js"
+    },
     "./switch": {
       "types": "./dist/switch.d.ts",
       "import": "./dist/switch.js",

@@ -33,6 +33,7 @@ export default defineConfig({
     form: 'src/form/index.ts',
     input: 'src/input/index.ts',
     checkbox: 'src/checkbox/index.ts',
+    'checkbox-group': 'src/checkbox-group/index.ts',
     switch: 'src/switch/index.ts',
     radio: 'src/radio/index.ts',
     'radio-group': 'src/radio-group/index.ts',

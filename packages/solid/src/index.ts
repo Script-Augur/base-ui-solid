@@ -266,6 +266,13 @@ export {
   CheckboxIndicatorDataAttributes,
 } from './checkbox'
 export {
+  CheckboxGroup,
+  CheckboxGroupDataAttributes,
+  CheckboxGroupContext,
+  useCheckboxGroupContext,
+  useCheckboxGroupParent,
+} from './checkbox-group'
+export {
   Switch,
   SwitchRoot,
   SwitchRootDataAttributes,
@@ -588,6 +595,15 @@ export type {
   CheckboxIndicatorProps,
   CheckboxIndicatorState,
 } from './checkbox'
+export type {
+  CheckboxGroupProps,
+  CheckboxGroupState,
+  CheckboxGroupChangeEventReason,
+  CheckboxGroupChangeEventDetails,
+  CheckboxGroupContextValue,
+  UseCheckboxGroupParentParameters,
+  UseCheckboxGroupParentReturnValue,
+} from './checkbox-group'
 export type {
   SwitchRootProps,
   SwitchRootState,
