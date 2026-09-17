@@ -175,7 +175,13 @@ export {
   DEFAULT_FIELD_ROOT_CONTEXT,
   useFieldRootContext,
 } from './internals/field-root-context'
-export { FieldsetRootContext, useFieldsetRootContext } from './fieldset'
+export {
+  Fieldset,
+  FieldsetRoot,
+  FieldsetRootContext,
+  useFieldsetRootContext,
+  FieldsetLegend,
+} from './fieldset'
 export {
   createControlled,
   createChangeEventDetails,
@@ -372,7 +378,13 @@ export type {
   CreateLabelableIdParameters,
 } from './internals/labelable-provider'
 export type { FieldRootContextValue } from './internals/field-root-context'
-export type { FieldsetRootContextValue } from './fieldset'
+export type {
+  FieldsetRootProps,
+  FieldsetRootState,
+  FieldsetRootContextValue,
+  FieldsetLegendProps,
+  FieldsetLegendState,
+} from './fieldset'
 export type {
   CreateControlledOptions,
   ControlledSetter,

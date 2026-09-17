@@ -26,6 +26,7 @@ export default defineConfig({
     'scroll-area': 'src/scroll-area/index.ts',
     portal: 'src/portal/index.ts',
     field: 'src/field/index.ts',
+    fieldset: 'src/fieldset/index.ts',
   },
   format: ['esm'],
   dts: true,

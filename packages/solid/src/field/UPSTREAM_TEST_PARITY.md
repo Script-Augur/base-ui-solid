@@ -6,21 +6,21 @@ Sources under `/tmp/base-ui-field/field/`.
 
 ## Ported (Solid)
 
-| Area                                                    | Solid file                | Notes                     |
-| ------------------------------------------------------- | ------------------------- | ------------------------- |
-| Label association / id swap                             | `root/FieldRoot.test.tsx` |                           |
-| `disabled` / `invalid` / Fieldset inherit               | `root/FieldRoot.test.tsx` | Fieldset via context only |
-| Form-error invalid while disabled                       | `root/FieldRoot.test.tsx` | Via `FormErrorsProvider`  |
-| `validate` + `validationMode` onBlur/onChange           | `root/FieldRoot.test.tsx` |                           |
-| valueMissing dirty/pristine                             | `root/FieldRoot.test.tsx` |                           |
-| required + typeMismatch native interactions             | `root/FieldRoot.test.tsx` | Field-local revalidation  |
-| valueMissing clear / typeMismatch defer-until-blur      | `root/FieldRoot.test.tsx` | Field-local revalidation  |
-| async + stale async                                     | `root/FieldRoot.test.tsx` |                           |
-| debounce (`validationDebounceTime`)                     | `root/FieldRoot.test.tsx` | Field.Control only        |
-| style hooks (touched/dirty/filled/focused)              | `root/FieldRoot.test.tsx` |                           |
-| controlled `dirty` / `touched`                          | `root/FieldRoot.test.tsx` |                           |
-| `actionsRef.validate` (+ clear on unmount)              | `root/FieldRoot.test.tsx` |                           |
-| Label / Description / Control / Error / Validity / Item | matching `*.test.tsx`     | Form errors via context   |
+| Area                                                    | Solid file                | Notes                                      |
+| ------------------------------------------------------- | ------------------------- | ------------------------------------------ |
+| Label association / id swap                             | `root/FieldRoot.test.tsx` |                                            |
+| `disabled` / `invalid` / Fieldset inherit               | `root/FieldRoot.test.tsx` | Fieldset via context (full Root available) |
+| Form-error invalid while disabled                       | `root/FieldRoot.test.tsx` | Via `FormErrorsProvider`                   |
+| `validate` + `validationMode` onBlur/onChange           | `root/FieldRoot.test.tsx` |                                            |
+| valueMissing dirty/pristine                             | `root/FieldRoot.test.tsx` |                                            |
+| required + typeMismatch native interactions             | `root/FieldRoot.test.tsx` | Field-local revalidation                   |
+| valueMissing clear / typeMismatch defer-until-blur      | `root/FieldRoot.test.tsx` | Field-local revalidation                   |
+| async + stale async                                     | `root/FieldRoot.test.tsx` |                                            |
+| debounce (`validationDebounceTime`)                     | `root/FieldRoot.test.tsx` | Field.Control only                         |
+| style hooks (touched/dirty/filled/focused)              | `root/FieldRoot.test.tsx` |                                            |
+| controlled `dirty` / `touched`                          | `root/FieldRoot.test.tsx` |                                            |
+| `actionsRef.validate` (+ clear on unmount)              | `root/FieldRoot.test.tsx` |                                            |
+| Label / Description / Control / Error / Validity / Item | matching `*.test.tsx`     | Form errors via context                    |
 
 ## Skipped
 
