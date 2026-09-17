@@ -5,6 +5,7 @@ import type {
   ChangeEventReason,
 } from '../../internals/createChangeEventDetails'
 import type { TransitionStatus } from '../../internals/createTransitionStatus'
+import type { PopoverStore } from '../store/PopoverStore'
 import type { Accessor, Setter } from 'solid-js'
 
 /**
@@ -44,6 +45,8 @@ export interface PopoverRootContextValue {
     next: boolean,
     eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
   ) => void
+  /** Popup-handle store for this root (trigger registry + imperative open). */
+  store: PopoverStore
   modal: Accessor<boolean | 'trap-focus'>
   nested: Accessor<boolean>
   nestedOpenPopoverCount: Accessor<number>

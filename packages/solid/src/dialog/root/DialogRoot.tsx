@@ -11,7 +11,13 @@ import { createTransitionStatus } from '../../internals/createTransitionStatus'
 import { createDismiss } from '../../internals/dismiss'
 import { createFocusTrap } from '../../internals/focusTrap'
 import { listenerEffect } from '../../internals/listenerEffect'
+import {
+  createImplicitActiveTrigger,
+  createPopupHandleAttachment,
+  setPopupOpenState,
+} from '../../internals/popups'
 import { createScrollLock } from '../../internals/scrollLock'
+import { DialogStore } from '../store/DialogStore'
 
 import { DialogRootContext, useDialogRootContext } from './DialogRootContext'
 
@@ -20,6 +26,7 @@ import type {
   BaseUIChangeEventDetails,
   ChangeEventReason,
 } from '../../internals/createChangeEventDetails'
+import type { DialogHandle } from '../store/DialogHandle'
 import type { JSX } from 'solid-js'
 /**
  * Shared dialog root implementation (upstream `useRenderDialogRoot`).
@@ -47,6 +54,9 @@ export function useRenderDialogRoot(
     'modal',
     'disablePointerDismissal',
     'actionsRef',
+    'handle',
+    'triggerId',
+    'defaultTriggerId',
   ])
 
   const isAlertDialog = mode === 'alert-dialog'
@@ -64,6 +74,44 @@ export function useRenderDialogRoot(
     isAlertDialog ? true : (local.disablePointerDismissal ?? false)
   const role = (): 'dialog' | 'alertdialog' =>
     isAlertDialog ? 'alertdialog' : 'dialog'
+
+  const store = new DialogStore({
+    open: local.defaultOpen ?? false,
+    openProp: local.open,
+    activeTriggerId: local.defaultTriggerId ?? null,
+    triggerIdProp: local.triggerId,
+    modal: modal(),
+    disablePointerDismissal: disablePointerDismissal(),
+    nested: nested(),
+    role: role(),
+  })
+
+  createPopupHandleAttachment(local.handle, store)
+  createImplicitActiveTrigger(store)
+
+  createEffect(() => {
+    store.set('openProp', local.open)
+  })
+  createEffect(() => {
+    store.set('triggerIdProp', local.triggerId)
+  })
+  createEffect(() => {
+    store.update({
+      modal: modal(),
+      disablePointerDismissal: disablePointerDismissal(),
+      nested: nested(),
+      role: role(),
+    })
+  })
+  createEffect(() => {
+    store.context.onOpenChange = local.onOpenChange as
+      | ((
+          open: boolean,
+          eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
+        ) => void)
+      | undefined
+    store.context.onOpenChangeComplete = local.onOpenChangeComplete
+  })
 
   const { mounted, mountedAssign, transitionStatus } =
     createTransitionStatus(open)
@@ -106,6 +154,14 @@ export function useRenderDialogRoot(
     const details = eventDetails as DialogRootChangeEventDetails
     details.preventUnmountOnClose = () => {
       preventUnmountOnCloseAssign(true)
+      store.set('preventUnmountingOnClose', true)
+    }
+    if (
+      !nextOpen &&
+      details.trigger == null &&
+      store.state.activeTriggerId != null
+    ) {
+      details.trigger = store.state.activeTriggerElement ?? undefined
     }
     local.onOpenChange?.(nextOpen, details)
     if (eventDetails.isCanceled) return
@@ -115,7 +171,13 @@ export function useRenderDialogRoot(
       preventUnmountOnCloseAssign(false)
     }
     openAssign(nextOpen)
+    const updatedState = { open: nextOpen }
+    setPopupOpenState(updatedState, nextOpen, details.trigger)
+    store.update(updatedState)
   }
+
+  // Handle / detached triggers call `store.setOpen`; route through Root `setOpen`.
+  store.setOpen = setOpen
 
   const handleUnmount = () => {
     mountedAssign(false)
@@ -234,10 +296,34 @@ export function useRenderDialogRoot(
     true
   )
 
+  createEffect(() => {
+    store.set('popupElement', popupElement())
+    store.context.popupRef.current = popupElement()
+  })
+  createEffect(() => {
+    store.set('viewportElement', viewportElement())
+  })
+  createEffect(() => {
+    store.set('titleElementId', titleElementId())
+  })
+  createEffect(() => {
+    store.set('descriptionElementId', descriptionElementId())
+  })
+  createEffect(() => {
+    store.set('mounted', mounted())
+  })
+  createEffect(() => {
+    // Keep store.open aligned with controlled/uncontrolled open for handle.isOpen.
+    if (store.state.open !== open()) {
+      store.set('open', open())
+    }
+  })
+
   const contextValue: DialogRootContextValue = {
     open,
     openAssign,
     setOpen,
+    store,
     modal,
     disablePointerDismissal,
     nested,
@@ -353,6 +439,19 @@ export type DialogRootProps = {
    * mounted until `actionsRef.unmount()` runs.
    */
   actionsRef?: DialogRootActions
+  /**
+   * A handle to associate detached `Dialog.Trigger` components with this root.
+   */
+  handle?: DialogHandle<unknown>
+  /**
+   * ID of the trigger associated with a controlled dialog.
+   */
+  triggerId?: string | null
+  /**
+   * Default trigger id for an initially open uncontrolled dialog.
+   * @default null
+   */
+  defaultTriggerId?: string | null
 }
 /** Imperative actions exposed via `actionsRef`. */
 export type DialogRootActions = {

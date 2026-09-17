@@ -539,6 +539,43 @@ describe('Dialog', () => {
       )
     })
   })
+
+  it('exports createHandle and opens via detached trigger', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const handle = Dialog.createHandle()
+    expect(handle).toBeInstanceOf(Dialog.Handle)
+    expect(handle.isOpen).toBe(false)
+    handle.open()
+    expect(handle.isOpen).toBe(false)
+    warn.mockRestore()
+
+    render(() => (
+      <>
+        <Dialog.Trigger handle={handle} id="detached-trigger">
+          Detached
+        </Dialog.Trigger>
+        <Dialog.Root handle={handle}>
+          <Dialog.Portal>
+            <Dialog.Popup data-testid="popup">
+              <Dialog.Title>Title</Dialog.Title>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </>
+    ))
+
+    expect(screen.queryByTestId('popup')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Detached' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+    expect(handle.isOpen).toBe(true)
+
+    handle.close()
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+    })
+  })
 })
 
 function BasicDialog(props: {

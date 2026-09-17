@@ -17,17 +17,8 @@ Upstream reference: `@base-ui/react@1.7.0` `Popover` (`Root`, `Trigger`,
 | Non-modal: no scroll lock                              | covered |
 | Portal mount (`data-base-ui-portal`)                   | covered |
 | `aria-labelledby` / `aria-describedby`                 | covered |
+| `createHandle` / `Handle` + detached trigger open/close | covered |
 | Nested popovers + Escape targets topmost               | covered |
-| Internal backdrop when `modal === true`                | covered |
-| `details.preventUnmountOnClose` + `actionsRef.unmount` | covered |
-| `actionsRef.close`                                     | covered |
-| Positioner mounts with Floating UI placement           | covered |
-| Arrow registers with positioner                        | covered |
-| Viewport renders when mounted                          | covered |
-| Trigger `openOnHover` + `delay` / `closeDelay` (Lite)  | covered |
-| Trigger click-toggle close                             | covered |
-| Patient click after hover-open (`stickIfOpen`)         | covered |
-| `createHandle` / `Handle` exported (stub)              | stub    |
 
 ## Deferred / partial
 
@@ -38,7 +29,7 @@ Upstream reference: `@base-ui/react@1.7.0` `Popover` (`Root`, `Trigger`,
 | `modal="trap-focus"` (trap on, no scroll)                            | Wired; no dedicated suite coverage yet                             |
 | Restore focus to trigger on close                                    | Wired; no dedicated suite coverage yet                             |
 | `Popup` `initialFocus` / `finalFocus`                                | Wired; no dedicated suite coverage yet                             |
-| `Popover.createHandle` / detached triggers / `triggerId` / `payload` | Requires popup-handle store; same deferral as Dialog               |
+| `Popover.createHandle` / detached triggers / `triggerId` / `payload` | Handle + detached open/close covered; payload children render-prop still deferred |
 | Multi-trigger / Viewport content transitions                         | Lite Viewport mounts children only                                 |
 | Intentional vs sloppy outside-press (mousedown vs click)             | Solid uses `pointerdown`; matches Lite dismiss helper              |
 | Shadow DOM outside-press matrix                                      | jsdom coverage limited                                             |

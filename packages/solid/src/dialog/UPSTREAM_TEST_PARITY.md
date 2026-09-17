@@ -30,12 +30,14 @@ Upstream reference: `@base-ui/react@1.7.0` `Dialog` (`Root`, `Trigger`,
 | `modal="trap-focus"` (trap on, no scroll)              | covered |
 | `details.preventUnmountOnClose` + `actionsRef.unmount` | covered |
 | Viewport renders when mounted                          | covered |
+| `createHandle` / detached trigger open/close           | covered |
 
 ## Deferred / partial
 
 | Behavior                                                     | Notes                                                                        |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `Dialog.createHandle` / detached triggers / `triggerId`      | Requires popup-handle store; follow-up with Menu/Popover                     |
+| `Dialog.createHandle` payload children render function       | Handle + detached triggers covered; payload children render-prop deferred    |
+| Multi-trigger ARIA sync edge cases                           | Basic `triggerId` / active trigger wired via popup store                     |
 | `actionsRef.unmount` + exit-animation handoff edge cases     | `actionsRef` + `preventUnmountOnClose` wired; full animation matrix deferred |
 | Intentional vs sloppy outside-press (mousedown vs click)     | Solid uses `pointerdown`; matches Lite dismiss helper                        |
 | Shadow DOM outside-press matrix                              | jsdom coverage limited                                                       |

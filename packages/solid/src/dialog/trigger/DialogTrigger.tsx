@@ -1,10 +1,15 @@
-import { mergeProps, splitProps } from 'solid-js'
+import { generateId } from '@script-augur/base-ui-utils'
+import { createSignal, mergeProps, splitProps } from 'solid-js'
 
 import {
   REASONS,
   createChangeEventDetails,
 } from '../../internals/createChangeEventDetails'
 import { createRender } from '../../internals/createRender'
+import {
+  createPopupHandleStore,
+  createTriggerDataForwarding,
+} from '../../internals/popups'
 import { useButton } from '../../internals/useButton'
 import { useDialogRootContext } from '../root/DialogRootContext'
 import { triggerOpenStateMapping } from '../utils/stateAttributesMapping'
@@ -12,6 +17,7 @@ import { triggerOpenStateMapping } from '../utils/stateAttributesMapping'
 import { DialogTriggerDataAttributes } from './DialogTriggerDataAttributes'
 
 import type { RenderProp } from '../../internals/createRender'
+import type { DialogHandle } from '../store/DialogHandle'
 import type { JSX } from 'solid-js'
 
 /**
@@ -24,7 +30,7 @@ import type { JSX } from 'solid-js'
  * @returns A Solid JSX element.
  */
 export function DialogTrigger(componentProps: DialogTriggerProps): JSX.Element {
-  const context = useDialogRootContext()
+  const dialogRootContext = useDialogRootContext(true)
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -33,7 +39,35 @@ export function DialogTrigger(componentProps: DialogTriggerProps): JSX.Element {
     'disabled',
     'nativeButton',
     'ref',
+    'id',
+    'payload',
+    'handle',
   ])
+
+  const handleStore = createPopupHandleStore(
+    local.handle
+  )
+  const store = () =>
+    (handleStore() ??
+      dialogRootContext?.store)
+
+  if (!store()) {
+    throw new Error(
+      'Base UI: <Dialog.Trigger> must be used within <Dialog.Root> or provided with a handle.'
+    )
+  }
+
+  const triggerId = local.id ?? generateId('base-ui-dialog-trigger')
+  const [triggerElement, triggerElementAssign] =
+    createSignal<HTMLElement | null>(null)
+
+  const { registerTrigger, isMountedByThisTrigger } =
+    createTriggerDataForwarding(
+      () => triggerId,
+      triggerElement,
+      () => store()!,
+      () => ({ payload: local.payload })
+    )
 
   const disabled = () => local.disabled ?? false
 
@@ -42,12 +76,16 @@ export function DialogTrigger(componentProps: DialogTriggerProps): JSX.Element {
     native: () => local.nativeButton ?? true,
   })
 
+  const isOpenedByThisTrigger = () =>
+    store()!.select('isOpenedByTrigger', triggerId)
+  const popupId = () => store()!.select('triggerPopupId', triggerId)
+
   const state: DialogTriggerState = {
     get disabled() {
       return disabled()
     },
     get open() {
-      return context.open()
+      return isOpenedByThisTrigger()
     },
   }
 
@@ -62,25 +100,31 @@ export function DialogTrigger(componentProps: DialogTriggerProps): JSX.Element {
         mergeProps(elementProps as Record<string, unknown>, {
           onClick(event: MouseEvent) {
             if (disabled()) return
-            const next = !context.open()
-            context.setOpen(
+            const activeStore = store()!
+            const next = !activeStore.select('open')
+            activeStore.setOpen(
               next,
-              createChangeEventDetails(REASONS.triggerPress, event)
+              createChangeEventDetails(
+                REASONS.triggerPress,
+                event,
+                triggerElement() ?? undefined
+              )
             )
           },
         }) as Record<string, unknown>
       ),
       {
+        get id() {
+          return triggerId
+        },
         get 'aria-haspopup'() {
           return 'dialog' as const
         },
         get 'aria-expanded'() {
-          return context.open()
+          return isOpenedByThisTrigger()
         },
         get 'aria-controls'() {
-          return context.open()
-            ? (context.popupElement()?.id ?? undefined)
-            : undefined
+          return popupId()
         },
         get class() {
           return local.class
@@ -89,11 +133,16 @@ export function DialogTrigger(componentProps: DialogTriggerProps): JSX.Element {
           return local.style
         },
         get [DialogTriggerDataAttributes.popupOpen]() {
-          return context.open() ? '' : undefined
+          return isOpenedByThisTrigger() ? '' : undefined
         },
         ref(element: HTMLElement) {
           buttonRefAssign(element)
-          context.triggerElementAssign(element)
+          triggerElementAssign(element)
+          registerTrigger(element)
+          // Keep legacy single-trigger element for focus restore when nested in Root.
+          if (isMountedByThisTrigger() || dialogRootContext) {
+            dialogRootContext?.triggerElementAssign(element)
+          }
           const userRef = local.ref
           if (typeof userRef === 'function') {
             userRef(element as HTMLButtonElement)
@@ -122,4 +171,12 @@ export type DialogTriggerProps = Omit<
    */
   nativeButton?: boolean
   render?: RenderProp<DialogTriggerState, Record<string, unknown>>
+  /**
+   * A handle to associate this trigger with a dialog root rendered elsewhere.
+   */
+  handle?: DialogHandle<unknown>
+  /**
+   * Payload associated with this trigger (exposed via root render-prop children).
+   */
+  payload?: unknown
 }

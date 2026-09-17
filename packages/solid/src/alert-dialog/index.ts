@@ -23,6 +23,11 @@ export {
   useDialogRootContext as useAlertDialogRootContext,
 } from '../dialog/root/DialogRootContext'
 
+export {
+  createDialogHandle as createAlertDialogHandle,
+  DialogHandle as AlertDialogHandle,
+} from '../dialog/store/DialogHandle'
+
 export type {
   AlertDialogRootProps,
   AlertDialogRootActions,

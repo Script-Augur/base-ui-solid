@@ -7,3 +7,7 @@ export { DialogPortal as Portal } from '../dialog/portal/DialogPortal'
 export { DialogTitle as Title } from '../dialog/title/DialogTitle'
 export { AlertDialogTrigger as Trigger } from './trigger/AlertDialogTrigger'
 export { DialogViewport as Viewport } from '../dialog/viewport/DialogViewport'
+export {
+  createDialogHandle as createHandle,
+  DialogHandle as Handle,
+} from '../dialog/store/DialogHandle'

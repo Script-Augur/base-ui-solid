@@ -343,11 +343,46 @@ describe('Popover', () => {
     expect(screen.getByTestId('arrow')).toBeInTheDocument()
   })
 
-  it('exports createHandle stub', () => {
+  it('exports createHandle and ignores open while unattached', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const handle = Popover.createHandle()
     expect(handle).toBeInstanceOf(Popover.Handle)
+    expect(handle.isOpen).toBe(false)
     expect(() => handle.open()).not.toThrow()
     expect(() => handle.close()).not.toThrow()
+    expect(handle.isOpen).toBe(false)
+    warn.mockRestore()
+  })
+
+  it('opens and closes via createHandle when Root is attached', async () => {
+    const handle = Popover.createHandle()
+    render(() => (
+      <>
+        <Popover.Trigger handle={handle} id="detached-trigger">
+          Detached
+        </Popover.Trigger>
+        <Popover.Root handle={handle}>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">
+                <Popover.Title>Title</Popover.Title>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>
+    ))
+
+    expect(screen.queryByTestId('popup')).toBeNull()
+    handle.open('detached-trigger')
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+    expect(handle.isOpen).toBe(true)
+    handle.close()
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+    })
   })
 
   it('sets aria-modal when modal is true', () => {

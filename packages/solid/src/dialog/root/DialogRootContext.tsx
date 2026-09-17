@@ -5,6 +5,7 @@ import type {
   ChangeEventReason,
 } from '../../internals/createChangeEventDetails'
 import type { TransitionStatus } from '../../internals/createTransitionStatus'
+import type { DialogStore } from '../store/DialogStore'
 import type { Accessor, Setter } from 'solid-js'
 
 /**
@@ -42,6 +43,8 @@ export interface DialogRootContextValue {
     next: boolean,
     eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
   ) => void
+  /** Popup-handle store for this root (trigger registry + imperative open). */
+  store: DialogStore
   modal: Accessor<boolean | 'trap-focus'>
   disablePointerDismissal: Accessor<boolean>
   nested: Accessor<boolean>
