@@ -119,6 +119,11 @@
       "import": "./dist/input.js",
       "default": "./dist/input.js"
     },
+    "./number-field": {
+      "types": "./dist/number-field.d.ts",
+      "import": "./dist/number-field.js",
+      "default": "./dist/number-field.js"
+    },
     "./checkbox": {
       "types": "./dist/checkbox.d.ts",
       "import": "./dist/checkbox.js",

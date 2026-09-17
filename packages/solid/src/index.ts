@@ -185,6 +185,27 @@ export {
 export { Form } from './form'
 export { Input, InputDataAttributes } from './input'
 export {
+  NumberField,
+  NumberFieldRoot,
+  NumberFieldRootDataAttributes,
+  NumberFieldRootContext,
+  useNumberFieldRootContext,
+  NumberFieldGroup,
+  NumberFieldGroupDataAttributes,
+  NumberFieldIncrement,
+  NumberFieldIncrementDataAttributes,
+  NumberFieldDecrement,
+  NumberFieldDecrementDataAttributes,
+  NumberFieldInput,
+  NumberFieldInputDataAttributes,
+  NumberFieldScrubArea,
+  NumberFieldScrubAreaDataAttributes,
+  NumberFieldScrubAreaContext,
+  useNumberFieldScrubAreaContext,
+  NumberFieldScrubAreaCursor,
+  NumberFieldScrubAreaCursorDataAttributes,
+} from './number-field'
+export {
   Dialog,
   DialogRoot,
   DialogRootContext,
@@ -586,6 +607,26 @@ export type {
   InputChangeEventDetails,
   InputChangeEventReason,
 } from './input'
+export type {
+  NumberFieldRootProps,
+  NumberFieldRootState,
+  NumberFieldRootChangeEventDetails,
+  NumberFieldRootChangeEventReason,
+  NumberFieldRootCommitEventDetails,
+  NumberFieldRootCommitEventReason,
+  NumberFieldGroupProps,
+  NumberFieldGroupState,
+  NumberFieldIncrementProps,
+  NumberFieldIncrementState,
+  NumberFieldDecrementProps,
+  NumberFieldDecrementState,
+  NumberFieldInputProps,
+  NumberFieldInputState,
+  NumberFieldScrubAreaProps,
+  NumberFieldScrubAreaState,
+  NumberFieldScrubAreaCursorProps,
+  NumberFieldScrubAreaCursorState,
+} from './number-field'
 export type {
   CheckboxRootProps,
   CheckboxRootState,

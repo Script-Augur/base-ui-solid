@@ -151,6 +151,9 @@ function renderInner<
     if (renderProp === 'span') {
       return renderStableSpan(outProps())
     }
+    if (renderProp === 'button') {
+      return renderStableButton(outProps())
+    }
     return <Dynamic component={renderProp as ValidComponent} {...outProps()} />
   }
 
@@ -165,6 +168,9 @@ function renderInner<
     if (renderProp.component === 'span') {
       return renderStableSpan(merged)
     }
+    if (renderProp.component === 'button') {
+      return renderStableButton(merged)
+    }
     return <Dynamic component={renderProp.component} {...merged} />
   }
 
@@ -178,6 +184,9 @@ function renderInner<
 
   if (options.defaultElement === 'span') {
     return renderStableSpan(renderDefaultElementProps('span', outProps()))
+  }
+  if (options.defaultElement === 'button') {
+    return renderStableButton(renderDefaultElementProps('button', outProps()))
   }
 
   return (
@@ -229,6 +238,20 @@ function renderStableSpan(props: Record<string, unknown>): JSX.Element {
   const resolved = children(() => props.children as JSX.Element)
   const [, others] = splitProps(props, ['children'])
   return <span {...others}>{resolved()}</span>
+}
+
+/**
+ * `button` host that stays mounted across reactive prop updates (same Dynamic
+ * remount issue as {@link renderStableDiv}).
+ *
+ * Number Field steppers rely on press-and-hold timers tied to the button
+ * instance; remounting mid-press drops `pointerup` and leaves the repeat
+ * interval running forever.
+ */
+function renderStableButton(props: Record<string, unknown>): JSX.Element {
+  const resolved = children(() => props.children as JSX.Element)
+  const [, others] = splitProps(props, ['children'])
+  return <button {...others}>{resolved()}</button>
 }
 function computeRenderElementProps<
   TState extends Record<string, unknown>,

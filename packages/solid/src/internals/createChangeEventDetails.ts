@@ -16,6 +16,15 @@ export const REASONS = {
   closePress: 'close-press',
   focusOut: 'focus-out',
   imperativeAction: 'imperative-action',
+  inputChange: 'input-change',
+  inputClear: 'input-clear',
+  inputBlur: 'input-blur',
+  inputPaste: 'input-paste',
+  keyboard: 'keyboard',
+  incrementPress: 'increment-press',
+  decrementPress: 'decrement-press',
+  wheel: 'wheel',
+  scrub: 'scrub',
 } as const
 
 /**
