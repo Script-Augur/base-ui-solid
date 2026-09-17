@@ -2,13 +2,17 @@
  * Port of `@base-ui/react` Toolbar tests (v1.7.0).
  * Skips documented in `./UPSTREAM_TEST_PARITY.md`.
  */
-import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library'
+import { cleanup, fireEvent, render, screen, waitFor } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { AlertDialog } from '../alert-dialog'
+import { Dialog } from '../dialog'
 import { flushMicrotasks } from '../field/test-utils'
 import { DirectionProvider } from '../internals/direction'
 import { NumberField } from '../number-field'
+import { Popover } from '../popover'
+import { Switch } from '../switch'
 import { Toggle } from '../toggle'
 import { ToggleGroup } from '../toggle-group'
 
@@ -475,9 +479,576 @@ describe('<Toolbar.Button />', () => {
       fireEvent.click(button)
       expect(handleClick).toHaveBeenCalledTimes(0)
     })
+
+    it('allows hover handlers while blocking activation', () => {
+      const handleClick = vi.fn()
+      const handleMouseMove = vi.fn()
+
+      render(() => (
+        <Toolbar.Root>
+          <Toolbar.Button
+            disabled
+            onClick={handleClick}
+            onMouseMove={handleMouseMove}
+          />
+        </Toolbar.Root>
+      ))
+
+      const button = screen.getByRole('button')
+      expect(button).not.toHaveAttribute('disabled')
+      expect(button).toHaveAttribute('data-disabled')
+      expect(button).toHaveAttribute('aria-disabled', 'true')
+
+      fireEvent.mouseMove(button)
+      expect(handleMouseMove).toHaveBeenCalled()
+
+      fireEvent.click(button)
+      expect(handleClick).toHaveBeenCalledTimes(0)
+    })
+
+    it('forwards live disabled to render hosts when root disabled flips', async () => {
+      function App() {
+        const [rootDisabled, rootDisabledAssign] = createSignal(false)
+        return (
+          <div>
+            <button
+              type="button"
+              data-testid="toggle-root"
+              onClick={() => rootDisabledAssign(value => !value)}
+            >
+              toggle
+            </button>
+            <Toolbar.Root disabled={rootDisabled()}>
+              <Toolbar.Button
+                data-testid="button"
+                render={(props: Record<string, unknown>) => (
+                  <Switch.Root {...props} nativeButton={false} />
+                )}
+              />
+            </Toolbar.Root>
+          </div>
+        )
+      }
+
+      render(() => <App />)
+      const switchElement = screen.getByRole('switch')
+
+      expect(switchElement).not.toHaveAttribute('data-disabled')
+      expect(switchElement).not.toHaveAttribute('aria-disabled')
+
+      fireEvent.click(screen.getByTestId('toggle-root'))
+      await flushMicrotasks()
+
+      expect(switchElement).toHaveAttribute('data-disabled')
+      expect(switchElement).toHaveAttribute('aria-disabled', 'true')
+
+      fireEvent.click(screen.getByTestId('toggle-root'))
+      await flushMicrotasks()
+
+      expect(switchElement).not.toHaveAttribute('data-disabled')
+      expect(switchElement).not.toHaveAttribute('aria-disabled')
+    })
   })
 
   describe('rendering other Base UI components', () => {
+    describe('Switch', () => {
+      it('renders a switch', () => {
+        render(() => (
+          <Toolbar.Root>
+            <Toolbar.Button
+              data-testid="button"
+              render={(props: Record<string, unknown>) => (
+                <Switch.Root {...props} />
+              )}
+            />
+          </Toolbar.Root>
+        ))
+
+        expect(screen.getByTestId('button')).toBe(screen.getByRole('switch'))
+      })
+
+      it('handles interactions', () => {
+        const handleCheckedChange = vi.fn()
+        const handleClick = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Toolbar.Button
+              onClick={handleClick}
+              render={(props: Record<string, unknown>) => (
+                <Switch.Root
+                  {...props}
+                  defaultChecked={false}
+                  onCheckedChange={handleCheckedChange}
+                />
+              )}
+            />
+          </Toolbar.Root>
+        ))
+
+        const switchElement = screen.getByRole('switch')
+        expect(switchElement).toHaveAttribute('data-unchecked')
+
+        switchElement.focus()
+        expect(switchElement).toHaveAttribute('tabindex', '0')
+
+        fireEvent.click(switchElement)
+        expect(handleCheckedChange).toHaveBeenCalledTimes(1)
+        expect(handleClick).toHaveBeenCalledTimes(1)
+        expect(switchElement).toHaveAttribute('data-checked')
+
+        fireEvent.keyDown(switchElement, { key: 'Enter' })
+        expect(handleCheckedChange).toHaveBeenCalledTimes(2)
+        expect(handleClick).toHaveBeenCalledTimes(2)
+        expect(switchElement).toHaveAttribute('data-unchecked')
+
+        fireEvent.keyDown(switchElement, { key: ' ' })
+        fireEvent.keyUp(switchElement, { key: ' ' })
+        expect(handleCheckedChange).toHaveBeenCalledTimes(3)
+        expect(handleClick).toHaveBeenCalledTimes(3)
+        expect(switchElement).toHaveAttribute('data-checked')
+      })
+
+      it('disabled state', () => {
+        const handleCheckedChange = vi.fn()
+        const handleClick = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Toolbar.Button
+              disabled
+              onClick={handleClick}
+              render={(props: Record<string, unknown>) => (
+                <Switch.Root {...props} onCheckedChange={handleCheckedChange} />
+              )}
+            />
+          </Toolbar.Root>
+        ))
+
+        const switchElement = screen.getByRole('switch')
+
+        expect(switchElement).not.toHaveAttribute('disabled')
+        expect(switchElement).toHaveAttribute('data-disabled')
+        expect(switchElement).toHaveAttribute('aria-disabled', 'true')
+
+        switchElement.focus()
+        expect(switchElement).toHaveAttribute('tabindex', '0')
+
+        fireEvent.keyDown(switchElement, { key: 'Enter' })
+        expect(handleCheckedChange).toHaveBeenCalledTimes(0)
+        expect(handleClick).toHaveBeenCalledTimes(0)
+
+        fireEvent.keyDown(switchElement, { key: ' ' })
+        expect(handleCheckedChange).toHaveBeenCalledTimes(0)
+        expect(handleClick).toHaveBeenCalledTimes(0)
+
+        fireEvent.click(switchElement)
+        expect(handleCheckedChange).toHaveBeenCalledTimes(0)
+        expect(handleClick).toHaveBeenCalledTimes(0)
+      })
+    })
+
+    describe('Dialog', () => {
+      it('renders a dialog trigger', () => {
+        render(() => (
+          <Toolbar.Root>
+            <Dialog.Root modal={false}>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <Dialog.Trigger {...props} data-testid="trigger" />
+                )}
+              />
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <Dialog.Title>title text</Dialog.Title>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.getByTestId('trigger')).toBe(screen.getByRole('button'))
+      })
+
+      it('handles interactions', async () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Dialog.Root modal={false} onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <Dialog.Trigger {...props} />
+                )}
+              />
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <Dialog.Title>title text</Dialog.Title>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByText('title text')).toBeNull()
+
+        const trigger = screen.getByRole('button')
+        trigger.focus()
+        expect(trigger).toHaveFocus()
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+
+        // fireEvent.keyDown does not synthesize a click on native <button>;
+        // activation goes through the composed useButton click path.
+        fireEvent.click(trigger)
+        expect(screen.queryByText('title text')).not.toBeNull()
+        expect(onOpenChange).toHaveBeenCalledTimes(1)
+        expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+
+        fireEvent.keyDown(document, { key: 'Escape' })
+        await waitFor(() => {
+          expect(screen.queryByText('title text')).toBeNull()
+        })
+        expect(onOpenChange).toHaveBeenCalledTimes(2)
+        expect(onOpenChange.mock.calls[1]?.[0]).toBe(false)
+
+        await waitFor(() => {
+          expect(trigger).toHaveFocus()
+        })
+      })
+
+      it('disabled state', () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Dialog.Root modal={false} onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                disabled
+                render={(props: Record<string, unknown>) => (
+                  <Dialog.Trigger {...props} />
+                )}
+              />
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <Dialog.Title>title text</Dialog.Title>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByText('title text')).toBeNull()
+
+        const trigger = screen.getByRole('button')
+        expect(trigger).not.toHaveAttribute('disabled')
+        expect(trigger).toHaveAttribute('data-disabled')
+        expect(trigger).toHaveAttribute('aria-disabled', 'true')
+
+        trigger.focus()
+        expect(trigger).toHaveFocus()
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+
+        fireEvent.click(trigger)
+        fireEvent.keyDown(trigger, { key: 'Enter' })
+        fireEvent.keyDown(trigger, { key: ' ' })
+        fireEvent.keyDown(trigger, { key: 'ArrowUp' })
+        fireEvent.keyDown(trigger, { key: 'ArrowDown' })
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+      })
+
+      it('prevents composite keydowns from escaping', async () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Dialog.Root modal={false} onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <Dialog.Trigger {...props}>dialog</Dialog.Trigger>
+                )}
+              />
+              <Dialog.Portal>
+                <Dialog.Popup data-testid="popup" />
+              </Dialog.Portal>
+            </Dialog.Root>
+
+            <Toolbar.Button>empty</Toolbar.Button>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByRole('dialog')).toBeNull()
+
+        const trigger = screen.getByRole('button', { name: 'dialog' })
+        fireEvent.click(trigger)
+
+        await waitFor(() => {
+          expect(screen.getByRole('dialog')).toBeVisible()
+        })
+
+        fireEvent.keyDown(screen.getByRole('dialog'), { key: 'ArrowRight' })
+        expect(onOpenChange).toHaveBeenLastCalledWith(
+          true,
+          expect.anything()
+        )
+      })
+    })
+
+    describe('AlertDialog', () => {
+      it('renders an alert dialog trigger', () => {
+        render(() => (
+          <Toolbar.Root>
+            <AlertDialog.Root>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <AlertDialog.Trigger {...props} data-testid="trigger" />
+                )}
+              />
+              <AlertDialog.Portal>
+                <AlertDialog.Backdrop />
+                <AlertDialog.Popup>
+                  <AlertDialog.Title>title text</AlertDialog.Title>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.getByTestId('trigger')).toBe(screen.getByRole('button'))
+      })
+
+      it('handles interactions', async () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <AlertDialog.Root onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <AlertDialog.Trigger {...props} />
+                )}
+              />
+              <AlertDialog.Portal>
+                <AlertDialog.Backdrop />
+                <AlertDialog.Popup>
+                  <AlertDialog.Title>title text</AlertDialog.Title>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByText('title text')).toBeNull()
+
+        const trigger = screen.getByRole('button')
+        trigger.focus()
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+
+        fireEvent.click(trigger)
+        expect(screen.queryByText('title text')).not.toBeNull()
+        expect(onOpenChange).toHaveBeenCalledTimes(1)
+        expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+
+        fireEvent.keyDown(document, { key: 'Escape' })
+        await waitFor(() => {
+          expect(screen.queryByText('title text')).toBeNull()
+        })
+        expect(onOpenChange).toHaveBeenCalledTimes(2)
+        expect(onOpenChange.mock.calls[1]?.[0]).toBe(false)
+
+        await waitFor(() => {
+          expect(trigger).toHaveFocus()
+        })
+      })
+
+      it('disabled state', () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <AlertDialog.Root onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                disabled
+                render={(props: Record<string, unknown>) => (
+                  <AlertDialog.Trigger {...props} />
+                )}
+              />
+              <AlertDialog.Portal>
+                <AlertDialog.Backdrop />
+                <AlertDialog.Popup>
+                  <AlertDialog.Title>title text</AlertDialog.Title>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByText('title text')).toBeNull()
+
+        const trigger = screen.getByRole('button')
+        expect(trigger).not.toHaveAttribute('disabled')
+        expect(trigger).toHaveAttribute('data-disabled')
+        expect(trigger).toHaveAttribute('aria-disabled', 'true')
+
+        trigger.focus()
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+
+        fireEvent.click(trigger)
+        fireEvent.keyDown(trigger, { key: 'Enter' })
+        fireEvent.keyDown(trigger, { key: ' ' })
+        fireEvent.keyDown(trigger, { key: 'ArrowUp' })
+        fireEvent.keyDown(trigger, { key: 'ArrowDown' })
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+      })
+
+      it('prevents composite keydowns from escaping', async () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <AlertDialog.Root onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <AlertDialog.Trigger {...props}>dialog</AlertDialog.Trigger>
+                )}
+              />
+              <AlertDialog.Portal>
+                <AlertDialog.Popup />
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+
+            <Toolbar.Button>empty</Toolbar.Button>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByRole('alertdialog')).toBeNull()
+
+        const trigger = screen.getByRole('button', { name: 'dialog' })
+        fireEvent.click(trigger)
+
+        await waitFor(() => {
+          expect(screen.getByRole('alertdialog')).toBeVisible()
+        })
+
+        fireEvent.keyDown(screen.getByRole('alertdialog'), {
+          key: 'ArrowRight',
+        })
+        expect(onOpenChange).toHaveBeenLastCalledWith(
+          true,
+          expect.anything()
+        )
+      })
+    })
+
+    describe('Popover', () => {
+      it('renders a popover trigger', () => {
+        render(() => (
+          <Toolbar.Root>
+            <Popover.Root>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <Popover.Trigger {...props} data-testid="trigger" />
+                )}
+              />
+              <Popover.Portal>
+                <Popover.Positioner>
+                  <Popover.Popup>Content</Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.getByTestId('trigger')).toBe(screen.getByRole('button'))
+        expect(screen.getByRole('button')).toHaveAttribute(
+          'aria-haspopup',
+          'dialog'
+        )
+      })
+
+      it('handles interactions', async () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Popover.Root onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                render={(props: Record<string, unknown>) => (
+                  <Popover.Trigger {...props} />
+                )}
+              />
+              <Popover.Portal>
+                <Popover.Positioner>
+                  <Popover.Popup>Content</Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByText('Content')).toBeNull()
+
+        const trigger = screen.getByRole('button')
+        trigger.focus()
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+
+        fireEvent.click(trigger)
+        expect(screen.queryByText('Content')).not.toBeNull()
+        expect(onOpenChange).toHaveBeenCalledTimes(1)
+        expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+
+        fireEvent.keyDown(document, { key: 'Escape' })
+        await waitFor(() => {
+          expect(onOpenChange).toHaveBeenCalledTimes(2)
+        })
+        expect(onOpenChange.mock.calls[1]?.[0]).toBe(false)
+        await waitFor(() => {
+          expect(trigger).toHaveFocus()
+        })
+      })
+
+      it('disabled state', () => {
+        const onOpenChange = vi.fn()
+
+        render(() => (
+          <Toolbar.Root>
+            <Popover.Root onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                disabled
+                render={(props: Record<string, unknown>) => (
+                  <Popover.Trigger {...props} />
+                )}
+              />
+              <Popover.Portal>
+                <Popover.Positioner>
+                  <Popover.Popup>Content</Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
+          </Toolbar.Root>
+        ))
+
+        expect(screen.queryByText('Content')).toBeNull()
+
+        const trigger = screen.getByRole('button')
+        expect(trigger).not.toHaveAttribute('disabled')
+        expect(trigger).toHaveAttribute('data-disabled')
+        expect(trigger).toHaveAttribute('aria-disabled', 'true')
+
+        trigger.focus()
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+
+        fireEvent.click(trigger)
+        fireEvent.keyDown(trigger, { key: 'Enter' })
+        fireEvent.keyDown(trigger, { key: ' ' })
+        fireEvent.keyDown(trigger, { key: 'ArrowUp' })
+        fireEvent.keyDown(trigger, { key: 'ArrowDown' })
+        expect(onOpenChange).toHaveBeenCalledTimes(0)
+      })
+    })
+
     describe('Toggle', () => {
       it('renders a toggle', () => {
         render(() => (
@@ -649,6 +1220,84 @@ describe('<Toolbar.Input />', () => {
         'aria-roledescription',
         'Number field'
       )
+    })
+
+    it('handles interactions', () => {
+      const onValueChange = vi.fn()
+
+      render(() => (
+        <Toolbar.Root>
+          <NumberField.Root
+            min={1}
+            max={10}
+            defaultValue={5}
+            onValueChange={onValueChange}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement />
+              <Toolbar.Input
+                render={(props: Record<string, unknown>) => (
+                  <NumberField.Input {...props} />
+                )}
+              />
+              <NumberField.Increment />
+            </NumberField.Group>
+          </NumberField.Root>
+        </Toolbar.Root>
+      ))
+
+      const input = screen.getByRole('textbox')
+      input.focus()
+      expect(input).toHaveAttribute('tabindex', '0')
+      expect(input).toHaveFocus()
+
+      fireEvent.keyDown(input, { key: 'ArrowUp' })
+      expect(onValueChange).toHaveBeenCalledTimes(1)
+      expect(onValueChange.mock.calls[0]?.[0]).toBe(6)
+
+      fireEvent.keyDown(input, { key: 'ArrowDown' })
+      expect(onValueChange).toHaveBeenCalledTimes(2)
+      expect(onValueChange.mock.calls[1]?.[0]).toBe(5)
+    })
+
+    it('disabled state', () => {
+      const onValueChange = vi.fn()
+
+      render(() => (
+        <Toolbar.Root>
+          <NumberField.Root
+            min={1}
+            max={10}
+            defaultValue={5}
+            onValueChange={onValueChange}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement />
+              <Toolbar.Input
+                disabled
+                render={(props: Record<string, unknown>) => (
+                  <NumberField.Input {...props} />
+                )}
+              />
+              <NumberField.Increment />
+            </NumberField.Group>
+          </NumberField.Root>
+        </Toolbar.Root>
+      ))
+
+      const input = screen.getByRole('textbox')
+
+      expect(input).not.toHaveAttribute('disabled')
+      expect(input).toHaveAttribute('data-disabled')
+      expect(input).toHaveAttribute('aria-disabled', 'true')
+
+      input.focus()
+      expect(input).toHaveAttribute('tabindex', '0')
+      expect(input).toHaveFocus()
+
+      fireEvent.keyDown(input, { key: 'ArrowUp' })
+      fireEvent.keyDown(input, { key: 'ArrowDown' })
+      expect(onValueChange).toHaveBeenCalledTimes(0)
     })
   })
 })

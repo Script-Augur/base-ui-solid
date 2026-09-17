@@ -11,6 +11,16 @@ import type { JSX } from 'solid-js'
 
 const EMPTY_OBJECT: Record<string, unknown> = {}
 
+/** `useButton` native keys → Solid delegated prop names. */
+const NATIVE_EVENT_TO_DELEGATED: Record<string, string> = {
+  'on:click': 'onClick',
+  'on:mousedown': 'onMouseDown',
+  'on:mouseup': 'onMouseUp',
+  'on:keydown': 'onKeyDown',
+  'on:keyup': 'onKeyUp',
+  'on:pointerdown': 'onPointerDown',
+}
+
 /**
  * A button that can be used as-is or as a trigger for other components.
  * Renders a `<button>` element.
@@ -83,19 +93,31 @@ export function ToolbarButton(componentProps: ToolbarButtonProps): JSX.Element {
       metadata={itemMetadata}
       state={state}
       stateAttributesMapping={{}}
-      refs={[assignRefs]}
+      refs={[buttonElementAssign]}
       props={[
-        // getButtonProps merges consumer props and gates click/keyboard when
-        // disabled. Passing elementProps only through getButtonProps avoids a
-        // second raw `onClick` that would bypass the disabled check.
-        () =>
-          getButtonProps({
-            ...(elementProps as Record<string, unknown>),
-            // When a render prop is provided (typically another Base UI component
-            // like Menu.Trigger), forward `disabled` so the rendered component can
-            // derive its own disabled state.
-            ...(local.render ? { disabled: disabled() } : EMPTY_OBJECT),
-          }),
+        elementProps,
+        // When a render prop is provided (typically another Base UI component
+        // like Menu.Trigger), forward `disabled` so the rendered component can
+        // derive its own disabled state. For the default toolbar button, avoid
+        // forwarding a DOM `disabled` prop so focusable disabled buttons remain
+        // hoverable. Live getter — must not snapshot via `disabled()`.
+        local.render
+          ? {
+              get disabled() {
+                return disabled()
+              },
+            }
+          : EMPTY_OBJECT,
+        // Mirror React: getButtonProps last, receiving prior bags as `previous`.
+        // For `render` hosts, rewrite non-delegated `on:` listeners to delegated
+        // `onX` so Solid composes them with the host's own `useButton` `on:`
+        // handlers instead of overwriting (Solid treats `on:` as plain props).
+        (previous: Record<string, unknown>) => {
+          const buttonProps = getButtonProps(previous)
+          return local.render
+            ? rewriteNonDelegatedEventProps(buttonProps)
+            : buttonProps
+        },
       ]}
     >
       {local.children}
@@ -107,10 +129,10 @@ export function ToolbarButton(componentProps: ToolbarButtonProps): JSX.Element {
    *
    * @param element - Mounted button element, or `null` on unmount.
    */
-  function assignRefs(element: HTMLElement | null) {
+  function buttonElementAssign(element: HTMLElement | null) {
     buttonRefAssign(element)
     const userRef = local.ref
-    if (typeof userRef === 'function' && element) {
+    if (typeof userRef === 'function') {
       userRef(element as HTMLButtonElement)
     }
   }
@@ -152,4 +174,36 @@ export type ToolbarButtonProps = Omit<
   nativeButton?: boolean
   /** Base UI-style render prop for host element composition. */
   render?: RenderProp<ToolbarButtonState, Record<string, unknown>>
+}
+
+/**
+ * Maps Solid non-delegated `on:` listeners from {@link useButton} to delegated
+ * `onX` props so a `render` host's own `useButton` can compose them via its
+ * `externalOn*` path instead of overwriting colliding `on:` keys.
+ *
+ * @param props - Button props that may include `on:click` / `on:keydown` / ….
+ * @returns Props with known `on:` keys rewritten to camelCase delegated names.
+ */
+function rewriteNonDelegatedEventProps(
+  props: Record<string, unknown>
+): Record<string, unknown> {
+  const rewritten: Record<string, unknown> = {}
+
+  for (const key of Object.keys(props)) {
+    const delegatedKey = NATIVE_EVENT_TO_DELEGATED[key]
+    const descriptor = Object.getOwnPropertyDescriptor(props, key)
+
+    if (delegatedKey != null) {
+      rewritten[delegatedKey] = props[key]
+      continue
+    }
+
+    if (descriptor?.get || descriptor?.set) {
+      Object.defineProperty(rewritten, key, descriptor)
+    } else {
+      rewritten[key] = props[key]
+    }
+  }
+
+  return rewritten
 }

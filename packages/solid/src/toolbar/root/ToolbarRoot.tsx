@@ -81,7 +81,7 @@ export function ToolbarRoot(componentProps: ToolbarRootProps): JSX.Element {
         class={local.class}
         style={local.style}
         state={state}
-        refs={[setRootRef]}
+        refs={[rootRefAssign]}
         props={[defaultProps, elementProps]}
         disabledIndices={disabledIndices}
         loopFocus={loopFocus}
@@ -114,7 +114,7 @@ export function ToolbarRoot(componentProps: ToolbarRootProps): JSX.Element {
    *
    * @param el - Mounted root element, or `null` on unmount.
    */
-  function setRootRef(el: HTMLElement | null) {
+  function rootRefAssign(el: HTMLElement | null) {
     const userRef = local.ref
     if (typeof userRef === 'function') {
       userRef(el as HTMLDivElement)

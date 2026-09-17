@@ -58,7 +58,7 @@ export function ToolbarLink(componentProps: ToolbarLinkProps): JSX.Element {
       metadata={TOOLBAR_LINK_METADATA}
       state={state}
       stateAttributesMapping={{}}
-      refs={[assignRef]}
+      refs={[linkRefAssign]}
       props={[elementProps]}
     >
       {local.children}
@@ -70,9 +70,9 @@ export function ToolbarLink(componentProps: ToolbarLinkProps): JSX.Element {
    *
    * @param element - Mounted anchor element, or `null` on unmount.
    */
-  function assignRef(element: HTMLElement | null) {
+  function linkRefAssign(element: HTMLElement | null) {
     const userRef = local.ref
-    if (typeof userRef === 'function' && element) {
+    if (typeof userRef === 'function') {
       userRef(element as HTMLAnchorElement)
     }
   }

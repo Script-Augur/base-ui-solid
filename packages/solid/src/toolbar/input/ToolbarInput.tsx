@@ -79,11 +79,15 @@ export function ToolbarInput(componentProps: ToolbarInputProps): JSX.Element {
       metadata={itemMetadata}
       state={state}
       stateAttributesMapping={{}}
-      refs={[assignRef]}
+      refs={[inputRefAssign]}
       props={[
+        elementProps,
         {
           onClick: preventWhenDisabled,
           onPointerDown: preventWhenDisabled,
+          // Capture so nested render hosts (e.g. NumberField.Input) see
+          // `defaultPrevented` before their own key handlers run.
+          onKeyDownCapture: preventWhenDisabled,
           get 'aria-disabled'() {
             return focusableWhenDisabledProps()['aria-disabled']
           },
@@ -91,7 +95,6 @@ export function ToolbarInput(componentProps: ToolbarInputProps): JSX.Element {
             return focusableWhenDisabledProps().disabled
           },
         },
-        elementProps,
       ]}
     />
   )
@@ -112,9 +115,9 @@ export function ToolbarInput(componentProps: ToolbarInputProps): JSX.Element {
    *
    * @param element - Mounted input element, or `null` on unmount.
    */
-  function assignRef(element: HTMLElement | null) {
+  function inputRefAssign(element: HTMLElement | null) {
     const userRef = local.ref
-    if (typeof userRef === 'function' && element) {
+    if (typeof userRef === 'function') {
       userRef(element as HTMLInputElement)
     }
   }

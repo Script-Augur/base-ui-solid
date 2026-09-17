@@ -86,13 +86,44 @@ export function useButton(
     const externalOnPointerDown = externalProps.onPointerDown as
       JSX.EventHandlerUnion<HTMLElement, PointerEvent> | undefined
 
-    const otherExternalProps = { ...externalProps }
-    delete otherExternalProps.onClick
-    delete otherExternalProps.onMouseDown
-    delete otherExternalProps.onMouseUp
-    delete otherExternalProps.onKeyUp
-    delete otherExternalProps.onKeyDown
-    delete otherExternalProps.onPointerDown
+    // Parent `useButton` layers (e.g. Toolbar.Button → Dialog.Trigger) forward
+    // non-delegated `on:` listeners. Compose them instead of letting a later
+    // merge overwrite the inner button's activation handlers.
+    const externalOnClickNative = externalProps['on:click'] as
+      | ((event: MouseEvent) => void)
+      | undefined
+    const externalOnMouseDownNative = externalProps['on:mousedown'] as
+      | ((event: MouseEvent) => void)
+      | undefined
+    const externalOnMouseUpNative = externalProps['on:mouseup'] as
+      | ((event: MouseEvent) => void)
+      | undefined
+    const externalOnKeyDownNative = externalProps['on:keydown'] as
+      | ((event: KeyboardEvent) => void)
+      | undefined
+    const externalOnKeyUpNative = externalProps['on:keyup'] as
+      | ((event: KeyboardEvent) => void)
+      | undefined
+    const externalOnPointerDownNative = externalProps['on:pointerdown'] as
+      | ((event: PointerEvent) => void)
+      | undefined
+
+    // Preserve accessors/getters from `externalProps` (e.g. live `disabled`
+    // forwarded for Toolbar `render` hosts). Object spread would snapshot them.
+    const otherExternalProps = copyPropsPreservingAccessors(externalProps, [
+      'onClick',
+      'onMouseDown',
+      'onMouseUp',
+      'onKeyUp',
+      'onKeyDown',
+      'onPointerDown',
+      'on:click',
+      'on:mousedown',
+      'on:mouseup',
+      'on:keyup',
+      'on:keydown',
+      'on:pointerdown',
+    ])
 
     // Use non-delegated `on:` listeners so keyboard activation works with
     // testing-library `fireEvent` and matches native host behavior.
@@ -104,10 +135,12 @@ export function useButton(
             return
           }
           callEventHandler(externalOnClick, event)
+          externalOnClickNative?.(event)
         },
         'on:mousedown': (event: MouseEvent) => {
           if (!disabled()) {
             callEventHandler(externalOnMouseDown, event)
+            externalOnMouseDownNative?.(event)
           }
         },
         'on:mouseup': (event: MouseEvent) => {
@@ -116,6 +149,7 @@ export function useButton(
           }
           const baseUIEvent = makeEventPreventable(event)
           callEventHandler(externalOnMouseUp, baseUIEvent)
+          externalOnMouseUpNative?.(event)
         },
         'on:keydown': (event: KeyboardEvent) => {
           if (disabled() && focusableWhenDisabled() && event.key !== 'Tab') {
@@ -128,6 +162,7 @@ export function useButton(
 
           const baseUIEvent = makeEventPreventable(event)
           callEventHandler(externalOnKeyDown, baseUIEvent)
+          externalOnKeyDownNative?.(event)
           if (baseUIEvent.baseUIHandlerPrevented) {
             return
           }
@@ -193,6 +228,7 @@ export function useButton(
 
           const baseUIEvent = makeEventPreventable(event)
           callEventHandler(externalOnKeyUp, baseUIEvent)
+          externalOnKeyUpNative?.(event)
 
           const currentTarget = event.currentTarget
           if (!(currentTarget instanceof Element)) {
@@ -231,6 +267,7 @@ export function useButton(
             return
           }
           callEventHandler(externalOnPointerDown, event)
+          externalOnPointerDownNative?.(event)
         },
       },
       {
@@ -352,4 +389,31 @@ function isValidLinkElement(
     elem.tagName === 'A' &&
     Boolean((elem as HTMLAnchorElement).href)
   )
+}
+
+/**
+ * Copies own props while preserving accessors/getters and omitting keys.
+ *
+ * @param source - Props object that may define getters.
+ * @param omitKeys - Property names to skip (typically extracted event handlers).
+ * @returns A new props object with descriptors preserved where present.
+ */
+function copyPropsPreservingAccessors(
+  source: Record<string, unknown>,
+  omitKeys: Array<string>
+): Record<string, unknown> {
+  const omit = new Set(omitKeys)
+  const copied: Record<string, unknown> = {}
+
+  for (const key of Object.keys(source)) {
+    if (omit.has(key)) continue
+    const descriptor = Object.getOwnPropertyDescriptor(source, key)
+    if (descriptor?.get || descriptor?.set) {
+      Object.defineProperty(copied, key, descriptor)
+    } else {
+      copied[key] = source[key]
+    }
+  }
+
+  return copied
 }
