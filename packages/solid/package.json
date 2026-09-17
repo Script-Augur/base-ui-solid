@@ -129,6 +129,16 @@
       "import": "./dist/switch.js",
       "default": "./dist/switch.js"
     },
+    "./radio": {
+      "types": "./dist/radio.d.ts",
+      "import": "./dist/radio.js",
+      "default": "./dist/radio.js"
+    },
+    "./radio-group": {
+      "types": "./dist/radio-group.d.ts",
+      "import": "./dist/radio-group.js",
+      "default": "./dist/radio-group.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

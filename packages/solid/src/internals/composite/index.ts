@@ -14,6 +14,7 @@ export {
 } from './root/CompositeRootContext'
 export { useCompositeRoot } from './root/useCompositeRoot'
 export { useCompositeItem } from './item/useCompositeItem'
+export { CompositeItem } from './item/CompositeItem'
 export { ACTIVE_COMPOSITE_ITEM } from './constants'
 export * from './composite'
 export type { CompositeMetadata } from './list/CompositeList'

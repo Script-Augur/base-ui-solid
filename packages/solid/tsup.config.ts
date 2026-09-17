@@ -34,6 +34,8 @@ export default defineConfig({
     input: 'src/input/index.ts',
     checkbox: 'src/checkbox/index.ts',
     switch: 'src/switch/index.ts',
+    radio: 'src/radio/index.ts',
+    'radio-group': 'src/radio-group/index.ts',
   },
   format: ['esm'],
   dts: true,
