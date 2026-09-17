@@ -124,6 +124,11 @@
       "import": "./dist/checkbox.js",
       "default": "./dist/checkbox.js"
     },
+    "./switch": {
+      "types": "./dist/switch.d.ts",
+      "import": "./dist/switch.js",
+      "default": "./dist/switch.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

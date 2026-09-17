@@ -33,6 +33,7 @@ export default defineConfig({
     form: 'src/form/index.ts',
     input: 'src/input/index.ts',
     checkbox: 'src/checkbox/index.ts',
+    switch: 'src/switch/index.ts',
   },
   format: ['esm'],
   dts: true,
