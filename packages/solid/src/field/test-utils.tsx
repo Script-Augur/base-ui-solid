@@ -12,7 +12,8 @@ import type {
 import type { JSX, ParentProps } from 'solid-js'
 
 /**
- * Thin FormContext provider for Field tests before the Form component exists.
+ * Thin FormContext provider for Field unit tests that need external `errors`
+ * without mounting the full `<Form>` element (no native submit / focus-first).
  */
 export function FormErrorsProvider(
   props: ParentProps<{

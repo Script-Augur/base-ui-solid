@@ -114,6 +114,11 @@
       "import": "./dist/form.js",
       "default": "./dist/form.js"
     },
+    "./input": {
+      "types": "./dist/input.d.ts",
+      "import": "./dist/input.js",
+      "default": "./dist/input.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
