@@ -28,21 +28,15 @@ export function resolvePortalContainer(
   containerProp: PortalContainerProp | undefined,
   parentPortalNode: HTMLElement | null | undefined
 ): PortalContainer | null {
-  if (containerProp === null) {
-    return null
-  }
+  if (containerProp === null) return null
 
   if (containerProp !== undefined) {
     // Accessors: treat null/undefined as “wait” so deferred containers do not
     // briefly mount to document.body.
     if (typeof containerProp === 'function') {
       const resolved = containerProp()
-      if (resolved == null) {
-        return null
-      }
-      if (isPortalContainer(resolved)) {
-        return resolved
-      }
+      if (resolved == null) return null
+      if (isPortalContainer(resolved)) return resolved
       warnInvalidContainer(resolved)
       return null
     }
@@ -51,19 +45,13 @@ export function resolvePortalContainer(
       containerProp,
       undefined
     )
-    if (resolved == null) {
-      return null
-    }
-    if (isPortalContainer(resolved)) {
-      return resolved
-    }
+    if (resolved == null) return null
+    if (isPortalContainer(resolved)) return resolved
     warnInvalidContainer(resolved)
     return null
   }
 
-  if (parentPortalNode) {
-    return parentPortalNode
-  }
+  if (parentPortalNode) return parentPortalNode
 
   if (typeof document !== 'undefined') {
     return document.body
