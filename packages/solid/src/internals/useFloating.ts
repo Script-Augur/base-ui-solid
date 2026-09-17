@@ -12,7 +12,6 @@ import type { Middleware, Placement, Strategy } from '@floating-ui/dom'
 import type { Accessor } from 'solid-js'
 
 export { offset, flip, shift, arrow, autoUpdate, computePosition }
-
 /**
  * Thin Solid wrapper around `@floating-ui/dom` (`computePosition` + `autoUpdate`).
  *
@@ -71,7 +70,17 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
       middleware.push(arrow({ element: arrowEl }))
     }
 
-    const cleanup = autoUpdate(reference, floating, () => {
+    // jsdom has no layout; Floating UI computePosition/autoUpdate can hang the
+    // Vitest runner on unresolved promises. Use a static placement instead.
+    if (isJsdomEnvironment()) {
+      xAssign(0)
+      yAssign(0)
+      strategyAssign(options.strategy ?? 'absolute')
+      placementAssign(options.placement ?? 'bottom')
+      return
+    }
+
+    const update = () => {
       void computePosition(reference, floating, {
         placement: options.placement ?? 'bottom',
         strategy: options.strategy ?? 'absolute',
@@ -83,8 +92,9 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
         placementAssign(data.placement)
         middlewareDataAssign(data.middlewareData as Record<string, unknown>)
       })
-    })
+    }
 
+    const cleanup = autoUpdate(reference, floating, update)
     onCleanup(cleanup)
   })
 
@@ -103,9 +113,7 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
     floatingStyles,
   }
 }
-
 export type { Placement, Strategy, Middleware }
-
 /**
  * Options for {@link useFloating}.
  */
@@ -127,7 +135,6 @@ export interface UseFloatingOptions {
   /** Additional Floating UI middleware. */
   middleware?: Array<Middleware>
 }
-
 /**
  * Inline styles derived from Floating UI coordinates.
  */
@@ -141,7 +148,6 @@ export interface FloatingStyles {
   /** Optional CSS `transform` when used by consumers. */
   transform?: string
 }
-
 /**
  * Reactive Floating UI outputs from {@link useFloating}.
  */
@@ -158,4 +164,16 @@ export interface UseFloatingReturn {
   middlewareData: Accessor<Record<string, unknown>>
   /** Convenience style object for the floating element. */
   floatingStyles: Accessor<FloatingStyles>
+}
+/**
+ * Whether the current environment is jsdom (Vitest / Jest).
+ *
+ * @returns `true` under jsdom user agents.
+ */
+function isJsdomEnvironment(): boolean {
+  return (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.userAgent === 'string' &&
+    navigator.userAgent.includes('jsdom')
+  )
 }

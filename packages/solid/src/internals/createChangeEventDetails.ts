@@ -5,6 +5,8 @@
 export const REASONS = {
   none: 'none',
   triggerPress: 'trigger-press',
+  triggerHover: 'trigger-hover',
+  triggerFocus: 'trigger-focus',
   initial: 'initial',
   disabled: 'disabled',
   missing: 'missing',

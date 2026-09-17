@@ -99,6 +99,11 @@
       "import": "./dist/alert-dialog.js",
       "default": "./dist/alert-dialog.js"
     },
+    "./popover": {
+      "types": "./dist/popover.d.ts",
+      "import": "./dist/popover.js",
+      "default": "./dist/popover.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

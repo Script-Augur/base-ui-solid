@@ -98,8 +98,14 @@ export function createFocusTrap(options: FocusTrapOptions): void {
         return
       }
 
-      const first = items[0]!
-      const last = items[items.length - 1]!
+      const first = items.at(0)
+      const last = items.at(-1)
+      if (first == null || last == null) {
+        event.preventDefault()
+        container.focus()
+        return
+      }
+
       const doc = ownerDocument(container)
       const active = activeElement(doc)
 
