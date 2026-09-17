@@ -32,6 +32,7 @@ export default defineConfig({
     fieldset: 'src/fieldset/index.ts',
     form: 'src/form/index.ts',
     input: 'src/input/index.ts',
+    checkbox: 'src/checkbox/index.ts',
   },
   format: ['esm'],
   dts: true,

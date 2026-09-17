@@ -148,6 +148,9 @@ function renderInner<
     if (renderProp === 'input') {
       return renderStableInput(outProps())
     }
+    if (renderProp === 'span') {
+      return renderStableSpan(outProps())
+    }
     return <Dynamic component={renderProp as ValidComponent} {...outProps()} />
   }
 
@@ -159,6 +162,9 @@ function renderInner<
     if (renderProp.component === 'input') {
       return renderStableInput(merged)
     }
+    if (renderProp.component === 'span') {
+      return renderStableSpan(merged)
+    }
     return <Dynamic component={renderProp.component} {...merged} />
   }
 
@@ -168,6 +174,10 @@ function renderInner<
 
   if (options.defaultElement === 'input') {
     return renderStableInput(renderDefaultElementProps('input', outProps()))
+  }
+
+  if (options.defaultElement === 'span') {
+    return renderStableSpan(renderDefaultElementProps('span', outProps()))
   }
 
   return (
@@ -206,6 +216,19 @@ function renderStableInput(props: Record<string, unknown>): JSX.Element {
   const resolved = children(() => props.children as JSX.Element)
   const [, others] = splitProps(props, ['children'])
   return <input {...others}>{resolved()}</input>
+}
+
+/**
+ * `span` host that stays mounted across reactive prop updates (same Dynamic
+ * remount issue as {@link renderStableDiv}).
+ *
+ * Children are excluded from the reactive spread for the same reason as
+ * {@link renderStableDiv}.
+ */
+function renderStableSpan(props: Record<string, unknown>): JSX.Element {
+  const resolved = children(() => props.children as JSX.Element)
+  const [, others] = splitProps(props, ['children'])
+  return <span {...others}>{resolved()}</span>
 }
 function computeRenderElementProps<
   TState extends Record<string, unknown>,

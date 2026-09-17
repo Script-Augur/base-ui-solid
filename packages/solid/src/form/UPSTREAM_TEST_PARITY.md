@@ -6,14 +6,14 @@ Core Form behavior with Field / Fieldset is covered. This is **not** a claim of 
 
 ## Skipped (React-only or deferred controls)
 
-| Upstream case                                       | Reason                                                                                    |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `describeConformance`                               | React conformance harness — skipped                                                       |
-| Checkbox focus / reorder cases                      | Checkbox not ported yet; equivalents use `Field.Control` (+ keyed `<For>` reorder)        |
-| Switch unnamed / same-name / control takeover cases | Switch not ported yet; unnamed + same-name covered with `Field.Control` where equivalent  |
-| `onFormSubmit` NumberField quantity value           | NumberField not ported; covered with `Field.Control` values                               |
-| `actionsRef` NumberField validate-by-name           | NumberField not ported; covered with `Field.Control` + custom `validate`                  |
-| React Strict Mode registration replacement          | React StrictMode double-mount; Solid covers rename / unmount / replace without StrictMode |
+| Upstream case                                       | Reason                                                                                                                                                                           |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `describeConformance`                               | React conformance harness — skipped                                                                                                                                              |
+| Checkbox focus / reorder cases                      | Document-order focus covered with Field.Control; Checkbox PR adds control surface + some Field/Form wiring, not Form’s remaining portal/shadow focus cases — those stay deferred |
+| Switch unnamed / same-name / control takeover cases | Switch not ported yet; unnamed + same-name covered with `Field.Control` where equivalent                                                                                         |
+| `onFormSubmit` NumberField quantity value           | NumberField not ported; covered with `Field.Control` values                                                                                                                      |
+| `actionsRef` NumberField validate-by-name           | NumberField not ported; covered with `Field.Control` + custom `validate`                                                                                                         |
+| React Strict Mode registration replacement          | React StrictMode double-mount; Solid covers rename / unmount / replace without StrictMode                                                                                        |
 
 ## Ported without Checkbox / Base UI Portal
 
