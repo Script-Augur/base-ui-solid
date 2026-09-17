@@ -401,10 +401,7 @@ export function ScrollAreaRoot(
 
     if (event.pointerType === 'touch') return
 
-    const isTargetRootChild = contains(
-      refs.root,
-      event.target as Element | null
-    )
+    const isTargetRootChild = contains(refs.root, event.target)
     hoveringAssign(isTargetRootChild)
   }
 }

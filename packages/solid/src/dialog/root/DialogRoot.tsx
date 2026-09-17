@@ -1,30 +1,26 @@
-import { contains, generateId, getTarget } from "@script-augur/base-ui-utils"
-import { createEffect, createSignal, onCleanup, splitProps } from "solid-js"
+import { contains, generateId, getTarget } from '@script-augur/base-ui-utils'
+import { createEffect, createSignal, onCleanup, splitProps } from 'solid-js'
 
 import {
   REASONS,
   createChangeEventDetails,
-} from "../../internals/createChangeEventDetails"
-import { createControlled } from "../../internals/createControlled"
-import { createOpenChangeComplete } from "../../internals/createOpenChangeComplete"
-import { createTransitionStatus } from "../../internals/createTransitionStatus"
-import { createDismiss } from "../../internals/dismiss"
-import { createFocusTrap } from "../../internals/focusTrap"
-import { listenerEffect } from "../../internals/listenerEffect"
-import { createScrollLock } from "../../internals/scrollLock"
+} from '../../internals/createChangeEventDetails'
+import { createControlled } from '../../internals/createControlled'
+import { createOpenChangeComplete } from '../../internals/createOpenChangeComplete'
+import { createTransitionStatus } from '../../internals/createTransitionStatus'
+import { createDismiss } from '../../internals/dismiss'
+import { createFocusTrap } from '../../internals/focusTrap'
+import { listenerEffect } from '../../internals/listenerEffect'
+import { createScrollLock } from '../../internals/scrollLock'
 
-import { DialogRootContext, useDialogRootContext } from "./DialogRootContext"
+import { DialogRootContext, useDialogRootContext } from './DialogRootContext'
 
-import type { DialogRootContextValue } from "./DialogRootContext"
+import type { DialogRootContextValue } from './DialogRootContext'
 import type {
   BaseUIChangeEventDetails,
   ChangeEventReason,
-} from "../../internals/createChangeEventDetails"
-import type { JSX } from "solid-js"
-
-/** Root mode — matches upstream `useRenderDialogRoot(mode)`. */
-export type DialogRootMode = "dialog" | "alert-dialog"
-
+} from '../../internals/createChangeEventDetails'
+import type { JSX } from 'solid-js'
 /**
  * Shared dialog root implementation (upstream `useRenderDialogRoot`).
  *
@@ -40,20 +36,20 @@ export type DialogRootMode = "dialog" | "alert-dialog"
  */
 export function useRenderDialogRoot(
   mode: DialogRootMode,
-  componentProps: DialogRootProps,
+  componentProps: DialogRootProps
 ): JSX.Element {
   const [local] = splitProps(componentProps, [
-    "children",
-    "open",
-    "defaultOpen",
-    "onOpenChange",
-    "onOpenChangeComplete",
-    "modal",
-    "disablePointerDismissal",
-    "actionsRef",
+    'children',
+    'open',
+    'defaultOpen',
+    'onOpenChange',
+    'onOpenChangeComplete',
+    'modal',
+    'disablePointerDismissal',
+    'actionsRef',
   ])
 
-  const isAlertDialog = mode === "alert-dialog"
+  const isAlertDialog = mode === 'alert-dialog'
 
   const parentContext = useDialogRootContext(true)
   const nested = () => parentContext != null
@@ -66,8 +62,8 @@ export function useRenderDialogRoot(
   const modal = () => (isAlertDialog ? true : (local.modal ?? true))
   const disablePointerDismissal = () =>
     isAlertDialog ? true : (local.disablePointerDismissal ?? false)
-  const role = (): "dialog" | "alertdialog" =>
-    isAlertDialog ? "alertdialog" : "dialog"
+  const role = (): 'dialog' | 'alertdialog' =>
+    isAlertDialog ? 'alertdialog' : 'dialog'
 
   const { mounted, mountedAssign, transitionStatus } =
     createTransitionStatus(open)
@@ -79,7 +75,7 @@ export function useRenderDialogRoot(
     string | undefined
   >()
   const [popupElement, popupElementAssign] = createSignal<HTMLElement | null>(
-    null,
+    null
   )
   const [viewportElement, viewportElementAssign] =
     createSignal<HTMLElement | null>(null)
@@ -99,13 +95,13 @@ export function useRenderDialogRoot(
     boolean | HTMLElement | null | undefined
   >(undefined)
 
-  const portalId = generateId("base-ui-dialog-portal")
+  const portalId = generateId('base-ui-dialog-portal')
 
   const isTopmost = () => ownNestedOpenDialogs() === 0
 
   const setOpen = (
     nextOpen: boolean,
-    eventDetails: BaseUIChangeEventDetails<ChangeEventReason>,
+    eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
   ) => {
     const details = eventDetails as DialogRootChangeEventDetails
     details.preventUnmountOnClose = () => {
@@ -184,7 +180,7 @@ export function useRenderDialogRoot(
   createDismiss({
     enabled: () => open() && mounted() && isTopmost(),
     refs: () => [popupElement(), viewportElement()],
-    onDismiss: (event) => {
+    onDismiss: event => {
       setOpen(false, createChangeEventDetails(REASONS.escapeKey, event))
     },
     escapeKey: true,
@@ -198,11 +194,11 @@ export function useRenderDialogRoot(
       if (disablePointerDismissal()) return null
       return document
     },
-    "pointerdown",
-    (event) => {
+    'pointerdown',
+    event => {
       // Prefer left-button presses; treat missing `button` (some synthetic
       // events) as a primary press.
-      if ("button" in event && event.button !== 0) {
+      if ('button' in event && event.button !== 0) {
         return
       }
       const target = getTarget(event) as Element | null
@@ -230,7 +226,7 @@ export function useRenderDialogRoot(
 
       setOpen(false, createChangeEventDetails(REASONS.outsidePress, event))
     },
-    true,
+    true
   )
 
   const contextValue: DialogRootContextValue = {
@@ -281,7 +277,6 @@ export function useRenderDialogRoot(
     </DialogRootContext.Provider>
   )
 }
-
 /**
  * Groups all parts of the dialog.
  * Doesn't render its own HTML element.
@@ -308,9 +303,10 @@ export function useRenderDialogRoot(
  * ```
  */
 export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
-  return useRenderDialogRoot("dialog", componentProps)
+  return useRenderDialogRoot('dialog', componentProps)
 }
-
+/** Root mode — matches upstream `useRenderDialogRoot(mode)`. */
+export type DialogRootMode = 'dialog' | 'alert-dialog'
 /**
  * Props for {@link DialogRoot}.
  *
@@ -332,11 +328,11 @@ export type DialogRootProps = {
    * - `'trap-focus'`: focus trap without scroll lock / pointer block
    * @default true
    */
-  modal?: boolean | "trap-focus"
+  modal?: boolean | 'trap-focus'
   /** Called when the dialog should open or close. */
   onOpenChange?: (
     open: boolean,
-    eventDetails: DialogRootChangeEventDetails,
+    eventDetails: DialogRootChangeEventDetails
   ) => void
   /** Called after open/close animations complete. */
   onOpenChangeComplete?: (open: boolean) => void
@@ -353,13 +349,11 @@ export type DialogRootProps = {
    */
   actionsRef?: DialogRootActions
 }
-
 /** Imperative actions exposed via `actionsRef`. */
 export type DialogRootActions = {
   unmount: () => void
   close: () => void
 }
-
 /** Change-event reason for Dialog. */
 export type DialogRootChangeEventReason =
   | typeof REASONS.triggerPress
@@ -369,7 +363,6 @@ export type DialogRootChangeEventReason =
   | typeof REASONS.focusOut
   | typeof REASONS.imperativeAction
   | typeof REASONS.none
-
 /** Change-event details for Dialog. */
 export type DialogRootChangeEventDetails =
   BaseUIChangeEventDetails<DialogRootChangeEventReason> & {
