@@ -18,15 +18,15 @@ export const version: string = __PACKAGE_VERSION__
 /** npm package name (from `package.json` at build time). */
 export const PACKAGE_NAME: string = __PACKAGE_NAME__
 
-export { Button, ButtonDataAttributes } from "./button"
-export { Separator, SeparatorDataAttributes } from "./separator"
-export { Toggle, ToggleDataAttributes } from "./toggle"
+export { Button, ButtonDataAttributes } from './button'
+export { Separator, SeparatorDataAttributes } from './separator'
+export { Toggle, ToggleDataAttributes } from './toggle'
 export {
   ToggleGroup,
   ToggleGroupDataAttributes,
   ToggleGroupContext,
   useToggleGroupContext,
-} from "./toggle-group"
+} from './toggle-group'
 export {
   Collapsible,
   CollapsibleRoot,
@@ -38,7 +38,7 @@ export {
   CollapsiblePanel,
   CollapsiblePanelDataAttributes,
   CollapsiblePanelCssVars,
-} from "./collapsible"
+} from './collapsible'
 export {
   Accordion,
   AccordionRoot,
@@ -56,7 +56,7 @@ export {
   AccordionPanel,
   AccordionPanelDataAttributes,
   AccordionPanelCssVars,
-} from "./accordion"
+} from './accordion'
 export {
   Tabs,
   TabsRoot,
@@ -74,7 +74,7 @@ export {
   TabsIndicator,
   TabsIndicatorDataAttributes,
   TabsIndicatorCssVars,
-} from "./tabs"
+} from './tabs'
 export {
   Progress,
   ProgressRoot,
@@ -89,7 +89,7 @@ export {
   ProgressLabelDataAttributes,
   ProgressValue,
   ProgressValueDataAttributes,
-} from "./progress"
+} from './progress'
 export {
   Meter,
   MeterRoot,
@@ -99,7 +99,7 @@ export {
   MeterIndicator,
   MeterLabel,
   MeterValue,
-} from "./meter"
+} from './meter'
 export {
   Avatar,
   AvatarRoot,
@@ -108,7 +108,7 @@ export {
   AvatarImage,
   AvatarImageDataAttributes,
   AvatarFallback,
-} from "./avatar"
+} from './avatar'
 export {
   ScrollArea,
   ScrollAreaRoot,
@@ -131,14 +131,14 @@ export {
   ScrollAreaThumb,
   ScrollAreaThumbDataAttributes,
   ScrollAreaCorner,
-} from "./scroll-area"
+} from './scroll-area'
 export {
   Portal,
   PortalContext,
   usePortalContext,
   isPortalContainer,
   resolvePortalContainer,
-} from "./portal"
+} from './portal'
 export {
   Dialog,
   DialogRoot,
@@ -158,7 +158,7 @@ export {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from "./dialog"
+} from './dialog'
 export {
   AlertDialog,
   AlertDialogRoot,
@@ -178,7 +178,7 @@ export {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogClose,
-} from "./alert-dialog"
+} from './alert-dialog'
 export {
   createControlled,
   createChangeEventDetails,
@@ -204,23 +204,23 @@ export {
   DirectionProvider,
   useDirection,
   DirectionContext,
-} from "./internals"
+} from './internals'
 
-export type { ButtonProps, ButtonState } from "./button"
-export type { Orientation, SeparatorProps, SeparatorState } from "./separator"
+export type { ButtonProps, ButtonState } from './button'
+export type { Orientation, SeparatorProps, SeparatorState } from './separator'
 export type {
   ToggleChangeEventDetails,
   ToggleChangeEventReason,
   ToggleProps,
   ToggleState,
-} from "./toggle"
+} from './toggle'
 export type {
   ToggleGroupChangeEventDetails,
   ToggleGroupChangeEventReason,
   ToggleGroupContextValue,
   ToggleGroupProps,
   ToggleGroupState,
-} from "./toggle-group"
+} from './toggle-group'
 export type {
   CollapsibleRootChangeEventDetails,
   CollapsibleRootChangeEventReason,
@@ -231,7 +231,7 @@ export type {
   CollapsibleTriggerState,
   CollapsiblePanelProps,
   CollapsiblePanelState,
-} from "./collapsible"
+} from './collapsible'
 export type {
   AccordionRootChangeEventDetails,
   AccordionRootChangeEventReason,
@@ -250,7 +250,7 @@ export type {
   AccordionTriggerState,
   AccordionPanelProps,
   AccordionPanelState,
-} from "./accordion"
+} from './accordion'
 export type {
   TabsRootChangeEventDetails,
   TabsRootChangeEventReason,
@@ -271,7 +271,7 @@ export type {
   TabsPanelState,
   TabsIndicatorProps,
   TabsIndicatorState,
-} from "./tabs"
+} from './tabs'
 export type {
   ProgressRootContextValue,
   ProgressRootProps,
@@ -285,7 +285,7 @@ export type {
   ProgressLabelState,
   ProgressValueProps,
   ProgressValueState,
-} from "./progress"
+} from './progress'
 export type {
   MeterRootContextValue,
   MeterRootProps,
@@ -298,7 +298,7 @@ export type {
   MeterLabelState,
   MeterValueProps,
   MeterValueState,
-} from "./meter"
+} from './meter'
 export type {
   AvatarRootContextValue,
   AvatarRootProps,
@@ -308,7 +308,7 @@ export type {
   AvatarImageState,
   AvatarFallbackProps,
   AvatarFallbackState,
-} from "./avatar"
+} from './avatar'
 export type {
   ScrollAreaRootContextValue,
   ScrollAreaRootRefs,
@@ -330,7 +330,7 @@ export type {
   ScrollAreaThumbState,
   ScrollAreaCornerProps,
   ScrollAreaCornerState,
-} from "./scroll-area"
+} from './scroll-area'
 export type {
   PortalProps,
   PortalState,
@@ -338,7 +338,7 @@ export type {
   PortalFocusManagerState,
   PortalContainer,
   PortalContainerProp,
-} from "./portal"
+} from './portal'
 export type {
   DialogRootProps,
   DialogRootActions,
@@ -360,7 +360,7 @@ export type {
   DialogDescriptionState,
   DialogCloseProps,
   DialogCloseState,
-} from "./dialog"
+} from './dialog'
 export type {
   AlertDialogRootProps,
   AlertDialogRootActions,
@@ -382,7 +382,7 @@ export type {
   AlertDialogDescriptionState,
   AlertDialogCloseProps,
   AlertDialogCloseState,
-} from "./alert-dialog"
+} from './alert-dialog'
 export type {
   CreateControlledOptions,
   ControlledSetter,
@@ -411,4 +411,4 @@ export type {
   TextDirection,
   DirectionProviderProps,
   DirectionContextValue,
-} from "./internals"
+} from './internals'

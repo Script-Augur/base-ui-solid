@@ -1,11 +1,11 @@
-import { createContext, useContext } from "solid-js"
+import { createContext, useContext } from 'solid-js'
 
 import type {
   BaseUIChangeEventDetails,
   ChangeEventReason,
-} from "../../internals/createChangeEventDetails"
-import type { TransitionStatus } from "../../internals/createTransitionStatus"
-import type { Accessor, Setter } from "solid-js"
+} from '../../internals/createChangeEventDetails'
+import type { TransitionStatus } from '../../internals/createTransitionStatus'
+import type { Accessor, Setter } from 'solid-js'
 
 /**
  * Shared Dialog root state for compound parts.
@@ -20,14 +20,14 @@ export const DialogRootContext = createContext<DialogRootContextValue>()
  */
 export function useDialogRootContext(optional?: false): DialogRootContextValue
 export function useDialogRootContext(
-  optional: true,
+  optional: true
 ): DialogRootContextValue | undefined
 export function useDialogRootContext(
-  optional = false,
+  optional = false
 ): DialogRootContextValue | undefined {
   const context = useContext(DialogRootContext)
   if (context == null && !optional) {
-    throw new Error("Base UI: Dialog parts must be used within <Dialog.Root>.")
+    throw new Error('Base UI: Dialog parts must be used within <Dialog.Root>.')
   }
   return context
 }
@@ -40,9 +40,9 @@ export interface DialogRootContextValue {
   openAssign: (next: boolean) => void
   setOpen: (
     next: boolean,
-    eventDetails: BaseUIChangeEventDetails<ChangeEventReason>,
+    eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
   ) => void
-  modal: Accessor<boolean | "trap-focus">
+  modal: Accessor<boolean | 'trap-focus'>
   disablePointerDismissal: Accessor<boolean>
   nested: Accessor<boolean>
   nestedOpenDialogCount: Accessor<number>
@@ -76,5 +76,5 @@ export interface DialogRootContextValue {
   popupFinalFocusAssign: Setter<boolean | HTMLElement | null | undefined>
   onOpenChangeComplete?: (open: boolean) => void
   /** Popup ARIA role — `'alertdialog'` when rooted via alert-dialog mode. */
-  role: Accessor<"dialog" | "alertdialog">
+  role: Accessor<'dialog' | 'alertdialog'>
 }
