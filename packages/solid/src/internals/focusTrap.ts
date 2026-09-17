@@ -42,22 +42,39 @@ export function createFocusTrap(options: FocusTrapOptions): void {
     const doc = ownerDocument(container)
     previouslyFocused = activeElement(doc)
 
-    const initial = options.initialFocus?.() ?? getTabbables(container)[0]
-    if (initial) {
-      queueMicrotask(() => initial.focus())
+    const initial = options.initialFocus?.()
+    if (initial === false) {
+      // Caller opted out of move-focus on open.
     } else {
-      if (!container.hasAttribute('tabindex')) {
-        container.setAttribute('tabindex', '-1')
+      const target = initial ?? getTabbables(container)[0]
+      if (target) {
+        queueMicrotask(() => target.focus())
+      } else {
+        if (!container.hasAttribute('tabindex')) {
+          container.setAttribute('tabindex', '-1')
+        }
+        queueMicrotask(() => container.focus())
       }
-      queueMicrotask(() => container.focus())
     }
 
     onCleanup(() => {
-      const restore =
-        options.restoreFocus?.() ?? (previouslyFocused as HTMLElement | null)
-      if (restore && typeof restore.focus === 'function') {
-        queueMicrotask(() => restore.focus())
-      }
+      // Capture before sibling cleanups clear Popup focus props.
+      const restore = options.restoreFocus?.()
+      // Defer so option-only re-runs (e.g. late `initialFocus` element) do not
+      // restore while the trap is still active.
+      queueMicrotask(() => {
+        if (options.enabled() && options.container()) {
+          return
+        }
+        if (restore === false) {
+          return
+        }
+        const target =
+          restore ?? (previouslyFocused as HTMLElement | null | undefined)
+        if (target && typeof target.focus === 'function') {
+          target.focus()
+        }
+      })
     })
   })
 
@@ -107,10 +124,18 @@ export interface FocusTrapOptions {
   enabled: Accessor<boolean>
   /** Container whose tabbables participate in the cycle. */
   container: Accessor<HTMLElement | null | undefined>
-  /** Element to restore focus to when the trap disables. */
-  restoreFocus?: Accessor<HTMLElement | null | undefined>
-  /** Initially focus this element, or the first tabbable when omitted. */
-  initialFocus?: Accessor<HTMLElement | null | undefined>
+  /**
+   * Element to restore focus to when the trap disables.
+   * - `false`: do not restore focus
+   * - `HTMLElement`: focus that element
+   * - omitted / `null` / `undefined`: previously focused element
+   */
+  restoreFocus?: Accessor<HTMLElement | null | undefined | false>
+  /**
+   * Initially focus this element, or the first tabbable when omitted.
+   * Pass `false` to skip move-focus on open.
+   */
+  initialFocus?: Accessor<HTMLElement | null | undefined | false>
 }
 
 /**
@@ -120,5 +145,9 @@ export interface FocusTrapOptions {
  * @returns Tabbable HTML elements.
  */
 function getTabbables(container: HTMLElement): Array<HTMLElement> {
-  return tabbable(container, { includeContainer: false }) as Array<HTMLElement>
+  return tabbable(container, {
+    includeContainer: false,
+    // jsdom has no layout; `full` display checks yield an empty list.
+    displayCheck: 'none',
+  }) as Array<HTMLElement>
 }
