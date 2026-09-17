@@ -26,6 +26,8 @@ export default defineConfig({
     'scroll-area': 'src/scroll-area/index.ts',
     portal: 'src/portal/index.ts',
     field: 'src/field/index.ts',
+    dialog: 'src/dialog/index.ts',
+    'alert-dialog': 'src/alert-dialog/index.ts',
   },
   format: ['esm'],
   dts: true,
