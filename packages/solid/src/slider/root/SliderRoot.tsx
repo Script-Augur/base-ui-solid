@@ -155,33 +155,49 @@ export function SliderRoot<
     return unwrapped.map(value => clamp(value, min(), max())).sort(asc)
   })
 
-  const fieldValue = () => (range() ? values() : values()[0])
+  const fieldValue = (): number | ReadonlyArray<number> => {
+    const nextValues = values()
+    if (range()) {
+      return nextValues
+    }
+    return nextValues[0] ?? min()
+  }
 
+  // Register the nested range input (Thumb writes `validation.inputRef`), not
+  // the Control surface — Form.focusFirstInvalid focuses `field.controlRef`.
   createRegisterFieldControl({
-    controlRef,
+    controlRef: field.validation.inputRef,
     id,
     value: fieldValue,
     enabled: () => !disabled(),
     name: () => local.name,
   })
 
-  createEffect(() => {
-    const next = fieldValue()
-    clearErrors(name())
-    field.validation.change(next)
+  // Mirror React `useValueChanged` / Switch prev-value gating: skip mount, and
+  // only read `validityData` inside the gated branch so validation commits
+  // cannot re-enter this effect.
+  createEffect(
+    (prev: number | ReadonlyArray<number> | undefined) => {
+      const next = fieldValue()
+      if (prev !== undefined && !areValuesEqual(next, prev)) {
+        clearErrors(name())
+        field.validation.change(next)
 
-    const initialValue = field.validityData().initialValue as
-      | number
-      | ReadonlyArray<number>
-      | undefined
-    let isDirty: boolean
-    if (Array.isArray(next) && Array.isArray(initialValue)) {
-      isDirty = !areArraysEqual(next, initialValue)
-    } else {
-      isDirty = next !== initialValue
+        const initialValue = field.validityData().initialValue as
+          | number
+          | ReadonlyArray<number>
+          | undefined
+        let isDirty: boolean
+        if (Array.isArray(next) && Array.isArray(initialValue)) {
+          isDirty = !areArraysEqual(next, initialValue)
+        } else {
+          isDirty = next !== initialValue
+        }
+        field.dirtyAssign(isDirty)
+      }
+      return next
     }
-    field.dirtyAssign(isDirty)
-  })
+  )
 
   function setValue(
     newValue: number | Array<number>,

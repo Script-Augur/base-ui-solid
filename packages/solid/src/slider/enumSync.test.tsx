@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@solidjs/testing-library'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { SliderRootDataAttributes } from './root/SliderRootDataAttributes'
 import { SliderThumbDataAttributes } from './thumb/SliderThumbDataAttributes'
 
 import { Slider } from './index'
@@ -25,6 +26,27 @@ describe('Slider enum sync', () => {
     expect(screen.getByTestId('thumb')).toHaveAttribute(
       SliderThumbDataAttributes.index,
       '0'
+    )
+  })
+
+  it('names root orientation and disabled attributes', () => {
+    render(() => (
+      <Slider.Root orientation="vertical" disabled>
+        <Slider.Control data-testid="control">
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>
+    ))
+
+    const group = screen.getByRole('group')
+    expect(group).toHaveAttribute(
+      SliderRootDataAttributes.orientation,
+      'vertical'
+    )
+    expect(group).toHaveAttribute(SliderRootDataAttributes.disabled)
+    expect(screen.getByTestId('control')).toHaveAttribute(
+      SliderRootDataAttributes.orientation,
+      'vertical'
     )
   })
 })

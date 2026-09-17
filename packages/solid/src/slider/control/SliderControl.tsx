@@ -507,7 +507,10 @@ export function SliderControl(
           setValueFromPointer(finger, REASONS.trackPress, event)
         }
 
-        control.setPointerCapture(event.pointerId)
+        // Match upstream: skip capture when pointerId is unset/0 (InvalidPointerId).
+        if (event.pointerId) {
+          control.setPointerCapture(event.pointerId)
+        }
 
         moveCountRef.current = 0
         const doc = ownerDocument(control)

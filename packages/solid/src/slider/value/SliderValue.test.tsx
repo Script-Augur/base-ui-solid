@@ -113,5 +113,57 @@ describe('SliderThumb', () => {
     expect(onValueChange.mock.calls.at(-1)![0]).toBe(100)
     expect(Number(input.value)).toBe(100)
   })
+
+  it('steps by largeStep on PageUp / PageDown', () => {
+    const onValueChange = vi.fn()
+    render(() => (
+      <Slider.Root
+        defaultValue={40}
+        min={0}
+        max={100}
+        step={1}
+        largeStep={10}
+        onValueChange={onValueChange}
+      >
+        <Slider.Control>
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>
+    ))
+
+    const input = screen.getByRole<HTMLInputElement>('slider')
+    input.focus()
+    fireEvent.keyDown(input, { key: 'PageUp' })
+    expect(onValueChange.mock.calls.at(-1)![0]).toBe(50)
+    expect(Number(input.value)).toBe(50)
+
+    fireEvent.keyDown(input, { key: 'PageDown' })
+    expect(onValueChange.mock.calls.at(-1)![0]).toBe(40)
+    expect(Number(input.value)).toBe(40)
+  })
+
+  it('uses largeStep with Shift+Arrow', () => {
+    const onValueChange = vi.fn()
+    render(() => (
+      <Slider.Root
+        defaultValue={30}
+        min={0}
+        max={100}
+        step={1}
+        largeStep={10}
+        onValueChange={onValueChange}
+      >
+        <Slider.Control>
+          <Slider.Thumb />
+        </Slider.Control>
+      </Slider.Root>
+    ))
+
+    const input = screen.getByRole<HTMLInputElement>('slider')
+    input.focus()
+    fireEvent.keyDown(input, { key: 'ArrowRight', shiftKey: true })
+    expect(onValueChange.mock.calls.at(-1)![0]).toBe(40)
+    expect(Number(input.value)).toBe(40)
+  })
 })
 
