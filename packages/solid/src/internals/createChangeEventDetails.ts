@@ -25,6 +25,8 @@ export const REASONS = {
   decrementPress: 'decrement-press',
   wheel: 'wheel',
   scrub: 'scrub',
+  drag: 'drag',
+  trackPress: 'track-press',
 } as const
 
 /**

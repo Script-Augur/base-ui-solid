@@ -149,6 +149,11 @@
       "import": "./dist/radio-group.js",
       "default": "./dist/radio-group.js"
     },
+    "./slider": {
+      "types": "./dist/slider.d.ts",
+      "import": "./dist/slider.js",
+      "default": "./dist/slider.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

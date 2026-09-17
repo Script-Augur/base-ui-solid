@@ -12,6 +12,10 @@ export const ARROW_RIGHT = 'ArrowRight'
 export const HOME = 'Home'
 /** `KeyboardEvent.key` for End. */
 export const END = 'End'
+/** `KeyboardEvent.key` for PageUp. */
+export const PAGE_UP = 'PageUp'
+/** `KeyboardEvent.key` for PageDown. */
+export const PAGE_DOWN = 'PageDown'
 /** Keys handled by composite list navigation. */
 export const COMPOSITE_KEYS = new Set([
   ARROW_UP,
