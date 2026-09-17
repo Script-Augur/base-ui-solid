@@ -87,9 +87,10 @@ export function PreviewCardTrigger(
       },
       onFocus(event: FocusEvent) {
         clearBlurCloseTimeout()
-        context.clearHoverTimers()
         const target = (event.currentTarget as Element | null) ?? null
-        // Upstream useFocus gates open on :focus-visible (keyboard modality).
+        // Upstream useFocus gates open on :focus-visible without cancelling
+        // hover's pending open (separate timeouts). Only clear shared timers
+        // when actually scheduling focus-open (`scheduleOpen` clears).
         if (!matchesFocusVisible(target)) {
           return
         }

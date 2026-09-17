@@ -117,6 +117,39 @@ describe('PreviewCard', () => {
     })
   })
 
+  it('keeps pending hover-open when non-focus-visible focus arrives', async () => {
+    vi.useFakeTimers()
+    const originalUa = navigator.userAgent
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      get: () => 'Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/120.0.0.0',
+    })
+
+    const onOpenChange = vi.fn()
+    render(() => <BasicPreviewCard delay={50} onOpenChange={onOpenChange} />)
+
+    const trigger = screen.getByRole('link', { name: 'typography' })
+    vi.spyOn(trigger, 'matches').mockImplementation((selectors: string) => {
+      if (selectors === ':focus-visible') return false
+      return Element.prototype.matches.call(trigger, selectors)
+    })
+
+    fireEvent.pointerEnter(trigger, { pointerType: 'mouse' })
+    // Mouse focus (not :focus-visible) must not cancel the hover open timer.
+    fireEvent.focus(trigger)
+    await vi.advanceTimersByTimeAsync(50)
+
+    expect(onOpenChange).toHaveBeenCalled()
+    expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+    expect(onOpenChange.mock.calls[0]?.[1].reason).toBe('trigger-hover')
+    expect(screen.getByTestId('popup')).toBeVisible()
+
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      get: () => originalUa,
+    })
+  })
+
   it('supports controlled open state', async () => {
     vi.useFakeTimers()
     const [open, openAssign] = createSignal(false)

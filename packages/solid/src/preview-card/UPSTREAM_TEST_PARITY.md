@@ -11,6 +11,7 @@ Upstream reference: `@base-ui/react@1.7.0` `PreviewCard` (`Root`, `Trigger`,
 | Trigger hover-open after `delay` (default 600)               | covered |
 | Trigger hover-close after `closeDelay` (default 300)         | covered |
 | Trigger focus-open (`trigger-focus`) + `:focus-visible` gate | covered |
+| Non-`:focus-visible` focus leaves pending hover-open intact  | covered |
 | Focus → blur before delay cancels pending open               | covered |
 | Focus-blur keeps open when focus moves into popup            | covered |
 | Controlled `open` + `onOpenChange` reason                    | covered |
