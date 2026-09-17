@@ -81,6 +81,34 @@ describe('createRender', () => {
       expect(next).toHaveAttribute('data-active')
     })
 
+    it('keeps the same button DOM node when reactive state data-attributes update', async () => {
+      const [active, activeAssign] = createSignal(false)
+
+      render(() =>
+        createRender({
+          defaultElement: 'button',
+          state: {
+            get active() {
+              return active()
+            },
+          },
+          mapStateToDataAttributes: true,
+          props: { 'data-testid': 'host', type: 'button' },
+        })
+      )
+
+      const host = screen.getByTestId('host')
+      expect(host.tagName).toBe('BUTTON')
+      expect(host).not.toHaveAttribute('data-active')
+
+      activeAssign(true)
+      await flushMicrotasks()
+
+      const next = screen.getByTestId('host')
+      expect(next).toBe(host)
+      expect(next).toHaveAttribute('data-active')
+    })
+
     it('forwards reactive getters to custom render functions', async () => {
       const [value, valueAssign] = createSignal('a')
 

@@ -32,6 +32,7 @@ export default defineConfig({
     fieldset: 'src/fieldset/index.ts',
     form: 'src/form/index.ts',
     input: 'src/input/index.ts',
+    'number-field': 'src/number-field/index.ts',
     checkbox: 'src/checkbox/index.ts',
     'checkbox-group': 'src/checkbox-group/index.ts',
     switch: 'src/switch/index.ts',
