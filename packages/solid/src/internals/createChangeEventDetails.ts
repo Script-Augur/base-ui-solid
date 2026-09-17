@@ -25,6 +25,7 @@ export const REASONS = {
   decrementPress: 'decrement-press',
   wheel: 'wheel',
   scrub: 'scrub',
+  linkPress: 'link-press',
 } as const
 
 /**
