@@ -5,6 +5,7 @@ import {
   PopupTriggerMap,
   SolidStore,
   createInitialPopupStoreState,
+  isPayloadChildRenderFunction,
   popupStoreSelectors,
 } from './index'
 
@@ -23,6 +24,16 @@ describe('PopupTriggerMap', () => {
     expect(map.size).toBe(0)
   })
 })
+
+describe('isPayloadChildRenderFunction', () => {
+  it('accepts arity > 0 render props and rejects Solid zero-arg children', () => {
+    expect(isPayloadChildRenderFunction(({ payload }) => payload)).toBe(true)
+    expect(isPayloadChildRenderFunction(() => null)).toBe(false)
+    expect(isPayloadChildRenderFunction('text')).toBe(false)
+    expect(isPayloadChildRenderFunction(null)).toBe(false)
+  })
+})
+
 describe('BasePopupHandle', () => {
   it('ignores open/close while no root is attached', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})

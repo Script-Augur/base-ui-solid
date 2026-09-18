@@ -177,8 +177,7 @@ export type DialogTriggerProps = Omit<
   handle?: DialogHandle<unknown>
   /**
    * Payload associated with this trigger. Stored on the popup store when this
-   * trigger opens the dialog; root render-prop children that consume payload are
-   * not implemented yet.
+   * trigger opens the dialog; exposed to root render-prop children as `{ payload }`.
    */
   payload?: unknown
 }

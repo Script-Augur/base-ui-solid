@@ -16,7 +16,7 @@ import type {
   PopupStoreState,
   PopupTriggerDataStore,
 } from './store'
-import type { Accessor, Setter } from 'solid-js'
+import type { Accessor, JSX, Setter } from 'solid-js'
 
 export { NOOP }
 /**
@@ -340,13 +340,23 @@ export function createTriggerDataForwarding<
   const isMountedByThisTrigger = () =>
     store().select('isMountedByTrigger', triggerId())
 
+  // Upstream: useIsoLayoutEffect keyed on useState('isMountedByTrigger').
+  // Subscribe to the store so payload/stateUpdates apply when this trigger
+  // becomes the mounted owner (open + activeTriggerId), not only on mount.
   createEffect(() => {
-    if (isMountedByThisTrigger()) {
-      store().update({
-        activeTriggerElement: triggerElement(),
-        ...stateUpdates(),
-      } as Partial<TState>)
+    const activeStore = store()
+    const id = triggerId()
+    const applyMountedUpdates = () => {
+      if (activeStore.select('isMountedByTrigger', id)) {
+        activeStore.update({
+          activeTriggerElement: triggerElement(),
+          ...stateUpdates(),
+        } as Partial<TState>)
+      }
     }
+    applyMountedUpdates()
+    const unsub = activeStore.subscribe(applyMountedUpdates)
+    onCleanup(unsub)
   })
 
   return {
@@ -508,6 +518,23 @@ export function createImplicitActiveTrigger<
 }
 
 /**
+ * Whether `children` is a payload render prop (not a Solid zero-arg lazy child).
+ *
+ * Solid resolves many element children as zero-arg functions. Upstream React
+ * uses `typeof === 'function'` alone; Solid must also require `length > 0`
+ * (same convention as Solid's `Show`) so we do not call the child as
+ * `({ payload }) => …` or subscribe Root to `payload` for normal Portal trees.
+ *
+ * @param children - Root `children` value.
+ * @returns `true` when `children` is a payload render function.
+ */
+export function isPayloadChildRenderFunction(
+  children: unknown
+): children is PayloadChildRenderFunction<unknown> {
+  return typeof children === 'function' && children.length > 0
+}
+
+/**
  * The subset of a popup handle that a Root needs to bind its store to.
  *
  * @typeParam TStore - Root-owned store type.
@@ -515,3 +542,14 @@ export function createImplicitActiveTrigger<
 export interface PopupRootStoreHandle<TStore> {
   attachStore: (store: TStore) => () => void
 }
+
+/**
+ * Root children render function that receives the active trigger's payload
+ * (or the payload from `DialogHandle.openWithPayload`). Matches upstream
+ * `@base-ui/react` `PayloadChildRenderFunction`.
+ *
+ * @typeParam TPayload - Payload type from `createHandle` / trigger `payload`.
+ */
+export type PayloadChildRenderFunction<TPayload> = (arg: {
+  payload: TPayload | undefined
+}) => JSX.Element

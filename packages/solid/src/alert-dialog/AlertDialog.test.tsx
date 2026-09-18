@@ -17,6 +17,7 @@ import type {
   AlertDialogRootChangeEventDetails,
   AlertDialogRootProps,
 } from './root/AlertDialogRoot'
+import type { JSX } from 'solid-js'
 
 afterEach(() => {
   cleanup()
@@ -237,6 +238,52 @@ describe('AlertDialog', () => {
     fireEvent.pointerDown(screen.getByTestId('backdrop'), { button: 0 })
     expect(onOpenChange).not.toHaveBeenCalled()
     expect(screen.getByRole('alertdialog')).toBeVisible()
+  })
+
+  it('exports createHandle and opens via detached trigger with payload children', async () => {
+    const handle = AlertDialog.createHandle<{ text: string }>()
+    expect(handle).toBeInstanceOf(AlertDialog.Handle)
+
+    render(() => (
+      <>
+        <AlertDialog.Trigger
+          handle={handle}
+          id="alert-detached"
+          payload={{ text: 'delete-me' }}
+        >
+          Detached
+        </AlertDialog.Trigger>
+        <AlertDialog.Root handle={handle}>
+          {
+            (({ payload }: { payload: { text: string } | undefined }) => (
+              <AlertDialog.Portal>
+                <AlertDialog.Popup data-testid="popup">
+                  <AlertDialog.Title>Confirm</AlertDialog.Title>
+                  {payload !== undefined && (
+                    <AlertDialog.Description data-testid="payload-text">
+                      {payload.text}
+                    </AlertDialog.Description>
+                  )}
+                  <AlertDialog.Close>Close</AlertDialog.Close>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            )) as unknown as JSX.Element
+          }
+        </AlertDialog.Root>
+      </>
+    ))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Detached' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+      expect(screen.getByRole('alertdialog')).toBeVisible()
+      expect(screen.getByTestId('payload-text')).toHaveTextContent('delete-me')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+    })
   })
 })
 
