@@ -1,12 +1,13 @@
-import { mergeProps, splitProps } from 'solid-js'
+import { splitProps } from 'solid-js'
 
 import { createRender } from '../../createRender'
-import { readMaybeAccessor } from '../../readMaybeAccessor'
+import { mergeRenderProps } from '../../mergeRenderProps'
 
 import { useCompositeItem } from './useCompositeItem'
 
 import type { RenderProp } from '../../createRender'
 import type { StateAttributesMapping } from '../../getStateAttributesProps.types'
+import type { PropsInput } from '../../mergeRenderProps'
 import type { MaybeAccessor } from '../../readMaybeAccessor'
 import type { JSX } from 'solid-js'
 
@@ -52,20 +53,31 @@ export function CompositeItem<
         ref => (el: Element | null) => ref?.(el as HTMLElement | null)
       ),
     ],
-    props: mergeProps(
-      // Item props first (includes useButton). Composite tabindex must win
-      // afterward — mirrors React getButtonProps(otherExternalProps) last.
-      ...(local.props ?? []).map(p => readMaybeAccessor(p, {})),
-      elementProps as Record<string, unknown>,
+    // Item props first (includes useButton). Composite tabindex must win
+    // afterward — mirrors React getButtonProps(otherExternalProps) last.
+    // Re-read MaybeAccessor bags via mergeRenderProps getters so live values
+    // (e.g. Toolbar `disabled` for `render` hosts) stay reactive.
+    props: [
+      ...(local.props ?? []).map(normalizePropsInput),
+      elementProps,
       {
         get tabIndex() {
           return compositeProps().tabIndex
         },
-        get onFocus() {
-          return compositeProps().onFocus
+        onFocus(event: FocusEvent) {
+          // Previous bag handlers (elementProps / getButtonProps) are composed by
+          // mergeRenderProps and run after this. Composite first matches React's
+          // `[compositeProps, ...props]` ordering.
+          const compositeFocus = compositeProps().onFocus as
+            | ((event: FocusEvent) => void)
+            | undefined
+          compositeFocus?.(event)
         },
-        get onMouseMove() {
-          return compositeProps().onMouseMove
+        onMouseMove(event: MouseEvent) {
+          const compositeMove = compositeProps().onMouseMove as
+            | ((event: MouseEvent) => void)
+            | undefined
+          compositeMove?.(event)
         },
         get class() {
           return local.class
@@ -76,8 +88,8 @@ export function CompositeItem<
         get children() {
           return local.children
         },
-      }
-    ),
+      },
+    ],
   })
 }
 
@@ -104,10 +116,11 @@ export interface CompositeItemProps<
   /** Ref callbacks invoked with the host element. */
   refs?: Array<((el: HTMLElement | null) => void) | undefined>
   /**
-   * Extra host props, each a record or an accessor that returns a record.
-   * Merged after composite props.
+   * Extra host props, each a record, a zero-arg accessor, or a
+   * `(previous) => props` getter (Base UI `mergeProps` style).
+   * Merged before composite `tabIndex` / focus handlers so composite wins.
    */
-  props?: Array<MaybeAccessor<Record<string, unknown>>>
+  props?: Array<CompositeItemPropsInput>
   /** Render-state object passed to {@link createRender}. */
   state?: TState
   /** Custom mapping for converting state fields to `data-*` attributes. */
@@ -120,4 +133,36 @@ export interface CompositeItemProps<
    */
   tag?: string
   [key: string]: unknown
+}
+
+/**
+ * Prop bag accepted by {@link CompositeItem}: a plain record, a zero-arg
+ * accessor that returns a record, or a previous-props getter.
+ */
+export type CompositeItemPropsInput =
+  | Record<string, unknown>
+  | (() => Record<string, unknown>)
+  | ((previous: Record<string, unknown>) => Record<string, unknown>)
+
+/**
+ * Converts a {@link CompositeItemPropsInput} into a {@link PropsInput} for
+ * {@link mergeRenderProps}.
+ *
+ * Zero-arg accessors are wrapped so they re-read on every merge; arity ≥ 1
+ * functions are treated as previous-props getters (e.g. `getButtonProps`).
+ *
+ * @param bag - Item prop bag.
+ * @returns Props input for merge.
+ */
+function normalizePropsInput(bag: CompositeItemPropsInput): PropsInput {
+  if (typeof bag !== 'function') {
+    return bag
+  }
+  // Zero-arg accessors re-read on every merge; arity ≥ 1 → previous-props getter.
+  if (bag.length === 0) {
+    const accessor = bag as () => Record<string, unknown>
+    return (previous: Record<string, unknown>) =>
+      mergeRenderProps(previous, accessor())
+  }
+  return bag
 }

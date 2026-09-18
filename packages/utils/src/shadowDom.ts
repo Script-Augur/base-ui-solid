@@ -10,16 +10,17 @@
  * ```ts
  * import { contains } from "@script-augur/base-ui-utils"
  *
- * if (!contains(panel, event.target as Node)) {
+ * if (!contains(panel, event.target)) {
  *   close()
  * }
  * ```
  */
 export function contains(
-  parent: Node | null | undefined,
-  child: Node | null
+  parent: EventTarget | null | undefined,
+  child: EventTarget | null | undefined
 ): boolean {
   if (!parent || !child) return false
+  if (!(parent instanceof Node) || !(child instanceof Node)) return false
   if (parent === child) return true
 
   const rootNode = child.getRootNode()

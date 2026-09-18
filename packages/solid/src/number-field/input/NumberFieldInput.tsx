@@ -326,7 +326,14 @@ export function NumberFieldInput(
           }
         },
         onKeyDown(event: KeyboardEvent & { currentTarget: HTMLInputElement }) {
-          if (event.defaultPrevented || state.readOnly || state.disabled) {
+          const ariaDisabled =
+            event.currentTarget.getAttribute('aria-disabled') === 'true'
+          if (
+            event.defaultPrevented ||
+            state.readOnly ||
+            state.disabled ||
+            ariaDisabled
+          ) {
             return
           }
 
