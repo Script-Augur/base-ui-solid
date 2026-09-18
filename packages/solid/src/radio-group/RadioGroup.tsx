@@ -277,7 +277,12 @@ export function RadioGroup<TValue = unknown>(
               field.focusedAssign(true)
             },
             onBlur(event: FocusEvent) {
-              if (!contains(event.currentTarget, event.relatedTarget)) {
+              if (
+                !contains(
+                  event.currentTarget as Node,
+                  event.relatedTarget as Node | null
+                )
+              ) {
                 field.touchedAssign(true)
                 field.focusedAssign(false)
                 if (field.validationMode() === 'onBlur') {
