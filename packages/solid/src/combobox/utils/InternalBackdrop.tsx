@@ -24,8 +24,8 @@ export function InternalBackdrop(
             const base: JSX.CSSProperties = {
               position: 'fixed',
               inset: '0',
-              'user-combobox': 'none',
-              '-webkit-user-combobox': 'none',
+              'user-select': 'none',
+              '-webkit-user-select': 'none',
             }
             const user = local.style
             if (user && typeof user === 'object' && !Array.isArray(user)) {

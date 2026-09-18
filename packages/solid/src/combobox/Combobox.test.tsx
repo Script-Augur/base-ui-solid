@@ -58,7 +58,8 @@ describe('Combobox', () => {
     expect(onValueChange).toHaveBeenCalled()
     expect(onValueChange.mock.calls[0]?.[0]).toBe('apple')
     expect(screen.queryByTestId('popup')).toBeNull()
-    expect(screen.getByTestId('input')).toHaveValue('Apple')
+    // Without `items` / `itemToStringLabel`, Lite fills from stringifyAsLabel → value string.
+    expect(screen.getByTestId('input')).toHaveValue('apple')
   })
 
   it('marks the selected item with aria-selected', () => {
@@ -103,9 +104,7 @@ describe('Combobox', () => {
       }
     )
 
-    render(() => (
-      <BasicCombobox open={open()} onOpenChange={onOpenChange} />
-    ))
+    render(() => <BasicCombobox open={open()} onOpenChange={onOpenChange} />)
 
     fireEvent.mouseDown(screen.getByTestId('trigger'))
     expect(onOpenChange).toHaveBeenCalled()
@@ -242,7 +241,9 @@ describe('Combobox', () => {
               <Combobox.List>
                 <Combobox.Collection>
                   {(item: { value: string; label: string }) => (
-                    <Combobox.Item value={item.value}>{item.label}</Combobox.Item>
+                    <Combobox.Item value={item.value}>
+                      {item.label}
+                    </Combobox.Item>
                   )}
                 </Combobox.Collection>
               </Combobox.List>
@@ -327,6 +328,7 @@ describe('Combobox', () => {
                 <Combobox.Item value="apple" disabled>
                   Apple
                 </Combobox.Item>
+                <Combobox.Item value="banana">Banana</Combobox.Item>
               </Combobox.List>
             </Combobox.Popup>
           </Combobox.Positioner>

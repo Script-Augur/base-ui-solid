@@ -30,9 +30,7 @@ export function ComboboxList(componentProps: ComboboxListProps): JSX.Element {
     const child = local.children
     if (typeof child === 'function') {
       const items = context.filteredItems() ?? []
-      return items.map((item, index) =>
-        (child as (item: unknown, index: number) => JSX.Element)(item, index)
-      )
+      return items.map((item, index) => child(item, index))
     }
     return child
   }

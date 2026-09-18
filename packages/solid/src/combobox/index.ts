@@ -47,7 +47,7 @@ export {
   useComboboxItemContext,
 } from './item/ComboboxItemContext'
 export { ComboboxItemDataAttributes } from './item/ComboboxItemDataAttributes'
-export { ComboboxItemIndicator } from './item-indicator/ComboboxItemIndicator'
+export { ComboboxItemIndicator } from './item/ComboboxItemIndicator'
 export { ComboboxChips } from './chips/ComboboxChips'
 export {
   ComboboxChipsContext,
@@ -65,10 +65,7 @@ export { ComboboxEmpty } from './empty/ComboboxEmpty'
 export { ComboboxClear } from './clear/ComboboxClear'
 export { ComboboxClearDataAttributes } from './clear/ComboboxClearDataAttributes'
 export { ComboboxSeparator } from './separator/ComboboxSeparator'
-export {
-  useFilter,
-  useComboboxFilter,
-} from './root/utils/useFilter'
+export { useFilter, useComboboxFilter } from './root/utils/useFilter'
 export { useFilteredItems } from './root/utils/useFilteredItems'
 
 export type {
@@ -81,9 +78,18 @@ export type {
   ComboboxRootHighlightEventReason,
 } from './root/ComboboxRoot'
 export type { ComboboxRootContextValue } from './root/ComboboxRootContext'
-export type { ComboboxLabelProps, ComboboxLabelState } from './label/ComboboxLabel'
-export type { ComboboxValueProps, ComboboxValueState } from './value/ComboboxValue'
-export type { ComboboxInputProps, ComboboxInputState } from './input/ComboboxInput'
+export type {
+  ComboboxLabelProps,
+  ComboboxLabelState,
+} from './label/ComboboxLabel'
+export type {
+  ComboboxValueProps,
+  ComboboxValueState,
+} from './value/ComboboxValue'
+export type {
+  ComboboxInputProps,
+  ComboboxInputState,
+} from './input/ComboboxInput'
 export type {
   ComboboxInputGroupProps,
   ComboboxInputGroupState,
@@ -108,10 +114,19 @@ export type {
 } from './positioner/ComboboxPositioner'
 export type { ComboboxPositionerContextValue } from './positioner/ComboboxPositionerContext'
 export type { Side, Align } from './positioner/placement'
-export type { ComboboxPopupProps, ComboboxPopupState } from './popup/ComboboxPopup'
-export type { ComboboxArrowProps, ComboboxArrowState } from './arrow/ComboboxArrow'
+export type {
+  ComboboxPopupProps,
+  ComboboxPopupState,
+} from './popup/ComboboxPopup'
+export type {
+  ComboboxArrowProps,
+  ComboboxArrowState,
+} from './arrow/ComboboxArrow'
 export type { ComboboxIconProps, ComboboxIconState } from './icon/ComboboxIcon'
-export type { ComboboxGroupProps, ComboboxGroupState } from './group/ComboboxGroup'
+export type {
+  ComboboxGroupProps,
+  ComboboxGroupState,
+} from './group/ComboboxGroup'
 export type { ComboboxGroupContextValue } from './group/ComboboxGroupContext'
 export type {
   ComboboxGroupLabelProps,
@@ -126,8 +141,11 @@ export type { ComboboxItemContextValue } from './item/ComboboxItemContext'
 export type {
   ComboboxItemIndicatorProps,
   ComboboxItemIndicatorState,
-} from './item-indicator/ComboboxItemIndicator'
-export type { ComboboxChipsProps, ComboboxChipsState } from './chips/ComboboxChips'
+} from './item/ComboboxItemIndicator'
+export type {
+  ComboboxChipsProps,
+  ComboboxChipsState,
+} from './chips/ComboboxChips'
 export type { ComboboxChipsContextValue } from './chips/ComboboxChipsContext'
 export type { ComboboxChipProps, ComboboxChipState } from './chip/ComboboxChip'
 export type { ComboboxChipContextValue } from './chip/ComboboxChipContext'
@@ -137,13 +155,22 @@ export type {
 } from './chip-remove/ComboboxChipRemove'
 export type { ComboboxRowProps, ComboboxRowState } from './row/ComboboxRow'
 export type { ComboboxCollectionProps } from './collection/ComboboxCollection'
-export type { ComboboxEmptyProps, ComboboxEmptyState } from './empty/ComboboxEmpty'
-export type { ComboboxClearProps, ComboboxClearState } from './clear/ComboboxClear'
+export type {
+  ComboboxEmptyProps,
+  ComboboxEmptyState,
+} from './empty/ComboboxEmpty'
+export type {
+  ComboboxClearProps,
+  ComboboxClearState,
+} from './clear/ComboboxClear'
 export type {
   ComboboxSeparatorProps,
   ComboboxSeparatorState,
 } from './separator/ComboboxSeparator'
-export type { ComboboxItems, ComboboxItemGroup } from './utils/resolveValueLabel'
+export type {
+  ComboboxItems,
+  ComboboxItemGroup,
+} from './utils/resolveValueLabel'
 export type {
   ComboboxFilter,
   ComboboxFilterOptions,

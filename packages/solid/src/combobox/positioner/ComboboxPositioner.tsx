@@ -12,9 +12,9 @@ import { useComboboxPortalContext } from '../portal/ComboboxPortalContext'
 import { useComboboxRootContext } from '../root/ComboboxRootContext'
 import { comboboxPositionerStateAttributesMapping } from '../utils/stateAttributesMapping'
 
-import { placementToSideAlign, sideAlignToPlacement } from './placement'
 import { ComboboxPositionerContext } from './ComboboxPositionerContext'
 import { ComboboxPositionerCssVars } from './ComboboxPositionerCssVars'
+import { placementToSideAlign, sideAlignToPlacement } from './placement'
 
 import type { Align, Side } from './placement'
 import type { RenderProp } from '../../internals/createRender'

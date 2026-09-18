@@ -1,5 +1,4 @@
 import {
-  Show,
   createEffect,
   createUniqueId,
   mergeProps,
@@ -46,18 +45,11 @@ export function ComboboxItem<TValue = unknown>(
   )
 
   const disabled = () => context.disabled() || Boolean(local.disabled)
+
   const generatedId = createUniqueId()
   const id = () => local.id ?? generatedId
 
-  const labelHint = () => {
-    const children = local.children
-    if (typeof children === 'string' || typeof children === 'number') {
-      return String(children)
-    }
-    return undefined
-  }
-
-  const matches = () => context.matchesQuery(local.value, labelHint())
+  const matches = () => context.matchesQuery(local.value)
 
   createEffect(() => {
     if (!matches()) {
@@ -143,78 +135,75 @@ export function ComboboxItem<TValue = unknown>(
   }
 
   return (
-    <Show when={matches()}>
-      <ComboboxItemContext.Provider value={itemContext}>
-        {createRender<ComboboxItemState, Record<string, unknown>>({
-          defaultElement: 'div',
-          state,
-          render: local.render,
-          mapStateToDataAttributes: true,
-          stateAttributesMapping: {
-            selected(value: unknown) {
-              return value
-                ? { [ComboboxItemDataAttributes.selected]: '' }
-                : null
-            },
-            disabled(value: unknown) {
-              return value
-                ? { [ComboboxItemDataAttributes.disabled]: '' }
-                : null
-            },
-            highlighted(value: unknown) {
-              return value
-                ? { [ComboboxItemDataAttributes.highlighted]: '' }
-                : null
-            },
+    <ComboboxItemContext.Provider value={itemContext}>
+      {createRender<ComboboxItemState, Record<string, unknown>>({
+        defaultElement: 'div',
+        state,
+        render: local.render,
+        mapStateToDataAttributes: true,
+        stateAttributesMapping: {
+          selected(value: unknown) {
+            return value ? { [ComboboxItemDataAttributes.selected]: '' } : null
           },
-          props: mergeProps(
-            getButtonProps(
-              mergeProps(
-                elementProps as Record<string, unknown>,
-                compositeProps,
-                {
-                  onClick(event: MouseEvent) {
-                    commitSelection(event)
-                  },
-                }
-              ) as Record<string, unknown>
-            ),
-            {
-              get id() {
-                return id()
-              },
-              role: 'option',
-              get 'aria-selected'() {
-                return selected()
-              },
-              get 'aria-disabled'() {
-                return disabled() || undefined
-              },
-              get [ACTIVE_COMPOSITE_ITEM as string]() {
-                return selected() ? '' : undefined
-              },
-              get class() {
-                return local.class
-              },
-              get style() {
-                return local.style
-              },
-              get children() {
-                return local.children
-              },
-              ref(element: HTMLElement) {
-                buttonRefAssign(element)
-                compositeRef(element)
-                const userRef = local.ref
-                if (typeof userRef === 'function') {
-                  userRef(element as HTMLDivElement)
-                }
-              },
-            }
+          disabled(value: unknown) {
+            return value ? { [ComboboxItemDataAttributes.disabled]: '' } : null
+          },
+          highlighted(value: unknown) {
+            return value
+              ? { [ComboboxItemDataAttributes.highlighted]: '' }
+              : null
+          },
+        },
+        props: mergeProps(
+          getButtonProps(
+            mergeProps(
+              elementProps as Record<string, unknown>,
+              compositeProps,
+              {
+                onClick(event: MouseEvent) {
+                  commitSelection(event)
+                },
+              }
+            ) as Record<string, unknown>
           ),
-        })}
-      </ComboboxItemContext.Provider>
-    </Show>
+          {
+            get id() {
+              return id()
+            },
+            role: 'option',
+            get 'aria-selected'() {
+              return selected()
+            },
+            get 'aria-disabled'() {
+              return disabled() || undefined
+            },
+            get ['attr:hidden']() {
+              return matches() ? undefined : true
+            },
+            get [ACTIVE_COMPOSITE_ITEM as string]() {
+              return selected() ? '' : undefined
+            },
+            get class() {
+              return local.class
+            },
+            get style() {
+              return local.style
+            },
+            get children() {
+              return local.children
+            },
+            ref(element: HTMLElement) {
+              buttonRefAssign(element)
+              compositeRef(element)
+              const userRef = local.ref
+              if (typeof userRef === 'function') {
+                userRef(element as HTMLDivElement)
+              }
+            },
+          }
+        ),
+      })}
+    </ComboboxItemContext.Provider>
   )
 }
 

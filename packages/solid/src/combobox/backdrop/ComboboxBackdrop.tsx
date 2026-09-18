@@ -54,8 +54,8 @@ export function ComboboxBackdrop(
       },
       get style() {
         const base: JSX.CSSProperties = {
-          'user-combobox': 'none',
-          '-webkit-user-combobox': 'none',
+          'user-select': 'none',
+          '-webkit-user-select': 'none',
         }
         const user = local.style
         if (user && typeof user === 'object' && !Array.isArray(user)) {

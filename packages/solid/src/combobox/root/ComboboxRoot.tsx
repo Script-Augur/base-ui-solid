@@ -20,13 +20,12 @@ import { createControlled } from '../../internals/createControlled'
 import { createOpenChangeComplete } from '../../internals/createOpenChangeComplete'
 import { createTransitionStatus } from '../../internals/createTransitionStatus'
 import { createDismiss } from '../../internals/dismiss'
-import { getFilter } from '../../internals/filter'
 import { createRegisterFieldControl } from '../../internals/field-register-control/createRegisterFieldControl'
 import { useFieldRootContext } from '../../internals/field-root-context/FieldRootContext'
+import { getFilter, stringifyAsLabel } from '../../internals/filter'
 import { createFocusTrap } from '../../internals/focusTrap'
 import { useFormContext } from '../../internals/form-context/FormContext'
 import { createScrollLock } from '../../internals/scrollLock'
-import { stringifyAsLabel } from '../../internals/filter'
 import { defaultItemEquality } from '../utils/itemEquality'
 import {
   resolveSelectedLabel,
@@ -139,9 +138,7 @@ export function ComboboxRoot<TValue = unknown>(
     value: () =>
       local.inputValue == null ? undefined : String(local.inputValue),
     defaultValue:
-      local.defaultInputValue == null
-        ? ''
-        : String(local.defaultInputValue),
+      local.defaultInputValue == null ? '' : String(local.defaultInputValue),
   })
 
   const { mounted, mountedAssign, transitionStatus } =
@@ -178,8 +175,8 @@ export function ComboboxRoot<TValue = unknown>(
   const itemToStringValue = () => local.itemToStringValue
   const itemToStringLabel = () => local.itemToStringLabel
 
-  const defaultFilter = createMemo(() =>
-    getFilter({ locale: local.locale }).contains
+  const defaultFilter = createMemo(
+    () => getFilter({ locale: local.locale }).contains
   )
 
   const activeFilter = ():
@@ -190,7 +187,7 @@ export function ComboboxRoot<TValue = unknown>(
         itemToString?: (itemValue: unknown) => string
       ) => boolean) => {
     if (local.filter === null) return null
-    if (local.filter) return local.filter as typeof local.filter
+    if (local.filter) return local.filter
     return defaultFilter()
   }
 
@@ -204,11 +201,11 @@ export function ComboboxRoot<TValue = unknown>(
       (labelHint != null
         ? () => labelHint
         : (item: unknown) => stringifyAsLabel(item))
-    return filterFn(itemValue, query, toString as (item: unknown) => string)
+    return filterFn(itemValue, query, toString)
   }
 
   const computedFilteredItems = createMemo(() => {
-    if (local.filteredItems) return local.filteredItems as ReadonlyArray<unknown>
+    if (local.filteredItems) return local.filteredItems
     const source = local.items
     if (!source || !Array.isArray(source)) return undefined
 
@@ -227,10 +224,8 @@ export function ComboboxRoot<TValue = unknown>(
                 ? String((entry as { label: unknown }).label)
                 : undefined
             const itemValue =
-              typeof entry === 'object' &&
-              entry != null &&
-              'value' in entry
-                ? (entry as { value: unknown }).value
+              typeof entry === 'object' && entry != null && 'value' in entry
+                ? entry.value
                 : entry
             return matchesQuery(itemValue, label)
           })
@@ -275,14 +270,11 @@ export function ComboboxRoot<TValue = unknown>(
   function fillInputFromValue(itemValue: unknown): string {
     const label = resolveSelectedLabel(
       itemValue,
-      local.items as ComboboxItems<unknown> | undefined,
-      itemToStringLabel() as ((item: unknown) => string) | undefined
+      local.items,
+      itemToStringLabel()
     )
     if (typeof label === 'string') return label
-    return stringifyAsLabel(
-      itemValue,
-      itemToStringLabel() as ((item: unknown) => string) | undefined
-    )
+    return stringifyAsLabel(itemValue, itemToStringLabel())
   }
 
   const serializedValue = createMemo(() => {
@@ -469,7 +461,7 @@ export function ComboboxRoot<TValue = unknown>(
     required,
     name,
     form: () => local.form,
-    items: () => local.items as ComboboxItems<unknown> | undefined,
+    items: () => local.items,
     filteredItems: computedFilteredItems,
     itemToStringLabel,
     itemToStringValue,
@@ -505,9 +497,7 @@ export function ComboboxRoot<TValue = unknown>(
     openChangeReason,
     instantType,
     onOpenChangeComplete: local.onOpenChangeComplete,
-    onItemHighlighted: local.onItemHighlighted as
-      | ComboboxRootContextValue['onItemHighlighted']
-      | undefined,
+    onItemHighlighted: local.onItemHighlighted,
     fillInputFromValue,
   }
 
@@ -633,8 +623,7 @@ export interface ComboboxRootProps<TValue = unknown> {
   itemToStringLabel?: ((itemValue: TValue) => string) | undefined
   itemToStringValue?: ((itemValue: TValue) => string) | undefined
   isItemEqualToValue?:
-    | ((itemValue: TValue, value: TValue) => boolean)
-    | undefined
+    ((itemValue: TValue, value: TValue) => boolean) | undefined
   /**
    * Whether moving the pointer over items should highlight them.
    * @default true
@@ -697,10 +686,7 @@ export type ComboboxRootChangeEventDetails =
   BaseUIChangeEventDetails<ComboboxRootChangeEventReason>
 
 /** Highlight-event reason for Combobox. */
-export type ComboboxRootHighlightEventReason =
-  | 'keyboard'
-  | 'pointer'
-  | 'none'
+export type ComboboxRootHighlightEventReason = 'keyboard' | 'pointer' | 'none'
 
 /** Highlight-event details for Combobox. */
 export interface ComboboxRootHighlightEventDetails {

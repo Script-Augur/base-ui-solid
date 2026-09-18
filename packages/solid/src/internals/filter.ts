@@ -1,21 +1,6 @@
 import { serializeValue } from './serializeValue'
 
-/**
- * Converts an `Intl.LocalesArgument` into a stable string for cache keys.
- *
- * @param locale - Locale argument passed to `Intl.Collator`.
- */
-function stringifyLocale(locale: Intl.LocalesArgument | undefined): string {
-  if (locale == null) return ''
-  if (typeof locale === 'string') return locale
-  if (Array.isArray(locale)) return locale.map(String).join(',')
-  try {
-    return JSON.stringify(locale)
-  } catch {
-    return String(locale)
-  }
-}
-
+const filterCache = new Map<string, Filter>()
 /**
  * Serializes an item for filter matching / display labels.
  *
@@ -24,12 +9,12 @@ function stringifyLocale(locale: Intl.LocalesArgument | undefined): string {
  * @param item - Item to stringify.
  * @param itemToStringLabel - Optional custom label formatter.
  */
-export function stringifyAsLabel<Item>(
-  item: Item,
-  itemToStringLabel?: (item: Item) => string
+export function stringifyAsLabel<TItem>(
+  item: TItem,
+  itemToStringLabel?: (item: TItem) => string
 ): string {
   if (itemToStringLabel && item != null) {
-    return itemToStringLabel(item) ?? ''
+    return itemToStringLabel(item)
   }
   if (item && typeof item === 'object') {
     if ('label' in item && (item as { label: unknown }).label != null) {
@@ -41,9 +26,6 @@ export function stringifyAsLabel<Item>(
   }
   return serializeValue(item)
 }
-
-const filterCache = new Map<string, Filter>()
-
 /**
  * Returns a collator-backed filter with `contains` / `startsWith` / `endsWith`.
  *
@@ -105,7 +87,6 @@ export function getFilter(options: GetFilterParameters = {}): Filter {
   filterCache.set(cacheKey, filter)
   return filter
 }
-
 /** Options for {@link getFilter}. */
 export interface GetFilterParameters extends Intl.CollatorOptions {
   /**
@@ -114,25 +95,39 @@ export interface GetFilterParameters extends Intl.CollatorOptions {
    */
   locale?: Intl.LocalesArgument | undefined
 }
-
 /** Collator filter returned by {@link getFilter}. */
 export interface Filter {
   /** Returns whether the item matches the query anywhere. */
-  contains: <Item>(
-    item: Item,
+  contains: <TItem>(
+    item: TItem,
     query: string,
-    itemToString?: (item: Item) => string
+    itemToString?: (item: TItem) => string
   ) => boolean
   /** Returns whether the item starts with the query. */
-  startsWith: <Item>(
-    item: Item,
+  startsWith: <TItem>(
+    item: TItem,
     query: string,
-    itemToString?: (item: Item) => string
+    itemToString?: (item: TItem) => string
   ) => boolean
   /** Returns whether the item ends with the query. */
-  endsWith: <Item>(
-    item: Item,
+  endsWith: <TItem>(
+    item: TItem,
     query: string,
-    itemToString?: (item: Item) => string
+    itemToString?: (item: TItem) => string
   ) => boolean
+}
+/**
+ * Converts an `Intl.LocalesArgument` into a stable string for cache keys.
+ *
+ * @param locale - Locale argument passed to `Intl.Collator`.
+ */
+function stringifyLocale(locale: Intl.LocalesArgument | undefined): string {
+  if (locale == null) return ''
+  if (typeof locale === 'string') return locale
+  if (Array.isArray(locale)) return locale.map(String).join(',')
+  try {
+    return JSON.stringify(locale)
+  } catch {
+    return String(locale)
+  }
 }

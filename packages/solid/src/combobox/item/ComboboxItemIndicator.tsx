@@ -3,7 +3,7 @@ import { Show, mergeProps, splitProps } from 'solid-js'
 import { createRender } from '../../internals/createRender'
 import { comboboxTransitionStateMapping } from '../utils/stateAttributesMapping'
 
-import { useComboboxItemContext } from '../item/ComboboxItemContext'
+import { useComboboxItemContext } from './ComboboxItemContext'
 
 import type { RenderProp } from '../../internals/createRender'
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps.types'

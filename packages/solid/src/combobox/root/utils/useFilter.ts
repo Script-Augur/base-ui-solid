@@ -2,6 +2,9 @@ import { getFilter } from '../../../internals/filter'
 
 import type { Filter, GetFilterParameters } from '../../../internals/filter'
 
+/** Alias matching the public `useFilter` export name. */
+export const useFilter = useComboboxFilter
+
 /**
  * Returns a collator-backed filter for matching items against a query.
  *
@@ -13,7 +16,7 @@ export function useComboboxFilter(options: GetFilterParameters = {}): Filter {
   return getFilter(options)
 }
 
-/** Alias matching the public `useFilter` export name. */
-export const useFilter = useComboboxFilter
-
-export type { Filter as ComboboxFilter, GetFilterParameters as ComboboxFilterOptions }
+export type {
+  Filter as ComboboxFilter,
+  GetFilterParameters as ComboboxFilterOptions,
+}

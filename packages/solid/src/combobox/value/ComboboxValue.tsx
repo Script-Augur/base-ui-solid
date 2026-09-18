@@ -1,10 +1,10 @@
-import type { JSX } from 'solid-js'
-
 import { useComboboxRootContext } from '../root/ComboboxRootContext'
 import {
   resolveMultipleLabels,
   resolveSelectedLabel,
 } from '../utils/resolveValueLabel'
+
+import type { JSX } from 'solid-js'
 
 /**
  * The current value of the combobox.
@@ -15,9 +15,7 @@ import {
  * @param componentProps - Value props.
  * @returns Resolved label content (no wrapper element).
  */
-export function ComboboxValue(
-  componentProps: ComboboxValueProps
-): JSX.Element {
+export function ComboboxValue(componentProps: ComboboxValueProps): JSX.Element {
   const context = useComboboxRootContext()
 
   const value = () => context.value()

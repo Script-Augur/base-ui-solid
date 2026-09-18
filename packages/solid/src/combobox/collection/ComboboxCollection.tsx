@@ -1,6 +1,8 @@
-import { For, type JSX } from 'solid-js'
+import { For } from 'solid-js'
 
 import { useComboboxRootContext } from '../root/ComboboxRootContext'
+
+import type { JSX } from 'solid-js'
 
 /**
  * Maps filtered items to children.
