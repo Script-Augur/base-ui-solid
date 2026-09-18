@@ -56,7 +56,9 @@ export type PropsInput =
   | undefined
 function createInitialMergedProps(input: PropsInput): Record<string, unknown> {
   if (isPropsGetter(input)) {
-    return { ...resolvePropsGetter(input, EMPTY_PROPS) }
+    // Use copyInitialProps — object spread would snapshot getters and freeze
+    // reactive attributes (aria-*, data-*) at merge time.
+    return copyInitialProps(resolvePropsGetter(input, EMPTY_PROPS))
   }
   return copyInitialProps(input)
 }
@@ -109,6 +111,8 @@ function mutablyMergeInto(
   }
 
   for (const propName in externalProps) {
+    const descriptor = Object.getOwnPropertyDescriptor(externalProps, propName)
+    const isAccessor = Boolean(descriptor?.get || descriptor?.set)
     const externalPropValue = externalProps[propName]
 
     switch (propName) {
@@ -139,6 +143,11 @@ function mutablyMergeInto(
               ((...args: Array<unknown>) => void) | undefined,
             externalPropValue as (...args: Array<unknown>) => void
           )
+        } else if (isAccessor && descriptor) {
+          // Preserve getters (Solid reactivity) instead of snapshotting the
+          // current value — the naive assignment below would freeze the
+          // rendered attribute at merge time.
+          Object.defineProperty(mergedProps, propName, descriptor)
         } else {
           mergedProps[propName] = externalPropValue
         }
