@@ -26,6 +26,11 @@ const EMPTY_OBJECT = Object.freeze({}) as Record<string, never>
  *
  * Documentation: [Base UI Toast](https://base-ui.com/react/components/toast)
  *
+ * **Lite:** uses `useFloating` (offset/flip/shift/arrow). `--available-*` /
+ * `--anchor-*` CSS vars and `anchorHidden` are API-parity stubs — see
+ * `UPSTREAM_TEST_PARITY.md`. Collision / sticky / arrowPadding props are accepted
+ * and ignored.
+ *
  * @param componentProps - Positioner props including `toast`.
  * @returns A Solid JSX element.
  */
@@ -134,6 +139,7 @@ export function ToastPositioner(
     get align() {
       return resolved().align
     },
+    // Lite: hide middleware not ported — always false (no `data-anchor-hidden`).
     get anchorHidden() {
       return false
     },
@@ -205,6 +211,10 @@ export function ToastPositioner(
 export interface ToastPositionerState extends Record<string, unknown> {
   side: Side
   align: Align
+  /**
+   * Whether the anchor is hidden.
+   * **Lite:** always `false` until hide middleware is ported.
+   */
   anchorHidden: boolean
 }
 /** Props for {@link ToastPositioner}. */

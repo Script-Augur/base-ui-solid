@@ -5,7 +5,7 @@ import {
   screen,
   waitFor,
 } from '@solidjs/testing-library'
-import { createSignal, onMount } from 'solid-js'
+import { createEffect, createRoot, onMount } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createToastManager } from './createToastManager'
@@ -408,21 +408,80 @@ describe('createToastManager bridge', () => {
   })
 })
 describe('select reactivity', () => {
-  it('exposes reactive accessors via store.select', () => {
+  it('re-runs createEffect consumers when the store updates', () => {
     const store = createStore([])
     const toasts = store.select('toasts')
-    const [seen, seenAssign] = createSignal(0)
+    const lengths: Array<number> = []
 
-    // Simulate a tracking consumer
-    const count = () => {
-      seenAssign(toasts().length)
-      return toasts().length
+    const dispose = createRoot(disposeRoot => {
+      createEffect(() => {
+        lengths.push(toasts().length)
+      })
+      return disposeRoot
+    })
+
+    expect(lengths).toEqual([0])
+    store.addToast({ id: 'x', title: 'X', timeout: 0 })
+    expect(lengths).toEqual([0, 1])
+    dispose()
+  })
+})
+
+describe('Positioner + Arrow smoke', () => {
+  it('mounts Positioner and Arrow against an anchor', async () => {
+    const anchor = document.createElement('button')
+    anchor.textContent = 'Anchor'
+    document.body.appendChild(anchor)
+
+    function AnchoredList() {
+      const { toasts } = useToastManager()
+      return (
+        <>
+          {toasts().map(toast => (
+            <Toast.Positioner
+              data-testid="positioner"
+              toast={toast}
+              anchor={anchor}
+              side="top"
+            >
+              <Toast.Arrow data-testid="arrow" />
+              <div data-testid="anchored-body">{toast.title}</div>
+            </Toast.Positioner>
+          ))}
+        </>
+      )
     }
 
-    expect(count()).toBe(0)
-    store.addToast({ id: 'x', title: 'X', timeout: 0 })
-    expect(count()).toBe(1)
-    expect(seen()).toBe(1)
+    function Trigger() {
+      const { add } = useToastManager()
+      onMount(() => {
+        add({ title: 'Anchored', timeout: 0 })
+      })
+      return null
+    }
+
+    render(() => (
+      <Toast.Provider timeout={0}>
+        <Trigger />
+        <Toast.Viewport>
+          <AnchoredList />
+        </Toast.Viewport>
+      </Toast.Provider>
+    ))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('positioner')).toBeTruthy()
+      expect(screen.getByTestId('arrow')).toBeTruthy()
+      expect(screen.getByTestId('anchored-body').textContent).toBe('Anchored')
+    })
+
+    const positioner = screen.getByTestId('positioner')
+    expect(positioner.getAttribute('data-anchor-hidden')).toBeNull()
+    // Lite: available/anchor CSS vars are not written
+    expect(positioner.style.getPropertyValue('--available-width')).toBe('')
+    expect(positioner.style.getPropertyValue('--anchor-width')).toBe('')
+
+    anchor.remove()
   })
 })
 function createStore(toasts: Array<ToastObject<object>> = []) {
