@@ -39,9 +39,12 @@ import type { JSX } from 'solid-js'
  * and popup role `'alertdialog'`. Role is **not** a public Dialog prop — Alert
  * Dialog is the only supported way to get `alertdialog` semantics.
  *
- * @internal Exported for Alert Dialog; not part of the public Dialog API.
+ * Mode `'drawer'` matches Dialog open/dismiss semantics (role stays `'dialog'`).
+ * Swipe / snap / nested-drawer gesture state lives in Drawer’s own context.
  *
- * @param mode - `'dialog'` or `'alert-dialog'`.
+ * @internal Exported for Alert Dialog and Drawer; not part of the public Dialog API.
+ *
+ * @param mode - `'dialog'`, `'drawer'`, or `'alert-dialog'`.
  * @param componentProps - Root props (`open`, `defaultOpen`, `modal`, …).
  * @returns A Solid JSX fragment wrapping children in context.
  */
@@ -436,7 +439,7 @@ export function DialogRoot<TPayload = unknown>(
   return useRenderDialogRoot('dialog', componentProps)
 }
 /** Root mode — matches upstream `useRenderDialogRoot(mode)`. */
-export type DialogRootMode = 'dialog' | 'alert-dialog'
+export type DialogRootMode = 'dialog' | 'drawer' | 'alert-dialog'
 /**
  * Props for {@link DialogRoot}.
  *
