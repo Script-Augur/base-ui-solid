@@ -1,15 +1,11 @@
 import { createEffect, onCleanup } from 'solid-js'
 
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext'
-import {
-  
-  useDrawerProviderContext
-} from '../provider/DrawerProviderContext'
+import { useDrawerProviderContext } from '../provider/DrawerProviderContext'
 
 import { useDrawerRootContext } from './DrawerRootContext'
 
-import type {DrawerVisualStateStore} from '../provider/DrawerProviderContext';
-
+import type { DrawerVisualStateStore } from '../provider/DrawerProviderContext'
 
 /**
  * Reports open state to the nearest {@link DrawerProvider} (Indent / IndentBackground).

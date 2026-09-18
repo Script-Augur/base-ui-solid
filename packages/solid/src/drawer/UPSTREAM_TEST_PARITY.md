@@ -22,11 +22,13 @@ snap / virtual-keyboard depth.
 | Portal mount | covered |
 | `aria-labelledby` / `aria-describedby` | covered |
 | `role="dialog"` + `aria-modal` | covered |
-| Popup `data-swipe-direction` / `data-expanded` / open attrs | covered |
-| `snapPoints` → expanded when last point active | covered |
+| Popup `data-swipe-direction` / open attrs | covered |
+| `data-expanded` iff `activeSnapPoint === 1` | covered |
 | Content `data-drawer-content` | covered |
 | SwipeArea opposite direction + closed attrs (no gesture) | covered |
 | Provider → Indent / IndentBackground `data-active` | covered |
+| Nested presence on open/ending (not Root mount) | covered |
+| Viewport suppresses `data-nested-dialog-open` | covered |
 | `createHandle` / detached trigger + payload children | covered |
 | Element children stable when detached trigger writes payload | covered |
 | `actionsRef.close` | covered |
@@ -38,9 +40,10 @@ snap / virtual-keyboard depth.
 | Behavior | Notes |
 | --- | --- |
 | Swipe-to-dismiss on Viewport / Popup | No `useSwipeDismiss`; CSS vars idle (`0px` / `1`) |
-| Snap-point drag / velocity / `snapToSequentialPoints` | Props + context accepted; no pointer pipeline |
+| Snap-point drag / velocity / `snapToSequentialPoints` | Props + context accepted; `--drawer-snap-point-offset` stays `0px` without drag |
 | SwipeArea open gesture | Renders attrs only; no movement / open |
-| Nested drawer swipe progress / `nestedDrawerSwiping` | Presence/height reporting wired; gesture progress idle |
+| Nested swipe progress / `nestedDrawerSwiping` | Presence follows open/ending; gesture progress idle |
+| Nested open **drawer count** via Dialog `isDrawer` | Solid Dialog has no drawer count; Drawer approximates via own context |
 | CloseWatcher (Android back) | Not ported |
 | VirtualKeyboardProvider realignment | Passthrough stub |
 | Indent visual-store swipeProgress during drag | Idle `0`; height sync from popup measure only |

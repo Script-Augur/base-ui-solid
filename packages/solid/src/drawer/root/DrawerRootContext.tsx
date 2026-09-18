@@ -89,12 +89,21 @@ export interface DrawerRootContextValue {
   onNestedFrontmostHeightChange: (height: number) => void
   onNestedSwipingChange: (swiping: boolean) => void
   onNestedSwipeProgressChange: (progress: number) => void
+  /**
+   * Provided to nested drawers so Popup can report open/ending presence to the
+   * parent (matches upstream `notifyParentHasNestedDrawer`).
+   */
+  notifyParentHasNestedDrawer?: ((present: boolean) => void) | undefined
+  /**
+   * Provided to nested drawers so Popup can report frontmost height while open.
+   */
+  notifyParentFrontmostHeight?: ((height: number) => void) | undefined
   /** Lite: always `false` — no swipe gesture pipeline. */
   swiping: Accessor<boolean>
   swipingAssign: Setter<boolean>
   /**
    * Whether the active snap point is the full-height expanded state.
-   * Lite: `true` when open and no snap points (or last snap is active).
+   * Upstream: `activeSnapPoint === 1` (literal `1`, not “last snap”).
    */
   expanded: Accessor<boolean>
 }

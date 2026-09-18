@@ -101,21 +101,37 @@ describe('Drawer', () => {
     expect(onOpenChange.mock.calls[0]?.[1]?.reason).toBe('outside-press')
   })
 
-  it('exposes swipeDirection and expanded on popup data attributes', () => {
+  it('exposes swipeDirection; data-expanded only when activeSnapPoint === 1', () => {
     render(() => <BasicDrawer defaultOpen swipeDirection="left" />)
 
     const popup = screen.getByTestId('popup')
     expect(popup).toHaveAttribute('data-swipe-direction', 'left')
-    expect(popup).toHaveAttribute('data-expanded')
+    // No snap points → activeSnapPoint null → not expanded (upstream).
+    expect(popup).not.toHaveAttribute('data-expanded')
     expect(popup).toHaveAttribute('data-open')
   })
 
-  it('reflects snapPoints expanded state (last point = expanded)', () => {
+  it('sets data-expanded only when active snap point is literal 1', () => {
     render(() => (
-      <BasicDrawer defaultOpen snapPoints={[0.3, 0.8]} defaultSnapPoint={0.3} />
+      <BasicDrawer
+        defaultOpen
+        snapPoints={[0.3, 0.8]}
+        defaultSnapPoint={0.8}
+      />
     ))
-
+    // Last point 0.8 !== 1 → not expanded.
     expect(screen.getByTestId('popup')).not.toHaveAttribute('data-expanded')
+  })
+
+  it('sets data-expanded when activeSnapPoint is 1', () => {
+    render(() => (
+      <BasicDrawer
+        defaultOpen
+        snapPoints={[0.5, 1]}
+        defaultSnapPoint={1}
+      />
+    ))
+    expect(screen.getByTestId('popup')).toHaveAttribute('data-expanded')
   })
 
   it('marks Content with data-drawer-content', () => {
@@ -322,6 +338,83 @@ describe('Drawer', () => {
         'true'
       )
     })
+  })
+
+  it('does not set nested-drawer-open while a nested Root is mounted closed', () => {
+    render(() => (
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Popup data-testid="parent-popup">
+            <Drawer.Root>
+              <Drawer.Trigger>Nested</Drawer.Trigger>
+              <Drawer.Portal>
+                <Drawer.Popup data-testid="nested-popup">Nested</Drawer.Popup>
+              </Drawer.Portal>
+            </Drawer.Root>
+          </Drawer.Popup>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ))
+
+    const parent = screen.getByTestId('parent-popup')
+    expect(parent).not.toHaveAttribute('data-nested-drawer-open')
+    expect(parent.style.getPropertyValue('--nested-drawers')).toBe('0')
+    expect(screen.queryByTestId('nested-popup')).toBeNull()
+  })
+
+  it('sets nested-drawer-open when a nested drawer is open', async () => {
+    render(() => (
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Popup data-testid="parent-popup">
+            <Drawer.Root>
+              <Drawer.Trigger>Nested</Drawer.Trigger>
+              <Drawer.Portal>
+                <Drawer.Popup data-testid="nested-popup">Nested</Drawer.Popup>
+              </Drawer.Portal>
+            </Drawer.Root>
+          </Drawer.Popup>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nested' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('nested-popup')).toBeVisible()
+    })
+
+    const parent = screen.getByTestId('parent-popup')
+    expect(parent).toHaveAttribute('data-nested-drawer-open')
+    expect(parent.style.getPropertyValue('--nested-drawers')).toBe('1')
+  })
+
+  it('Viewport suppresses data-nested-dialog-open', async () => {
+    render(() => (
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="parent-popup">
+              <Drawer.Root defaultOpen>
+                <Drawer.Portal>
+                  <Drawer.Popup data-testid="nested-popup">Nested</Drawer.Popup>
+                </Drawer.Portal>
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('nested-popup')).toBeVisible()
+    })
+
+    const viewport = screen.getByTestId('viewport')
+    expect(viewport).not.toHaveAttribute('data-nested-dialog-open')
+    // Nested drawer presence still surfaces on the parent Popup.
+    expect(screen.getByTestId('parent-popup')).toHaveAttribute(
+      'data-nested-drawer-open'
+    )
   })
 })
 

@@ -1,9 +1,7 @@
 import {
-  createEffect,
   createMemo,
   createSignal,
   mergeProps,
-  onCleanup,
   splitProps,
 } from 'solid-js'
 
@@ -16,14 +14,15 @@ import { createControlled } from '../../internals/createControlled'
 
 import {
   DrawerRootContext,
-  
-  
-  
   createNestedSwipeProgressStore,
-  useDrawerRootContext
+  useDrawerRootContext,
 } from './DrawerRootContext'
 
-import type {DrawerRootContextValue, DrawerSnapPoint, DrawerSwipeDirection} from './DrawerRootContext';
+import type {
+  DrawerRootContextValue,
+  DrawerSnapPoint,
+  DrawerSwipeDirection,
+} from './DrawerRootContext'
 import type {
   DialogRootActions,
   DialogRootProps,
@@ -133,13 +132,11 @@ export function DrawerRoot<TPayload = unknown>(
     activeSnapPointAssign(nextSnapPoint)
   }
 
-  const expanded = createMemo(() => {
-    const points = snapPoints()
-    if (!points || points.length === 0) return true
-    const active = resolvedActiveSnapPoint()
-    if (active == null) return false
-    return Object.is(active, points[points.length - 1])
-  })
+  // Upstream: expanded iff active snap point is the full-height value `1`
+  // (`activeSnapPoint === 1`), not “last snapPoints entry” / “no snaps”.
+  const expanded = createMemo(() =>
+    Object.is(resolvedActiveSnapPoint(), 1)
+  )
 
   const isNestedDrawerOpenRef = { current: false }
 
@@ -218,21 +215,15 @@ export function DrawerRoot<TPayload = unknown>(
     onNestedFrontmostHeightChange,
     onNestedSwipingChange,
     onNestedSwipeProgressChange,
+    notifyParentHasNestedDrawer: parentDrawer?.onNestedDrawerPresenceChange,
+    notifyParentFrontmostHeight: parentDrawer?.onNestedFrontmostHeightChange,
     swiping,
     swipingAssign,
     expanded,
   }
 
-  createEffect(() => {
-    const notify = parentDrawer?.onNestedDrawerPresenceChange
-    if (!notify) return
-    notify(true)
-    onCleanup(() => notify(false))
-  })
-
-  createEffect(() => {
-    parentDrawer?.onNestedFrontmostHeightChange(frontmostHeight())
-  })
+  // Parent frontmost-height / presence reporting lives on Popup (open-gated),
+  // matching upstream — avoid Root-level effects that fight Popup updates.
 
   // Inner component so `useRenderDialogRoot` runs once on mount (not in a
   // Provider `children` getter that can re-invoke and recreate DialogStore).

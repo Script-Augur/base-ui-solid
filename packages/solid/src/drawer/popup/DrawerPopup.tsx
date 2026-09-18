@@ -111,6 +111,30 @@ export function DrawerPopup(componentProps: DrawerPopupProps): JSX.Element {
     })
   })
 
+  // Upstream: parent nested presence is open || transitionStatus === 'ending'
+  // (not nested Root mount).
+  createEffect(() => {
+    const notify = drawer.notifyParentHasNestedDrawer
+    if (!notify) return
+    notify(dialog.open() || dialog.transitionStatus() === 'ending')
+  })
+
+  // Upstream: report frontmost height only while open.
+  createEffect(() => {
+    const notify = drawer.notifyParentFrontmostHeight
+    if (!notify) return
+    if (!dialog.open()) {
+      notify(0)
+      return
+    }
+    notify(drawer.frontmostHeight())
+  })
+
+  onCleanup(() => {
+    drawer.notifyParentHasNestedDrawer?.(false)
+    drawer.notifyParentFrontmostHeight?.(0)
+  })
+
   const nestedDrawerOpen = () => drawer.hasNestedDrawer()
 
   const state: DrawerPopupState = {
@@ -140,75 +164,81 @@ export function DrawerPopup(componentProps: DrawerPopupProps): JSX.Element {
     },
   }
 
+  // Build the host once during setup. Do NOT wrap `createRender(...)` in a
+  // JSX `{...}` expression — Solid treats that as a reactive computation, so
+  // reading `hasNestedDrawer` / height inside outProps would recreate the
+  // Popup and remount nested drawers (presence true/false oscillation).
+  const popup = createRender<DrawerPopupState, Record<string, unknown>>({
+    defaultElement: 'div',
+    state,
+    render: local.render,
+    mapStateToDataAttributes: true,
+    stateAttributesMapping: drawerPopupStateAttributesMapping,
+    props: mergeProps(elementProps as Record<string, unknown>, {
+      get id() {
+        return popupId
+      },
+      get role() {
+        return dialog.role()
+      },
+      tabindex: -1,
+      get 'aria-modal'() {
+        return dialog.modal() === true ? true : undefined
+      },
+      get 'aria-labelledby'() {
+        return dialog.titleElementId()
+      },
+      get 'aria-describedby'() {
+        return dialog.descriptionElementId()
+      },
+      get ['attr:hidden']() {
+        return dialog.mounted() ? undefined : true
+      },
+      get class() {
+        return local.class
+      },
+      get style() {
+        const height = drawer.popupHeight()
+        const frontmost = drawer.frontmostHeight()
+        const base: JSX.CSSProperties = {
+          [DrawerPopupCssVars.nestedDrawers]: String(
+            nestedDrawerOpen() ? 1 : 0
+          ),
+          [DrawerPopupCssVars.swipeMovementX]: '0px',
+          [DrawerPopupCssVars.swipeMovementY]: '0px',
+          [DrawerPopupCssVars.snapPointOffset]: '0px',
+          [DrawerPopupCssVars.swipeStrength]: '1',
+        }
+        if (height > 0) {
+          base[DrawerPopupCssVars.height] = `${height}px`
+        }
+        if (frontmost > 0) {
+          base[DrawerPopupCssVars.frontmostHeight] = `${frontmost}px`
+        }
+        const user = local.style
+        if (user && typeof user === 'object' && !Array.isArray(user)) {
+          return { ...base, ...user }
+        }
+        return base
+      },
+      get [DrawerPopupDataAttributes.nested]() {
+        return dialog.nested() ? '' : undefined
+      },
+      children: local.children,
+      ref(element: HTMLElement) {
+        dialog.popupElementAssign(element)
+        const userRef = local.ref
+        if (typeof userRef === 'function') {
+          userRef(element as HTMLDivElement)
+        }
+      },
+    }),
+  })
+
   return (
     <>
       <DrawerProviderReporter />
-      {createRender<DrawerPopupState, Record<string, unknown>>({
-        defaultElement: 'div',
-        state,
-        render: local.render,
-        mapStateToDataAttributes: true,
-        stateAttributesMapping: drawerPopupStateAttributesMapping,
-        props: mergeProps(elementProps as Record<string, unknown>, {
-          get id() {
-            return popupId
-          },
-          get role() {
-            return dialog.role()
-          },
-          tabindex: -1,
-          get 'aria-modal'() {
-            return dialog.modal() === true ? true : undefined
-          },
-          get 'aria-labelledby'() {
-            return dialog.titleElementId()
-          },
-          get 'aria-describedby'() {
-            return dialog.descriptionElementId()
-          },
-          get ['attr:hidden']() {
-            return dialog.mounted() ? undefined : true
-          },
-          get class() {
-            return local.class
-          },
-          get style() {
-            const height = drawer.popupHeight()
-            const frontmost = drawer.frontmostHeight()
-            const base: JSX.CSSProperties = {
-              [DrawerPopupCssVars.nestedDrawers]: String(
-                nestedDrawerOpen() ? 1 : 0
-              ),
-              [DrawerPopupCssVars.swipeMovementX]: '0px',
-              [DrawerPopupCssVars.swipeMovementY]: '0px',
-              [DrawerPopupCssVars.snapPointOffset]: '0px',
-              [DrawerPopupCssVars.swipeStrength]: '1',
-            }
-            if (height > 0) {
-              base[DrawerPopupCssVars.height] = `${height}px`
-            }
-            if (frontmost > 0) {
-              base[DrawerPopupCssVars.frontmostHeight] = `${frontmost}px`
-            }
-            const user = local.style
-            if (user && typeof user === 'object' && !Array.isArray(user)) {
-              return { ...base, ...user }
-            }
-            return base
-          },
-          get [DrawerPopupDataAttributes.nested]() {
-            return dialog.nested() ? '' : undefined
-          },
-          children: local.children,
-          ref(element: HTMLElement) {
-            dialog.popupElementAssign(element)
-            const userRef = local.ref
-            if (typeof userRef === 'function') {
-              userRef(element as HTMLDivElement)
-            }
-          },
-        }),
-      })}
+      {popup}
     </>
   )
 }
