@@ -2,8 +2,7 @@
 
 This folder ports shared createHandle / popup-store pieces from
 `@base-ui/react@1.7.0`. Dialog/Popover can ship on the hybrid open bridge
-(`OPEN_PIPELINE.md`). **Menu must not start until the items below land** (or are
-explicitly scoped into the Menu PR that consumes this foundation).
+(`OPEN_PIPELINE.md`). Menu fills the floating path below (see Menu PR).
 
 ## Already in place for Menu
 
@@ -12,19 +11,22 @@ explicitly scoped into the Menu PR that consumes this foundation).
 | `BasePopupHandle` / attach stack | done |
 | `PopupTriggerMap` + trigger data forwarding | done |
 | `SolidStore` / `NullStore` / `select` / `useState` | done |
-| `SolidStore.observe` (selector or projector) | done (stub-complete; matches upstream API) |
-| `PopupStoreState.floatingRootContext` / `floatingId` slots | typed + defaulted (`null` / `undefined`) |
+| `SolidStore.observe` (selector or projector) | done |
+| `PopupStoreState.floatingRootContext` / `floatingId` slots | typed + defaulted |
 | Active-trigger sync + outside-press helper | done |
+| `FloatingRootStore` / `createPopupFloatingRootContext` / `getEmptyRootContext` | done (Menu PR) |
+| `FloatingTreeStore` + event emitter | done (Menu PR) |
+| `createSyncedFloatingRootContext` | done (Menu PR) |
 
-## Still required before / in Menu
+## Still deferred / Lite in Menu
 
-| Upstream | Gap | Owner |
+| Upstream | Gap | Notes |
 | -------- | --- | ----- |
-| `createPopupFloatingRootContext` / real `FloatingRootStore` | Slot is typed but always `null` in Dialog/Popover initials. Menu needs a Solid floating root that supports `events.emit('setOpen')` / `dispatchOpenChange`. | Menu PR |
-| `applyPopupOpenChange` | Open logic is duplicated in Dialog/Popover Root closures. Menu should share floating dispatch, not the hybrid overwrite. | Menu PR (+ optional follow-up to consolidate overlays) |
-| `useTriggerFocusGuards` / `inlineRect` | Not ported. Menu focus guards / context-menu positioning need them. | Menu PR |
-| `usePopupRootStore` | React helper; Solid equivalent may be a small Root factory once floating exists. | Menu PR |
-| Menu `Handle.open(triggerId: string)` | Dialog allows optional id; Menu upstream requires a string id. | Menu handle |
+| Full `useListNavigation` / `useTypeahead` / `useDismiss` floating hooks | Lite keyboard + typeahead + Solid `createDismiss` in MenuRoot | Full Floating UI interaction merge deferred |
+| `useTriggerFocusGuards` / `inlineRect` | Not ported | Context-menu positioning polish |
+| `applyPopupOpenChange` shared helper | Menu Root owns setOpen (upstream also inlines Menu specifics) | Optional consolidate later |
+| Full `FloatingTree` React component / node ids | Lite tree store + **Menu writes `floatingNodeId` / `floatingParentNodeId`** + submenu parent observe | Full FloatingNode / safePolygon deferred; Menubar / Context Menu own more |
+| Menu `Handle.open(triggerId: string)` | **done** — required string id | |
 
 ## Rule
 

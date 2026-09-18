@@ -21,6 +21,14 @@ export {
   setPopupOpenState,
   attachPreventUnmountOnClose,
 } from './popupStoreUtils'
+export {
+  createEventEmitter,
+  FloatingTreeStore,
+  FloatingRootStore,
+  createPopupFloatingRootContext,
+  getEmptyRootContext,
+  createSyncedFloatingRootContext,
+} from './floatingRoot'
 
 export type { StoreSelectors } from './reactiveStore'
 export type {
@@ -37,3 +45,8 @@ export type {
   PopupHandleStoreWithOpen,
 } from './popupHandle'
 export type { PopupRootStoreHandle } from './popupStoreUtils'
+export type {
+  PopupEventEmitter,
+  FloatingTreeNode,
+  FloatingOpenChangeDetails,
+} from './floatingRoot'
