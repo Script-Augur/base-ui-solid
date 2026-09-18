@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { Field } from '../field'
 
-import { Combobox } from './index'
+import { Combobox, useFilteredItems } from './index'
 
 import type { ComboboxRootChangeEventDetails } from './root/ComboboxRoot'
 import type { JSX } from 'solid-js'
@@ -340,18 +340,190 @@ describe('Combobox', () => {
     expect(onValueChange).not.toHaveBeenCalled()
   })
 
-  it('highlights items with ArrowDown while Input is focused (Lite)', async () => {
+  it('moves highlight with ArrowDown/Up on focused Input (Lite)', async () => {
     render(() => <BasicCombobox defaultOpen />)
 
     const input = screen.getByTestId('input')
     input.focus()
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Apple' })).toHaveAttribute(
+        'data-highlighted'
+      )
+    })
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: 'Apple' }).id
+    )
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute(
+        'data-highlighted'
+      )
+    })
+    expect(screen.getByRole('option', { name: 'Apple' })).not.toHaveAttribute(
+      'data-highlighted'
+    )
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: 'Banana' }).id
+    )
+
+    fireEvent.keyDown(input, { key: 'ArrowUp' })
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Apple' })).toHaveAttribute(
+        'data-highlighted'
+      )
+    })
+  })
+
+  it('sets aria-activedescendant to the highlighted option while open', async () => {
+    render(() => <BasicCombobox defaultOpen />)
+
+    const input = screen.getByTestId('input')
+    expect(input.getAttribute('aria-activedescendant')).toBeNull()
+
+    input.focus()
     fireEvent.keyDown(input, { key: 'ArrowDown' })
 
     await waitFor(() => {
-      const options = screen.getAllByRole('option')
-      expect(
-        options.some(option => option.hasAttribute('data-highlighted'))
-      ).toBe(true)
+      const apple = screen.getByRole('option', { name: 'Apple' })
+      expect(input.getAttribute('aria-activedescendant')).toBe(apple.id)
+    })
+  })
+
+  it('Enter after filtering selects the visible match, not a hidden earlier option', async () => {
+    const onValueChange = vi.fn()
+    render(() => <BasicCombobox defaultOpen onValueChange={onValueChange} />)
+
+    const input = screen.getByTestId('input')
+    input.focus()
+    fireEvent.input(input, { target: { value: 'ban' } })
+
+    await waitFor(() => {
+      expect(screen.queryByRole('option', { name: 'Apple' })).toBeNull()
+      expect(screen.getByRole('option', { name: 'Banana' })).toBeVisible()
+    })
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute(
+        'data-highlighted'
+      )
+    })
+
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onValueChange).toHaveBeenCalled()
+    expect(onValueChange.mock.calls[0]?.[0]).toBe('banana')
+  })
+
+  it('autoHighlight reseeds to the first visible match while filtering', async () => {
+    const onItemHighlighted = vi.fn()
+    render(() => (
+      <Combobox.Root
+        defaultOpen
+        autoHighlight
+        onItemHighlighted={onItemHighlighted}
+      >
+        <Combobox.Input data-testid="input" />
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.List>
+                <Combobox.Item value="apple">Apple</Combobox.Item>
+                <Combobox.Item value="banana">Banana</Combobox.Item>
+                <Combobox.Item value="cherry">Cherry</Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ))
+
+    const input = screen.getByTestId('input')
+    fireEvent.input(input, { target: { value: 'ch' } })
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Cherry' })).toHaveAttribute(
+        'data-highlighted'
+      )
+    })
+    expect(onItemHighlighted).toHaveBeenCalled()
+  })
+
+  it('renders per-value hidden inputs for multiple + name', () => {
+    render(() => (
+      <Combobox.Root multiple name="fruits" defaultValue={['apple', 'banana']}>
+        <Combobox.Input data-testid="input" />
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.List>
+                <Combobox.Item value="apple">Apple</Combobox.Item>
+                <Combobox.Item value="banana">Banana</Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ))
+
+    const hiddens = document.querySelectorAll(
+      'input[type="hidden"][name="fruits"]'
+    )
+    expect(hiddens).toHaveLength(2)
+    expect(
+      Array.from(hiddens).map(el => (el as HTMLInputElement).value)
+    ).toEqual(['apple', 'banana'])
+  })
+
+  it('opens from Trigger keyboard click (detail === 0)', () => {
+    const onOpenChange = vi.fn()
+    render(() => <BasicCombobox onOpenChange={onOpenChange} />)
+
+    fireEvent.click(screen.getByTestId('trigger'), { detail: 0 })
+    expect(screen.getByTestId('popup')).toBeVisible()
+    expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+    expect(onOpenChange.mock.calls[0]?.[1]?.reason).toBe('trigger-press')
+  })
+
+  it('useFilteredItems returns a reactive accessor', async () => {
+    let readFiltered!: () => ReadonlyArray<unknown>
+    function Probe() {
+      readFiltered = useFilteredItems()
+      return null
+    }
+
+    const [inputValue, inputValueAssign] = createSignal('')
+    render(() => (
+      <Combobox.Root
+        defaultOpen
+        inputValue={inputValue()}
+        onInputValueChange={value => inputValueAssign(value)}
+        items={['apple', 'banana', 'cherry']}
+      >
+        <Probe />
+        <Combobox.Input data-testid="input" />
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.List>
+                <Combobox.Collection>
+                  {(item: unknown) => (
+                    <Combobox.Item value={item}>{String(item)}</Combobox.Item>
+                  )}
+                </Combobox.Collection>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ))
+
+    expect(readFiltered()).toHaveLength(3)
+    fireEvent.input(screen.getByTestId('input'), { target: { value: 'ban' } })
+    await waitFor(() => {
+      expect(readFiltered()).toEqual(['banana'])
     })
   })
 })

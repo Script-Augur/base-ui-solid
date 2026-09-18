@@ -34,10 +34,7 @@ export interface ComboboxRootContextValue<TValue = unknown> {
   id: Accessor<string>
   open: Accessor<boolean>
   openAssign: (next: boolean) => void
-  setOpen: (
-    next: boolean,
-    eventDetails: ComboboxRootChangeEventDetails
-  ) => void
+  setOpen: (next: boolean, eventDetails: ComboboxRootChangeEventDetails) => void
   mounted: Accessor<boolean>
   mountedAssign: Setter<boolean>
   transitionStatus: Accessor<TransitionStatus>
@@ -72,6 +69,29 @@ export interface ComboboxRootContextValue<TValue = unknown> {
   registerVisibleItem: (id: string) => void
   unregisterVisibleItem: (id: string) => void
   visibleItemCount: Accessor<number>
+  /** Controlled composite highlight index (`-1` = none). */
+  highlightedIndex: Accessor<number>
+  /**
+   * Sets the highlighted option index and optionally notifies
+   * `onItemHighlighted`.
+   */
+  setHighlightedIndex: (
+    index: number,
+    reason: 'keyboard' | 'pointer' | 'none',
+    event?: Event
+  ) => void
+  /**
+   * Moves highlight among visible options without focusing them (Input-driven
+   * virtual focus).
+   */
+  moveHighlight: (delta: 1 | -1, event: Event) => void
+  /** Activates the highlighted visible option (Enter from Input). */
+  activateHighlighted: (event: Event) => void
+  /** `id` of the highlighted option for `aria-activedescendant`. */
+  activeDescendantId: Accessor<string | undefined>
+  /** Registers an option's value by DOM id (for highlight callbacks / Enter). */
+  registerItemValue: (id: string, itemValue: unknown) => void
+  unregisterItemValue: (id: string) => void
   labelId: Accessor<string | undefined>
   labelIdAssign: Setter<string | undefined>
   inputElement: Accessor<HTMLInputElement | null>
@@ -94,13 +114,5 @@ export interface ComboboxRootContextValue<TValue = unknown> {
   openChangeReason: Accessor<ChangeEventReason | null>
   instantType: Accessor<string | undefined>
   onOpenChangeComplete?: (open: boolean) => void
-  onItemHighlighted?: (
-    highlightedValue: TValue | undefined,
-    eventDetails: {
-      reason: 'keyboard' | 'pointer' | 'none'
-      index: number
-      event?: Event
-    }
-  ) => void
   fillInputFromValue: (itemValue: unknown) => string
 }

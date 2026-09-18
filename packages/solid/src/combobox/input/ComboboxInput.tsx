@@ -58,24 +58,24 @@ export function ComboboxInput(componentProps: ComboboxInputProps): JSX.Element {
 
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
+      const delta: 1 | -1 = event.key === 'ArrowDown' ? 1 : -1
       if (!context.open()) {
         context.setOpen(
           true,
           createChangeEventDetails(REASONS.listNavigation, event)
         )
+        // After open, seed highlight on the first/last visible option.
+        queueMicrotask(() => {
+          context.moveHighlight(delta, event)
+        })
+        return
       }
+      context.moveHighlight(delta, event)
       return
     }
 
     if (event.key === 'Enter' && context.open()) {
-      const list = context.listElement()
-      const highlighted =
-        list?.querySelector<HTMLElement>('[data-highlighted]') ??
-        list?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]')
-      if (highlighted) {
-        event.preventDefault()
-        highlighted.click()
-      }
+      context.activateHighlighted(event)
     }
   }
 
@@ -143,6 +143,10 @@ export function ComboboxInput(componentProps: ComboboxInputProps): JSX.Element {
         return context.open()
           ? (context.listElement()?.id ?? undefined)
           : undefined
+      },
+      get 'aria-activedescendant'() {
+        if (!context.open()) return undefined
+        return context.activeDescendantId()
       },
       get 'aria-labelledby'() {
         return context.labelId()

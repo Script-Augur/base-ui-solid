@@ -169,6 +169,11 @@ export function ComboboxRoot<TValue = unknown>(
   const [visibleItemIds, visibleItemIdsAssign] = createSignal<
     ReadonlySet<string>
   >(new Set())
+  /** `-1` means no highlighted option (virtual focus cleared). */
+  const [highlightedIndex, highlightedIndexAssign] = createSignal(-1)
+  const [itemValuesById, itemValuesByIdAssign] = createSignal(
+    new Map<string, unknown>()
+  )
 
   const portalId = `base-ui-combobox-portal-${generatedId}`
 
@@ -276,6 +281,144 @@ export function ComboboxRoot<TValue = unknown>(
     if (typeof label === 'string') return label
     return stringifyAsLabel(itemValue, itemToStringLabel())
   }
+
+  function registerItemValue(itemId: string, itemValue: unknown) {
+    itemValuesByIdAssign(prev => {
+      if (prev.get(itemId) === itemValue) return prev
+      const next = new Map(prev)
+      next.set(itemId, itemValue)
+      return next
+    })
+  }
+
+  function unregisterItemValue(itemId: string) {
+    itemValuesByIdAssign(prev => {
+      if (!prev.has(itemId)) return prev
+      const next = new Map(prev)
+      next.delete(itemId)
+      return next
+    })
+  }
+
+  function getVisibleOptions(): Array<HTMLElement> {
+    const list = listElement()
+    if (!list) return []
+    return Array.from(
+      list.querySelectorAll<HTMLElement>('[role="option"]')
+    ).filter(el => {
+      if (el.getAttribute('aria-disabled') === 'true') return false
+      if (el.hasAttribute('disabled')) return false
+      if (el.hidden || el.getAttribute('hidden') != null) return false
+      return true
+    })
+  }
+
+  function emitItemHighlighted(
+    index: number,
+    reason: ComboboxRootHighlightEventReason,
+    event?: Event
+  ) {
+    const options = getVisibleOptions()
+    const option = index >= 0 ? options[index] : undefined
+    const highlightedValue =
+      option != null ? itemValuesById().get(option.id) : undefined
+    local.onItemHighlighted?.(highlightedValue, {
+      reason,
+      index,
+      event,
+    })
+  }
+
+  function setHighlightedIndex(
+    index: number,
+    reason: ComboboxRootHighlightEventReason,
+    event?: Event
+  ) {
+    const prev = highlightedIndex()
+    if (prev === index) {
+      // Still notify when reason changes from pointer/keyboard on same index.
+      if (reason !== 'none') {
+        emitItemHighlighted(index, reason, event)
+      }
+      return
+    }
+    highlightedIndexAssign(index)
+    emitItemHighlighted(index, reason, event)
+  }
+
+  function moveHighlight(delta: 1 | -1, event: Event) {
+    const options = getVisibleOptions()
+    if (options.length === 0) return
+
+    const current = highlightedIndex()
+    let next: number
+    if (current < 0 || current >= options.length) {
+      next = delta > 0 ? 0 : options.length - 1
+    } else if (loopFocus()) {
+      next = (current + delta + options.length) % options.length
+    } else {
+      next = Math.max(0, Math.min(options.length - 1, current + delta))
+    }
+
+    if (next !== current) {
+      setHighlightedIndex(next, 'keyboard', event)
+    }
+  }
+
+  function activateHighlighted(event: Event) {
+    const options = getVisibleOptions()
+    const index = highlightedIndex()
+    if (index < 0 || index >= options.length) return
+    const option = options[index]
+    if (!option) return
+    event.preventDefault()
+    option.click()
+  }
+
+  const activeDescendantId = createMemo(() => {
+    if (!open()) return undefined
+    const index = highlightedIndex()
+    if (index < 0) return undefined
+    const options = getVisibleOptions()
+    return options[index]?.id
+  })
+
+  // Reseed / clear highlight when the filter query changes while open.
+  createEffectOnValueChange(inputValue, () => {
+    if (!open()) return
+    if (autoHighlight()) {
+      // Highlight first visible match after filtering (upstream boolean path).
+      highlightedIndexAssign(0)
+      queueMicrotask(() => {
+        if (getVisibleOptions().length > 0) {
+          emitItemHighlighted(0, 'none')
+        } else {
+          highlightedIndexAssign(-1)
+        }
+      })
+    } else {
+      // Clear stale highlight so Enter cannot activate a filtered-out option.
+      highlightedIndexAssign(-1)
+      emitItemHighlighted(-1, 'none')
+    }
+  })
+
+  createEffectOnValueChange(open, () => {
+    if (open()) {
+      if (autoHighlight()) {
+        highlightedIndexAssign(0)
+        queueMicrotask(() => {
+          if (getVisibleOptions().length > 0) {
+            emitItemHighlighted(0, 'none')
+          }
+        })
+      } else {
+        highlightedIndexAssign(-1)
+      }
+    } else {
+      highlightedIndexAssign(-1)
+    }
+  })
 
   const serializedValue = createMemo(() => {
     if (multiple()) return ''
@@ -475,6 +618,13 @@ export function ComboboxRoot<TValue = unknown>(
     registerVisibleItem,
     unregisterVisibleItem,
     visibleItemCount,
+    highlightedIndex,
+    setHighlightedIndex,
+    moveHighlight,
+    activateHighlighted,
+    activeDescendantId,
+    registerItemValue,
+    unregisterItemValue,
     labelId,
     labelIdAssign,
     inputElement,
@@ -497,7 +647,6 @@ export function ComboboxRoot<TValue = unknown>(
     openChangeReason,
     instantType,
     onOpenChangeComplete: local.onOpenChangeComplete,
-    onItemHighlighted: local.onItemHighlighted,
     fillInputFromValue,
   }
 
@@ -636,14 +785,21 @@ export interface ComboboxRootProps<TValue = unknown> {
   openOnInputClick?: boolean | undefined
   /**
    * Whether the first matching item is highlighted automatically while filtering.
+   * When `true`, typing reseeds highlight to the first visible match and fires
+   * `onItemHighlighted`. When `false`, filter changes clear the highlight until
+   * ArrowDown/Up (Lite).
    * @default false
    */
   autoHighlight?: boolean | undefined
   /**
-   * Whether to loop keyboard focus.
+   * Whether to loop keyboard highlight from the last option to the first.
    * @default true
    */
   loopFocus?: boolean | undefined
+  /**
+   * Called when the highlighted item changes (keyboard, pointer, or programmatic
+   * reseed / clear).
+   */
   onItemHighlighted?:
     | ((
         highlightedValue: TValue | undefined,

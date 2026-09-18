@@ -48,7 +48,9 @@ export function ComboboxList(componentProps: ComboboxListProps): JSX.Element {
       class={local.class}
       style={local.style}
       state={state}
-      highlightItemOnHover={context.highlightItemOnHover()}
+      // Combobox uses Input-driven virtual focus via Root `highlightedIndex`
+      // (Composite's internal seed would force index 0 and fight autoHighlight).
+      highlightItemOnHover={false}
       loopFocus={context.loopFocus()}
       refs={[
         el => {

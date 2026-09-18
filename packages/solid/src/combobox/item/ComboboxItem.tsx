@@ -1,4 +1,5 @@
 import {
+  Show,
   createEffect,
   createUniqueId,
   mergeProps,
@@ -8,7 +9,6 @@ import {
 
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants'
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem'
-import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext'
 import {
   REASONS,
   createChangeEventDetails,
@@ -23,7 +23,6 @@ import { ComboboxItemDataAttributes } from './ComboboxItemDataAttributes'
 
 import type { RenderProp } from '../../internals/createRender'
 import type { JSX } from 'solid-js'
-
 /**
  * An individual selectable item in the combobox popup.
  * Renders a `<div>` element.
@@ -37,7 +36,52 @@ export function ComboboxItem<TValue = unknown>(
   componentProps: ComboboxItemProps<TValue>
 ): JSX.Element {
   const context = useComboboxRootContext()
-  const compositeRoot = useCompositeRootContext()
+
+  const [local] = splitProps(
+    componentProps as ComboboxItemProps<unknown> & Record<string, unknown>,
+    ['render', 'class', 'style', 'children', 'value', 'disabled', 'id', 'ref']
+  )
+
+  const matches = () => context.matchesQuery(local.value)
+
+  // Unmount non-matches so they leave the Composite map and cannot be
+  // highlighted / activated via Enter after filtering.
+  return (
+    <Show when={matches()}>
+      <ComboboxItemVisible {...componentProps} />
+    </Show>
+  )
+}
+/** Metadata published into the composite map for a combobox item. */
+export interface ComboboxItemMetadata<TValue> {
+  value: TValue
+  disabled: boolean
+}
+/** Public state for {@link ComboboxItem}. */
+export interface ComboboxItemState extends Record<string, unknown> {
+  selected: boolean
+  disabled: boolean
+  highlighted: boolean
+}
+/** Props for {@link ComboboxItem}. */
+export type ComboboxItemProps<TValue = unknown> = Omit<
+  JSX.HTMLAttributes<HTMLDivElement>,
+  'children'
+> & {
+  children?: JSX.Element
+  /** The value associated with this item. */
+  value: TValue
+  /**
+   * Whether the item is disabled.
+   * @default false
+   */
+  disabled?: boolean
+  render?: RenderProp<ComboboxItemState, Record<string, unknown>>
+}
+function ComboboxItemVisible<TValue = unknown>(
+  componentProps: ComboboxItemProps<TValue>
+): JSX.Element {
+  const context = useComboboxRootContext()
 
   const [local, elementProps] = splitProps(
     componentProps as ComboboxItemProps<unknown> & Record<string, unknown>,
@@ -49,15 +93,15 @@ export function ComboboxItem<TValue = unknown>(
   const generatedId = createUniqueId()
   const id = () => local.id ?? generatedId
 
-  const matches = () => context.matchesQuery(local.value)
-
   createEffect(() => {
-    if (!matches()) {
-      context.unregisterVisibleItem(id())
-      return
-    }
     context.registerVisibleItem(id())
     onCleanup(() => context.unregisterVisibleItem(id()))
+  })
+
+  createEffect(() => {
+    const itemId = id()
+    context.registerItemValue(itemId, local.value)
+    onCleanup(() => context.unregisterItemValue(itemId))
   })
 
   const selected = (): boolean => {
@@ -78,14 +122,15 @@ export function ComboboxItem<TValue = unknown>(
     metadata: () => ({ value: local.value, disabled: disabled() }),
   })
 
-  const highlighted = () =>
-    index() >= 0 && compositeRoot.highlightedIndex() === index()
+  // Root-owned virtual focus keyed by option id (Composite index assignment
+  // can briefly report 0 for every item before the map settles).
+  const highlighted = () => context.activeDescendantId() === id()
 
   const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     native: () => false,
     composite: () => true,
-    tabIndex: () => compositeProps().tabIndex as number,
+    tabIndex: () => -1,
   })
 
   const itemContext = { selected, index }
@@ -160,6 +205,29 @@ export function ComboboxItem<TValue = unknown>(
               elementProps as Record<string, unknown>,
               compositeProps,
               {
+                tabIndex: -1,
+                onFocus() {
+                  const options = context
+                    .listElement()
+                    ?.querySelectorAll<HTMLElement>('[role="option"]')
+                  if (!options) return
+                  const i = Array.from(options).findIndex(el => el.id === id())
+                  if (i >= 0 && !disabled()) {
+                    context.setHighlightedIndex(i, 'pointer')
+                  }
+                },
+                onMouseMove() {
+                  if (!context.highlightItemOnHover() || disabled()) return
+                  if (highlighted()) return
+                  const options = context
+                    .listElement()
+                    ?.querySelectorAll<HTMLElement>('[role="option"]')
+                  if (!options) return
+                  const i = Array.from(options).findIndex(el => el.id === id())
+                  if (i >= 0) {
+                    context.setHighlightedIndex(i, 'pointer')
+                  }
+                },
                 onClick(event: MouseEvent) {
                   commitSelection(event)
                 },
@@ -176,9 +244,6 @@ export function ComboboxItem<TValue = unknown>(
             },
             get 'aria-disabled'() {
               return disabled() || undefined
-            },
-            get ['attr:hidden']() {
-              return matches() ? undefined : true
             },
             get [ACTIVE_COMPOSITE_ITEM as string]() {
               return selected() ? '' : undefined
@@ -205,33 +270,4 @@ export function ComboboxItem<TValue = unknown>(
       })}
     </ComboboxItemContext.Provider>
   )
-}
-
-/** Metadata published into the composite map for a combobox item. */
-export interface ComboboxItemMetadata<TValue> {
-  value: TValue
-  disabled: boolean
-}
-
-/** Public state for {@link ComboboxItem}. */
-export interface ComboboxItemState extends Record<string, unknown> {
-  selected: boolean
-  disabled: boolean
-  highlighted: boolean
-}
-
-/** Props for {@link ComboboxItem}. */
-export type ComboboxItemProps<TValue = unknown> = Omit<
-  JSX.HTMLAttributes<HTMLDivElement>,
-  'children'
-> & {
-  children?: JSX.Element
-  /** The value associated with this item. */
-  value: TValue
-  /**
-   * Whether the item is disabled.
-   * @default false
-   */
-  disabled?: boolean
-  render?: RenderProp<ComboboxItemState, Record<string, unknown>>
 }
