@@ -56,7 +56,9 @@ export type PropsInput =
   | undefined
 function createInitialMergedProps(input: PropsInput): Record<string, unknown> {
   if (isPropsGetter(input)) {
-    return { ...resolvePropsGetter(input, EMPTY_PROPS) }
+    // Preserve accessors/getters — object spread would invoke them once and
+    // freeze values (e.g. Radio `aria-checked` via CompositeItem zero-arg bags).
+    return copyInitialProps(resolvePropsGetter(input, EMPTY_PROPS))
   }
   return copyInitialProps(input)
 }
