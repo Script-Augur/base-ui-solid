@@ -8,6 +8,8 @@ import {
 import { createSignal } from 'solid-js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { Field } from '../field'
+
 import { Select } from './index'
 
 import type { SelectRootChangeEventDetails } from './root/SelectRoot'
@@ -325,6 +327,131 @@ describe('Select', () => {
     expect(input).not.toBeNull()
     expect(input?.value).toBe('banana')
   })
+
+  it('opens from keyboard activation (click without pointer type)', () => {
+    const onOpenChange = vi.fn()
+    render(() => <BasicSelect onOpenChange={onOpenChange} />)
+
+    const trigger = screen.getByRole('combobox')
+    // Keyboard Enter/Space synthesizes `click` with `detail === 0`.
+    fireEvent.click(trigger, { detail: 0 })
+    expect(screen.getByTestId('popup')).toBeVisible()
+    expect(onOpenChange).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({ reason: 'trigger-press' })
+    )
+  })
+
+  it('does not change value when readOnly even if forced open', () => {
+    const onValueChange = vi.fn()
+    render(() => (
+      <Select.Root
+        readOnly
+        defaultOpen
+        defaultValue="apple"
+        onValueChange={onValueChange}
+      >
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup data-testid="popup">
+              <Select.List>
+                <Select.Item value="apple">Apple</Select.Item>
+                <Select.Item value="banana">Banana</Select.Item>
+              </Select.List>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ))
+
+    fireEvent.click(screen.getByRole('option', { name: 'Banana' }))
+    expect(onValueChange).not.toHaveBeenCalled()
+    expect(screen.getByRole('option', { name: 'Apple' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+  })
+
+  it('emits per-value hidden inputs when multiple and name are set', () => {
+    render(() => (
+      <Select.Root
+        multiple
+        name="fruit"
+        defaultValue={['apple', 'banana']}
+        defaultOpen
+      >
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.List>
+                <Select.Item value="apple">Apple</Select.Item>
+                <Select.Item value="banana">Banana</Select.Item>
+                <Select.Item value="cherry">Cherry</Select.Item>
+              </Select.List>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ))
+
+    const named = Array.from(
+      document.querySelectorAll<HTMLInputElement>('input[name="fruit"]')
+    )
+    expect(named).toHaveLength(2)
+    expect(named.map(input => input.type)).toEqual(['hidden', 'hidden'])
+    expect(named.map(input => input.value).sort()).toEqual(['apple', 'banana'])
+
+    fireEvent.click(screen.getByRole('option', { name: 'Cherry' }))
+    const after = Array.from(
+      document.querySelectorAll<HTMLInputElement>('input[name="fruit"]')
+    )
+    expect(after.map(input => input.value).sort()).toEqual([
+      'apple',
+      'banana',
+      'cherry',
+    ])
+  })
+
+  it('applies Field validity attrs to the combobox trigger', async () => {
+    render(() => (
+      <Field.Root
+        validationMode="onChange"
+        validate={value => (value === 'apple' ? 'bad fruit' : null)}
+      >
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.List>
+                  <Select.Item value="apple">Apple</Select.Item>
+                  <Select.Item value="banana">Banana</Select.Item>
+                </Select.List>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+        <Field.Error data-testid="error" />
+      </Field.Root>
+    ))
+
+    const trigger = screen.getByTestId('trigger')
+    expect(trigger).not.toHaveAttribute('aria-invalid')
+
+    fireEvent.click(screen.getByRole('option', { name: 'Apple' }))
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute('aria-invalid', 'true')
+    })
+    expect(trigger).toHaveAttribute('data-invalid')
+  })
 })
 
 function BasicSelect(props: {
@@ -339,6 +466,7 @@ function BasicSelect(props: {
   onOpenChange?: (open: boolean, details: SelectRootChangeEventDetails) => void
   modal?: boolean
   disabled?: boolean
+  readOnly?: boolean
   name?: string
   actionsRef?: { unmount: () => void }
   children?: JSX.Element
@@ -357,6 +485,7 @@ function BasicSelect(props: {
       onOpenChange={props.onOpenChange}
       modal={props.modal}
       disabled={props.disabled}
+      readOnly={props.readOnly}
       name={props.name}
       actionsRef={props.actionsRef}
     >

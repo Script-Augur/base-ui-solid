@@ -2,6 +2,7 @@ import { createUniqueId, mergeProps, splitProps } from 'solid-js'
 
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants'
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem'
+import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext'
 import {
   REASONS,
   createChangeEventDetails,
@@ -30,6 +31,7 @@ export function SelectItem<TValue = unknown>(
   componentProps: SelectItemProps<TValue>
 ): JSX.Element {
   const context = useSelectRootContext()
+  const compositeRoot = useCompositeRootContext()
 
   const [local, elementProps] = splitProps(
     componentProps as SelectItemProps<unknown> & Record<string, unknown>,
@@ -59,6 +61,9 @@ export function SelectItem<TValue = unknown>(
     metadata: () => ({ value: local.value, disabled: disabled() }),
   })
 
+  const highlighted = () =>
+    index() >= 0 && compositeRoot.highlightedIndex() === index()
+
   const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     native: () => false,
@@ -69,7 +74,7 @@ export function SelectItem<TValue = unknown>(
   const itemContext = { selected, index }
 
   function commitSelection(event: Event) {
-    if (disabled()) return
+    if (disabled() || context.readOnly()) return
 
     const details = createChangeEventDetails(REASONS.itemPress, event)
 
@@ -102,7 +107,7 @@ export function SelectItem<TValue = unknown>(
       return disabled()
     },
     get highlighted() {
-      return false
+      return highlighted()
     },
   }
 
@@ -120,14 +125,22 @@ export function SelectItem<TValue = unknown>(
           disabled(value: unknown) {
             return value ? { [SelectItemDataAttributes.disabled]: '' } : null
           },
+          highlighted(value: unknown) {
+            return value ? { [SelectItemDataAttributes.highlighted]: '' } : null
+          },
         },
         props: mergeProps(
           getButtonProps(
-            mergeProps(elementProps as Record<string, unknown>, {
-              onClick(event: MouseEvent) {
-                commitSelection(event)
-              },
-            }) as Record<string, unknown>
+            mergeProps(
+              elementProps as Record<string, unknown>,
+              // Accessor — Solid `mergeProps` keeps tabIndex / hover focus reactive.
+              compositeProps,
+              {
+                onClick(event: MouseEvent) {
+                  commitSelection(event)
+                },
+              }
+            ) as Record<string, unknown>
           ),
           {
             get id() {

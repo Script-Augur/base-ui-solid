@@ -259,9 +259,10 @@ export type SelectPositionerProps = JSX.HTMLAttributes<HTMLDivElement> & {
   collisionAvoidance?: unknown
   /**
    * Whether the selected item should align vertically with the trigger.
-   * Accepted for API parity; Lite positioning does not measure/align the
-   * selected item. See UPSTREAM_TEST_PARITY.md.
-   * @default false
+   * Default matches upstream (`true`), but Lite positioning does not
+   * measure/align the selected item yet — the prop is accepted as a no-op.
+   * See UPSTREAM_TEST_PARITY.md.
+   * @default true
    */
   alignItemWithTrigger?: boolean
   render?: RenderProp<SelectPositionerState, Record<string, unknown>>

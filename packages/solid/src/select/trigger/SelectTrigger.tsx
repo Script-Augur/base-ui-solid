@@ -6,9 +6,10 @@ import {
 } from '../../internals/createChangeEventDetails'
 import { createRender } from '../../internals/createRender'
 import { useFieldRootContext } from '../../internals/field-root-context/FieldRootContext'
+import { useLabelableContext } from '../../internals/labelable-provider/LabelableContext'
 import { useButton } from '../../internals/useButton'
 import { useSelectRootContext } from '../root/SelectRootContext'
-import { selectTriggerOpenStateMapping } from '../utils/stateAttributesMapping'
+import { selectTriggerStateAttributesMapping } from '../utils/stateAttributesMapping'
 
 import { SelectTriggerDataAttributes } from './SelectTriggerDataAttributes'
 
@@ -29,6 +30,7 @@ import type { JSX } from 'solid-js'
 export function SelectTrigger(componentProps: SelectTriggerProps): JSX.Element {
   const context = useSelectRootContext()
   const field = useFieldRootContext()
+  const { getDescriptionProps } = useLabelableContext()
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -50,8 +52,13 @@ export function SelectTrigger(componentProps: SelectTriggerProps): JSX.Element {
 
   const id = () => local.id ?? context.id()
 
+  function toggleOpen(event: Event) {
+    if (disabled() || context.readOnly()) return
+    const next = !context.open()
+    context.setOpen(next, createChangeEventDetails(REASONS.triggerPress, event))
+  }
+
   const state: SelectTriggerState = {
-    ...field.state,
     get disabled() {
       return disabled()
     },
@@ -64,6 +71,21 @@ export function SelectTrigger(componentProps: SelectTriggerProps): JSX.Element {
     get value() {
       return context.value()
     },
+    get touched() {
+      return field.state.touched
+    },
+    get dirty() {
+      return field.state.dirty
+    },
+    get valid() {
+      return field.state.valid
+    },
+    get filled() {
+      return field.state.filled
+    },
+    get focused() {
+      return field.state.focused
+    },
   }
 
   return createRender<SelectTriggerState, Record<string, unknown>>({
@@ -72,18 +94,21 @@ export function SelectTrigger(componentProps: SelectTriggerProps): JSX.Element {
     render: local.render,
     mapStateToDataAttributes: true,
     stateAttributesMapping:
-      selectTriggerOpenStateMapping as StateAttributesMapping<SelectTriggerState>,
+      selectTriggerStateAttributesMapping as StateAttributesMapping<SelectTriggerState>,
     props: mergeProps(
       getButtonProps(
         mergeProps(elementProps as Record<string, unknown>, {
           onMouseDown(event: MouseEvent) {
-            if (disabled() || context.readOnly()) return
+            // Pointer path — matches Floating UI useClick `event: 'mousedown'`.
             if (event.button !== 0) return
-            const next = !context.open()
-            context.setOpen(
-              next,
-              createChangeEventDetails(REASONS.triggerPress, event)
-            )
+            toggleOpen(event)
+          },
+          onClick(event: MouseEvent) {
+            // Keyboard Enter/Space synthesizes `click` with `detail === 0` and
+            // no preceding mousedown. Pointer clicks already toggled above —
+            // skip them to avoid double-toggle.
+            if (event.detail !== 0) return
+            toggleOpen(event)
           },
           onFocus() {
             field.focusedAssign(true)
@@ -147,6 +172,23 @@ export function SelectTrigger(componentProps: SelectTriggerProps): JSX.Element {
           if (typeof userRef === 'function') {
             userRef(element as HTMLButtonElement)
           }
+        },
+      },
+      // Validation / description attrs last (matches FieldControl / Radio merge order).
+      {
+        get 'aria-describedby'() {
+          const external = (elementProps as Record<string, unknown>)[
+            'aria-describedby'
+          ]
+          return field.validation.getValidationProps(
+            disabled(),
+            getDescriptionProps(
+              external != null ? { 'aria-describedby': external } : {}
+            )
+          )['aria-describedby']
+        },
+        get 'aria-invalid'() {
+          return field.validation.getValidationProps(disabled())['aria-invalid']
         },
       }
     ),

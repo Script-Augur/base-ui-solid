@@ -3,6 +3,8 @@ import {
   visuallyHiddenInput,
 } from '@script-augur/base-ui-utils'
 import {
+  For,
+  Show,
   createEffect,
   createMemo,
   createSignal,
@@ -376,6 +378,11 @@ export function SelectRoot<TValue = unknown>(
     onOpenChangeComplete: local.onOpenChangeComplete,
   }
 
+  const multipleSelectedValues = createMemo(() => {
+    const current = value()
+    return Array.isArray(current) ? (current as Array<unknown>) : []
+  })
+
   return (
     <SelectRootContext.Provider value={contextValue}>
       {local.children}
@@ -396,7 +403,36 @@ export function SelectRoot<TValue = unknown>(
         onFocus={() => {
           triggerElement()?.focus()
         }}
+        onChange={(event: Event & { currentTarget: HTMLInputElement }) => {
+          // Browser autofill path (Lite): match a registered item value/label.
+          // Full valuesRef/labelsRef matching is deferred — see UPSTREAM_TEST_PARITY.md.
+          if (
+            event.defaultPrevented ||
+            disabled() ||
+            readOnly() ||
+            multiple()
+          ) {
+            return
+          }
+          const nextValue = event.currentTarget.value
+          if (!nextValue) return
+          const details = createChangeEventDetails(REASONS.none, event)
+          setValue(nextValue, details)
+        }}
       />
+      <Show when={multiple() && Boolean(name())}>
+        <For each={multipleSelectedValues()}>
+          {entry => (
+            <input
+              type="hidden"
+              form={local.form}
+              name={name()}
+              value={stringifyAsValue(entry, itemToStringValue())}
+              disabled={disabled()}
+            />
+          )}
+        </For>
+      </Show>
     </SelectRootContext.Provider>
   )
 }

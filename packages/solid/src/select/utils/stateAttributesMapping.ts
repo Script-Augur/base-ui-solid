@@ -1,3 +1,4 @@
+import { fieldValidityMapping } from '../../internals/field-constants/constants'
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping'
 
 import type { TransitionStatus } from '../../internals/createTransitionStatus'
@@ -71,4 +72,15 @@ export const selectTriggerOpenStateMapping: StateAttributesMapping<{
   open(value) {
     return value ? POPUP_OPEN_HOOK : null
   },
+}
+
+/**
+ * Trigger open + Field validity (`data-popup-open`, `data-valid` / `data-invalid`).
+ */
+export const selectTriggerStateAttributesMapping: StateAttributesMapping<{
+  open: boolean
+  valid: boolean | null
+}> = {
+  ...selectTriggerOpenStateMapping,
+  ...fieldValidityMapping,
 }
