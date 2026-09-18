@@ -39,6 +39,7 @@ export default defineConfig({
     radio: 'src/radio/index.ts',
     'radio-group': 'src/radio-group/index.ts',
     select: 'src/select/index.ts',
+    combobox: 'src/combobox/index.ts',
   },
   format: ['esm'],
   dts: true,
