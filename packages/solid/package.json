@@ -124,6 +124,11 @@
       "import": "./dist/number-field.js",
       "default": "./dist/number-field.js"
     },
+    "./otp-field": {
+      "types": "./dist/otp-field.d.ts",
+      "import": "./dist/otp-field.js",
+      "default": "./dist/otp-field.js"
+    },
     "./checkbox": {
       "types": "./dist/checkbox.d.ts",
       "import": "./dist/checkbox.js",
