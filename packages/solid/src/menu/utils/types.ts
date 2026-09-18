@@ -1,8 +1,9 @@
+import type { MenubarContextValue } from '../../menubar/MenubarContext'
 import type { MenuStore } from '../store/MenuStore'
 
 /**
  * Parent relationship for a Menu root (submenu / menubar / context-menu).
- * Menubar and Context Menu packages fill their context shapes later.
+ * Context Menu package fills its context shape later.
  */
 export type MenuParent =
   | {
@@ -11,12 +12,7 @@ export type MenuParent =
     }
   | {
       type: 'menubar'
-      context: {
-        disabled?: boolean
-        rootId?: string
-        orientation?: 'horizontal' | 'vertical'
-        allowMouseUpTriggerRef: { current: boolean }
-      }
+      context: MenubarContextValue
     }
   | {
       type: 'context-menu'

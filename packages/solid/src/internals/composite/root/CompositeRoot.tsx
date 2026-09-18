@@ -84,7 +84,8 @@ export function CompositeRoot<
   const contextValue = {
     highlightedIndex: createMemo(() => composite.highlightedIndex()),
     onHighlightedIndexChange: composite.onHighlightedIndexChange,
-    highlightItemOnHover: () => local.highlightItemOnHover ?? false,
+    highlightItemOnHover: () =>
+      readMaybeAccessor(local.highlightItemOnHover, false),
     onKeyDown: composite.onKeyDown,
   }
 
@@ -236,10 +237,11 @@ export interface CompositeRootProps<
   disabledIndices?: Array<number>
   /**
    * When `true`, hovering an item updates the highlighted index.
+   * Accepts a Solid accessor so callers (e.g. Menubar `hasSubmenuOpen`) stay reactive.
    *
    * @default false
    */
-  highlightItemOnHover?: boolean
+  highlightItemOnHover?: MaybeAccessor<boolean>
   /**
    * Modifier keys allowed during arrow navigation (e.g. `['Shift']` for
    * Radio Group). Any other active modifier blocks the key.

@@ -30,6 +30,7 @@ export default defineConfig({
     'alert-dialog': 'src/alert-dialog/index.ts',
     popover: 'src/popover/index.ts',
     menu: 'src/menu/index.ts',
+    menubar: 'src/menubar/index.ts',
     fieldset: 'src/fieldset/index.ts',
     form: 'src/form/index.ts',
     input: 'src/input/index.ts',

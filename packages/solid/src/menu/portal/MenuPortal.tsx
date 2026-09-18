@@ -44,7 +44,11 @@ export function MenuPortal(componentProps: MenuPortalProps): JSX.Element {
   const shouldRender = () => context.mounted() || keepMounted()
 
   const shouldRenderGuards = () =>
-    context.mounted() && context.open() && !context.modal()
+    context.mounted() && context.open() && !isPortalModal()
+
+  const isPortalModal = () =>
+    context.modal() ||
+    (context.parent.type === 'menubar' && context.parent.context.modal)
 
   return (
     <Show when={shouldRender()}>
@@ -68,7 +72,7 @@ export function MenuPortal(componentProps: MenuPortalProps): JSX.Element {
         >
           <MenuPortalFocusPublisher />
 
-          <Show when={context.mounted() && context.modal()}>
+          <Show when={context.mounted() && isPortalModal()}>
             <InternalBackdrop
               inert={!context.open() ? true : undefined}
               ref={el => {
@@ -134,7 +138,9 @@ function MenuPortalFocusPublisher(): null {
   createEffect(() => {
     if (!portalContext) return
     portalContext.focusManagerStateAssign({
-      modal: context.modal(),
+      modal:
+        context.modal() ||
+        (context.parent.type === 'menubar' && context.parent.context.modal),
       open: context.open(),
       onOpenChange: (next, data) => {
         context.setOpen(

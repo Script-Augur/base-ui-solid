@@ -109,6 +109,11 @@
       "import": "./dist/menu.js",
       "default": "./dist/menu.js"
     },
+    "./menubar": {
+      "types": "./dist/menubar.d.ts",
+      "import": "./dist/menubar.js",
+      "default": "./dist/menubar.js"
+    },
     "./fieldset": {
       "types": "./dist/fieldset.d.ts",
       "import": "./dist/fieldset.js",

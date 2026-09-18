@@ -11,6 +11,7 @@ export const REASONS = {
   disabled: 'disabled',
   missing: 'missing',
   listNavigation: 'list-navigation',
+  siblingOpen: 'sibling-open',
   outsidePress: 'outside-press',
   escapeKey: 'escape-key',
   closePress: 'close-press',
