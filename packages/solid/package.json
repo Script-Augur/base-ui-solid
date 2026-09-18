@@ -104,6 +104,11 @@
       "import": "./dist/popover.js",
       "default": "./dist/popover.js"
     },
+    "./menu": {
+      "types": "./dist/menu.d.ts",
+      "import": "./dist/menu.js",
+      "default": "./dist/menu.js"
+    },
     "./fieldset": {
       "types": "./dist/fieldset.d.ts",
       "import": "./dist/fieldset.js",

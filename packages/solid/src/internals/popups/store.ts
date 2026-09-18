@@ -1,5 +1,6 @@
 import type { TransitionStatus } from '../createTransitionStatus'
 import type { HTMLProps } from '../labelable-provider'
+import type { FloatingRootStore } from './floatingRoot'
 import type { PopupTriggerMap } from './popupTriggerMap'
 import type { SolidStore } from './reactiveStore'
 
@@ -168,21 +169,12 @@ export type PopupStoreState<TPayload = unknown> = {
    */
   popupProps: HTMLProps
 }
+
 /**
- * Minimal typed slot for upstream `FloatingRootContext` / `FloatingRootStore`.
- * Menu fills this with a real floating root; Dialog/Popover keep `null`.
- *
- * Intentionally structural (not imported from floating-ui) so this foundation
- * can ship without dragging Menu's floating stack into every overlay.
+ * Typed slot for upstream `FloatingRootContext` / `FloatingRootStore`.
+ * Menu fills this with a real {@link FloatingRootStore}; Dialog/Popover keep `null`.
  */
-export type PopupFloatingRootContext = {
-  context?: {
-    events?: {
-      emit: (event: string, data: unknown) => void
-    }
-  }
-  dispatchOpenChange?: (open: boolean, eventDetails: unknown) => void
-}
+export type PopupFloatingRootContext = FloatingRootStore | null
 /**
  * Non-reactive context common to popup stores.
  *
