@@ -104,7 +104,10 @@ function ComboboxItemVisible<TValue = unknown>(
     onCleanup(() => context.unregisterItemValue(itemId))
   })
 
+  const selectable = () => context.selectionMode() !== 'none'
+
   const selected = (): boolean => {
+    if (!selectable()) return false
     const current = context.value()
     const comparer = context.isItemEqualToValue()
     if (context.multiple()) {
@@ -139,6 +142,21 @@ function ComboboxItemVisible<TValue = unknown>(
     if (disabled() || context.readOnly()) return
 
     const details = createChangeEventDetails(REASONS.itemPress, event)
+
+    // Autocomplete (`selectionMode: 'none'`): fill input + close; no persistent
+    // selection / `aria-selected`.
+    if (context.selectionMode() === 'none') {
+      if (context.fillInputOnItemPress()) {
+        const label = context.fillInputFromValue(local.value)
+        context.setInputValue(label, details)
+        if (details.isCanceled) return
+      }
+      context.setOpen(
+        false,
+        createChangeEventDetails(REASONS.itemPress, event)
+      )
+      return
+    }
 
     if (context.multiple()) {
       const current = context.value()
@@ -240,13 +258,13 @@ function ComboboxItemVisible<TValue = unknown>(
             },
             role: 'option',
             get 'aria-selected'() {
-              return selected()
+              return selectable() ? selected() : undefined
             },
             get 'aria-disabled'() {
               return disabled() || undefined
             },
             get [ACTIVE_COMPOSITE_ITEM as string]() {
-              return selected() ? '' : undefined
+              return selectable() && selected() ? '' : undefined
             },
             get class() {
               return local.class

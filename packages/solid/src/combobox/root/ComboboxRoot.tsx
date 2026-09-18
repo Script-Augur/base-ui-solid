@@ -70,6 +70,8 @@ export function ComboboxRoot<TValue = unknown>(
       'defaultInputValue',
       'onInputValueChange',
       'multiple',
+      'selectionMode',
+      'fillInputOnItemPress',
       'modal',
       'disabled',
       'readOnly',
@@ -111,12 +113,19 @@ export function ComboboxRoot<TValue = unknown>(
   const readOnly = () => local.readOnly ?? false
   const required = () => local.required ?? false
   const multiple = () => local.multiple ?? false
+  const selectionMode = (): 'single' | 'multiple' | 'none' => {
+    if (local.selectionMode) return local.selectionMode
+    return multiple() ? 'multiple' : 'single'
+  }
+  const fillInputOnItemPress = () => local.fillInputOnItemPress ?? true
   const modal = () => local.modal ?? false
   const name = () => field.name() ?? local.name
   const highlightItemOnHover = () => local.highlightItemOnHover ?? true
   const openOnInputClick = () => local.openOnInputClick ?? true
   const autoHighlight = () => local.autoHighlight ?? false
   const loopFocus = () => local.loopFocus ?? true
+  /** When `'none'`, the visible input owns form serialization (Autocomplete). */
+  const inputOwnsFormValue = () => selectionMode() === 'none'
 
   const generatedId = createUniqueId()
   const id = () => local.id ?? generatedId
@@ -421,11 +430,17 @@ export function ComboboxRoot<TValue = unknown>(
   })
 
   const serializedValue = createMemo(() => {
+    if (selectionMode() === 'none') {
+      return String(inputValue())
+    }
     if (multiple()) return ''
     return stringifyAsValue(value(), itemToStringValue())
   })
 
   const hasSelectedValue = createMemo(() => {
+    if (selectionMode() === 'none') {
+      return Boolean(inputValue())
+    }
     if (multiple()) {
       return Array.isArray(value()) && (value() as Array<unknown>).length > 0
     }
@@ -442,9 +457,17 @@ export function ComboboxRoot<TValue = unknown>(
   }
 
   createEffectOnValueChange(value, () => {
+    if (selectionMode() === 'none') return
     clearErrors(name())
     field.dirtyAssign(isSelectedValueDirty(value()))
     field.validation.change(value())
+  })
+
+  createEffectOnValueChange(inputValue, () => {
+    if (selectionMode() !== 'none') return
+    clearErrors(name())
+    field.dirtyAssign(isSelectedValueDirty(inputValue()))
+    field.validation.change(inputValue())
   })
 
   const setOpen = (
@@ -477,7 +500,9 @@ export function ComboboxRoot<TValue = unknown>(
       field.touchedAssign(true)
       field.focusedAssign(false)
       if (field.validationMode() === 'onBlur') {
-        void field.validation.commit(value())
+        void field.validation.commit(
+          selectionMode() === 'none' ? inputValue() : value()
+        )
       }
     }
   }
@@ -569,7 +594,7 @@ export function ComboboxRoot<TValue = unknown>(
   createRegisterFieldControl({
     controlRef,
     id,
-    value,
+    value: () => (selectionMode() === 'none' ? inputValue() : value()),
     getFormValueOverride: () => () => serializedValue(),
     enabled: () => !disabled(),
     name: () => local.name,
@@ -598,6 +623,8 @@ export function ComboboxRoot<TValue = unknown>(
     inputValue,
     setInputValue,
     multiple,
+    selectionMode,
+    fillInputOnItemPress,
     modal,
     disabled,
     readOnly,
@@ -655,6 +682,14 @@ export function ComboboxRoot<TValue = unknown>(
     return Array.isArray(current) ? (current as Array<unknown>) : []
   })
 
+  // When Autocomplete owns the form via the visible input, omit `name` on the
+  // hidden field (matches upstream `inputOwnsFormValue`).
+  const hiddenInputName = () => {
+    if (multiple()) return undefined
+    if (inputOwnsFormValue()) return undefined
+    return name()
+  }
+
   return (
     <ComboboxRootContext.Provider value={contextValue}>
       {local.children}
@@ -664,14 +699,22 @@ export function ComboboxRoot<TValue = unknown>(
         tabIndex={-1}
         aria-hidden
         form={local.form}
-        name={multiple() ? undefined : name()}
+        name={hiddenInputName()}
         autocomplete={local.autoComplete}
         value={serializedValue()}
         disabled={disabled()}
-        required={required() && !(multiple() && hasSelectedValue())}
+        required={
+          required() &&
+          !inputOwnsFormValue() &&
+          !(multiple() && hasSelectedValue())
+        }
         readOnly
         ref={inputRefAssign}
-        style={name() ? visuallyHiddenInput : visuallyHidden}
+        style={
+          hiddenInputName() || inputOwnsFormValue()
+            ? visuallyHiddenInput
+            : visuallyHidden
+        }
         onFocus={() => {
           inputElement()?.focus()
         }}
@@ -687,6 +730,10 @@ export function ComboboxRoot<TValue = unknown>(
           const nextValue = event.currentTarget.value
           if (!nextValue) return
           const details = createChangeEventDetails(REASONS.none, event)
+          if (selectionMode() === 'none') {
+            setInputValue(nextValue, details)
+            return
+          }
           setValue(nextValue, details)
         }}
       />
@@ -737,6 +784,18 @@ export interface ComboboxRootProps<TValue = unknown> {
       ) => void)
     | undefined
   multiple?: boolean | undefined
+  /**
+   * Selection semantics for the Aria engine.
+   * Prefer `multiple` for Combobox; Autocomplete passes `'none'`.
+   * When omitted, derived from `multiple` (`'multiple'` | `'single'`).
+   */
+  selectionMode?: 'single' | 'multiple' | 'none' | undefined
+  /**
+   * Whether pressing an item fills the input from the item label.
+   * Used by Autocomplete (`selectionMode: 'none'`).
+   * @default true
+   */
+  fillInputOnItemPress?: boolean | undefined
   /**
    * Whether the popup enters a modal state when open.
    * @default false

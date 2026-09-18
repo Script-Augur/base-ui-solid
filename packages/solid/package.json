@@ -159,6 +159,11 @@
       "import": "./dist/combobox.js",
       "default": "./dist/combobox.js"
     },
+    "./autocomplete": {
+      "types": "./dist/autocomplete.d.ts",
+      "import": "./dist/autocomplete.js",
+      "default": "./dist/autocomplete.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

@@ -128,6 +128,15 @@ export function ComboboxInput(componentProps: ComboboxInputProps): JSX.Element {
       get value() {
         return context.inputValue()
       },
+      get name() {
+        // Autocomplete: visible input owns form serialization.
+        return context.selectionMode() === 'none' ? context.name() : undefined
+      },
+      get required() {
+        return context.selectionMode() === 'none'
+          ? context.required() || undefined
+          : undefined
+      },
       get disabled() {
         return disabled() || undefined
       },
@@ -181,7 +190,11 @@ export function ComboboxInput(componentProps: ComboboxInputProps): JSX.Element {
           field.touchedAssign(true)
           field.focusedAssign(false)
           if (field.validationMode() === 'onBlur') {
-            void field.validation.commit(context.value())
+            void field.validation.commit(
+              context.selectionMode() === 'none'
+                ? context.inputValue()
+                : context.value()
+            )
           }
         }
       },
