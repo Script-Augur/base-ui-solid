@@ -38,3 +38,8 @@ bridge. Wire `floatingRootContext` (see `MENU_GAPS.md`) and keep open as a store
   `createActiveTriggerElementSync` so Portal / Positioner / focus / dismiss stay
   correct for detached triggers.
 - Outside-press must ignore registered triggers (`isEventOnPopupTrigger`).
+- Dialog / Popover / AlertDialog Roots may take a payload children render
+  function (`({ payload }) => …`). Read `children` **once under the Provider**
+  (Solid getters); do not put `PayloadChildRenderFunction` in the public
+  `children` TypeScript union or Solid’s JSX transform will wrap element
+  children and break context.

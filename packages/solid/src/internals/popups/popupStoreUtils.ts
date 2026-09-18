@@ -16,7 +16,7 @@ import type {
   PopupStoreState,
   PopupTriggerDataStore,
 } from './store'
-import type { Accessor, Setter } from 'solid-js'
+import type { Accessor, JSX, Setter } from 'solid-js'
 
 export { NOOP }
 /**
@@ -340,13 +340,23 @@ export function createTriggerDataForwarding<
   const isMountedByThisTrigger = () =>
     store().select('isMountedByTrigger', triggerId())
 
+  // Upstream: useIsoLayoutEffect keyed on useState('isMountedByTrigger').
+  // Subscribe to the store so payload/stateUpdates apply when this trigger
+  // becomes the mounted owner (open + activeTriggerId), not only on mount.
   createEffect(() => {
-    if (isMountedByThisTrigger()) {
-      store().update({
-        activeTriggerElement: triggerElement(),
-        ...stateUpdates(),
-      } as Partial<TState>)
+    const activeStore = store()
+    const id = triggerId()
+    const applyMountedUpdates = () => {
+      if (activeStore.select('isMountedByTrigger', id)) {
+        activeStore.update({
+          activeTriggerElement: triggerElement(),
+          ...stateUpdates(),
+        } as Partial<TState>)
+      }
     }
+    applyMountedUpdates()
+    const unsub = activeStore.subscribe(applyMountedUpdates)
+    onCleanup(unsub)
   })
 
   return {
@@ -515,3 +525,14 @@ export function createImplicitActiveTrigger<
 export interface PopupRootStoreHandle<TStore> {
   attachStore: (store: TStore) => () => void
 }
+
+/**
+ * Root children render function that receives the active trigger's payload
+ * (or the payload from `DialogHandle.openWithPayload`). Matches upstream
+ * `@base-ui/react` `PayloadChildRenderFunction`.
+ *
+ * @typeParam TPayload - Payload type from `createHandle` / trigger `payload`.
+ */
+export type PayloadChildRenderFunction<TPayload> = (arg: {
+  payload: TPayload | undefined
+}) => JSX.Element

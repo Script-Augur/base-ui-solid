@@ -19,15 +19,15 @@ Upstream reference: `@base-ui/react@1.7.0` `AlertDialog` (thin wrapper over
 | Trigger `aria-haspopup="dialog"`                                 | covered |
 | `details.preventUnmountOnClose` + `actionsRef.unmount` / `close` | covered |
 | Root context exposes modal / disablePointerDismissal / role      | covered |
+| `createHandle` / detached trigger + payload children             | covered |
 
 ## Deferred / partial
 
-Alert Dialog **inherits Dialog Lite gaps** (focus-manager Lite, no handle
-store, Lite transitions, etc.) in addition to the Alert-specific rows below.
+Alert Dialog **inherits Dialog Lite gaps** (focus-manager Lite, Lite
+transitions, etc.) in addition to the Alert-specific rows below.
 
 | Behavior                                                          | Notes                                                                     |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `AlertDialog.createHandle` / detached triggers / payload children | Handle shared with Dialog; payload children render-prop deferred |
 | Multi-trigger ARIA sync (`triggerId` / `defaultTriggerId`)        | Basic wiring via shared popup-handle store                                |
 | Full `onOpenChangeComplete` animation matrix                      | Inherited from Dialog Lite transitions                                    |
 | Focus-manager / floating-ui depth                                 | Inherited Dialog Lite gap                                                 |

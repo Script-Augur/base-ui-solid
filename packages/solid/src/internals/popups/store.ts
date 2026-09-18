@@ -221,6 +221,7 @@ export type PopupTriggerStoreKeys =
   | 'state'
   | 'update'
   | 'useState'
+  | 'subscribe'
 /**
  * The subset of a popup store that trigger registration and data forwarding rely on.
  *

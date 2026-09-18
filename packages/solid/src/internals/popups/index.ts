@@ -36,4 +36,7 @@ export type {
   PopupHandleStoreWithTriggers,
   PopupHandleStoreWithOpen,
 } from './popupHandle'
-export type { PopupRootStoreHandle } from './popupStoreUtils'
+export type {
+  PopupRootStoreHandle,
+  PayloadChildRenderFunction,
+} from './popupStoreUtils'

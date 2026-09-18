@@ -37,8 +37,8 @@ import type { JSX } from 'solid-js'
  * </AlertDialog.Root>
  * ```
  */
-export function AlertDialogRoot(
-  componentProps: AlertDialogRootProps
+export function AlertDialogRoot<TPayload = unknown>(
+  componentProps: AlertDialogRootProps<TPayload>
 ): JSX.Element {
   return useRenderDialogRoot('alert-dialog', componentProps)
 }
@@ -49,9 +49,11 @@ export function AlertDialogRoot(
  * Omits `modal` and `disablePointerDismissal` — Alert Dialog always uses
  * modal + no outside-press dismiss (matches `@base-ui/react@1.7.0`).
  * Role is internal via root mode (not a public Dialog prop).
+ *
+ * @typeParam TPayload - Optional payload type from `createHandle` / trigger `payload`.
  */
-export type AlertDialogRootProps = Omit<
-  DialogRootProps,
+export type AlertDialogRootProps<TPayload = unknown> = Omit<
+  DialogRootProps<TPayload>,
   'modal' | 'disablePointerDismissal'
 >
 

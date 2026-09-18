@@ -496,6 +496,47 @@ describe('Popover', () => {
     )
   })
 
+  it('exposes trigger payload to root children render function', async () => {
+    const handle = Popover.createHandle<{ text: string }>()
+    render(() => (
+      <>
+        <Popover.Trigger
+          handle={handle}
+          id="payload-trigger"
+          payload={{ text: 'from-trigger' }}
+        >
+          Open with payload
+        </Popover.Trigger>
+        <Popover.Root handle={handle}>
+          {
+            (({ payload }: { payload: { text: string } | undefined }) => (
+              <Popover.Portal>
+                <Popover.Positioner>
+                  <Popover.Popup data-testid="popup">
+                    <Popover.Title>Title</Popover.Title>
+                    {payload !== undefined && (
+                      <Popover.Description data-testid="payload-text">
+                        {payload.text}
+                      </Popover.Description>
+                    )}
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            )) as unknown as JSX.Element
+          }
+        </Popover.Root>
+      </>
+    ))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open with payload' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+      expect(screen.getByTestId('payload-text')).toHaveTextContent(
+        'from-trigger'
+      )
+    })
+  })
+
   it('sets aria-modal when modal is true', () => {
     render(() => <BasicPopover defaultOpen modal />)
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')

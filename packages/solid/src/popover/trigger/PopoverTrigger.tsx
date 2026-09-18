@@ -278,7 +278,8 @@ export type PopoverTriggerProps = Omit<
    */
   handle?: PopoverHandle<unknown>
   /**
-   * Payload associated with this trigger.
+   * Payload associated with this trigger. Stored on the popup store when this
+   * trigger opens the popover; exposed to root render-prop children as `{ payload }`.
    */
   payload?: unknown
   render?: RenderProp<PopoverTriggerState, Record<string, unknown>>

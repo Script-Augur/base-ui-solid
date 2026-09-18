@@ -29,6 +29,7 @@ import type {
   BaseUIChangeEventDetails,
   ChangeEventReason,
 } from '../../internals/createChangeEventDetails'
+import type { PayloadChildRenderFunction } from '../../internals/popups'
 import type { PopoverHandle } from '../store/PopoverHandle'
 import type { JSX } from 'solid-js'
 
@@ -58,7 +59,9 @@ import type { JSX } from 'solid-js'
  * </Popover.Root>
  * ```
  */
-export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
+export function PopoverRoot<TPayload = unknown>(
+  componentProps: PopoverRootProps<TPayload>
+): JSX.Element {
   const [local] = splitProps(componentProps, [
     'children',
     'open',
@@ -82,7 +85,7 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
 
   const modal = () => local.modal ?? false
 
-  const store = new PopoverStore({
+  const store = new PopoverStore<TPayload>({
     open: local.defaultOpen ?? false,
     openProp: local.open,
     activeTriggerId: local.defaultTriggerId ?? null,
@@ -407,7 +410,7 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     open,
     openAssign,
     setOpen,
-    store,
+    store: store as PopoverStore,
     modal,
     nested,
     nestedOpenPopoverCount: ownNestedOpenPopovers,
@@ -460,17 +463,41 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     onOpenChangeComplete: local.onOpenChangeComplete,
   }
 
+  const payload = store.useState('payload')
+
   return (
     <PopoverRootContext.Provider value={contextValue}>
-      {local.children}
+      {(() => {
+        // Read children once, and only under the Provider — Solid may expose
+        // `children` as a getter that creates the tree on access.
+        const resolvedChildren = local.children
+        if (typeof resolvedChildren === 'function') {
+          return (
+            resolvedChildren as PayloadChildRenderFunction<unknown>
+          )({
+            payload: payload(),
+          })
+        }
+        return resolvedChildren
+      })()}
     </PopoverRootContext.Provider>
   )
 }
 
 /**
  * Props for {@link PopoverRoot}.
+ *
+ * @typeParam TPayload - Optional payload type from `createHandle` / trigger `payload`.
  */
-export type PopoverRootProps = {
+export type PopoverRootProps<TPayload = unknown> = {
+  /**
+   * Popover contents. May be a render function that receives the active
+   * trigger's `payload`.
+   *
+   * Typed as {@link JSX.Element} so Solid's JSX transform does not wrap normal
+   * element children; {@link PayloadChildRenderFunction} is supported at
+   * runtime (and via assertion) matching `@base-ui/react`.
+   */
   children?: JSX.Element
   /** Whether the popover is currently open. */
   open?: boolean
@@ -510,7 +537,7 @@ export type PopoverRootProps = {
   /**
    * A handle to associate detached `Popover.Trigger` components with this root.
    */
-  handle?: PopoverHandle<unknown>
+  handle?: PopoverHandle<TPayload>
 }
 
 /** Imperative actions exposed via `actionsRef`. */

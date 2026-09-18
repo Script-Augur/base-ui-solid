@@ -14,6 +14,7 @@ import type {
   DialogRootActions,
   DialogRootChangeEventDetails,
 } from './root/DialogRoot'
+import type { JSX } from 'solid-js'
 
 afterEach(() => {
   cleanup()
@@ -649,6 +650,81 @@ describe('Dialog', () => {
       false,
       expect.objectContaining({ reason: 'outside-press' })
     )
+  })
+
+  it('exposes trigger payload to root children render function', async () => {
+    const handle = Dialog.createHandle<{ text: string }>()
+    render(() => (
+      <>
+        <Dialog.Trigger
+          handle={handle}
+          id="payload-trigger"
+          payload={{ text: 'from-trigger' }}
+        >
+          Open with payload
+        </Dialog.Trigger>
+        <Dialog.Root handle={handle}>
+          {
+            (({ payload }: { payload: { text: string } | undefined }) => (
+              <Dialog.Portal>
+                <Dialog.Popup data-testid="popup">
+                  <Dialog.Title>Title</Dialog.Title>
+                  {payload !== undefined && (
+                    <Dialog.Description data-testid="payload-text">
+                      {payload.text}
+                    </Dialog.Description>
+                  )}
+                </Dialog.Popup>
+              </Dialog.Portal>
+            )) as unknown as JSX.Element
+          }
+        </Dialog.Root>
+      </>
+    ))
+
+    expect(screen.queryByTestId('payload-text')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Open with payload' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+      expect(screen.getByTestId('payload-text')).toHaveTextContent(
+        'from-trigger'
+      )
+    })
+  })
+
+  it('exposes openWithPayload to root children render function', async () => {
+    const handle = Dialog.createHandle<{ text: string }>()
+    render(() => (
+      <>
+        <button
+          type="button"
+          onClick={() => handle.openWithPayload({ text: 'imperative' })}
+        >
+          Imperative open
+        </button>
+        <Dialog.Root handle={handle}>
+          {
+            (({ payload }: { payload: { text: string } | undefined }) => (
+              <Dialog.Portal>
+                <Dialog.Popup data-testid="popup">
+                  <Dialog.Title>Title</Dialog.Title>
+                  {payload !== undefined && (
+                    <span data-testid="payload-text">{payload.text}</span>
+                  )}
+                </Dialog.Popup>
+              </Dialog.Portal>
+            )) as unknown as JSX.Element
+          }
+        </Dialog.Root>
+      </>
+    ))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Imperative open' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+      expect(screen.getByTestId('payload-text')).toHaveTextContent('imperative')
+    })
+    expect(handle.isOpen).toBe(true)
   })
 })
 

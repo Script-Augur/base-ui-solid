@@ -28,6 +28,7 @@ import type {
   BaseUIChangeEventDetails,
   ChangeEventReason,
 } from '../../internals/createChangeEventDetails'
+import type { PayloadChildRenderFunction } from '../../internals/popups'
 import type { DialogHandle } from '../store/DialogHandle'
 import type { JSX } from 'solid-js'
 /**
@@ -43,9 +44,9 @@ import type { JSX } from 'solid-js'
  * @param componentProps - Root props (`open`, `defaultOpen`, `modal`, …).
  * @returns A Solid JSX fragment wrapping children in context.
  */
-export function useRenderDialogRoot(
+export function useRenderDialogRoot<TPayload = unknown>(
   mode: DialogRootMode,
-  componentProps: DialogRootProps
+  componentProps: DialogRootProps<TPayload>
 ): JSX.Element {
   const [local] = splitProps(componentProps, [
     'children',
@@ -77,7 +78,7 @@ export function useRenderDialogRoot(
   const role = (): 'dialog' | 'alertdialog' =>
     isAlertDialog ? 'alertdialog' : 'dialog'
 
-  const store = new DialogStore({
+  const store = new DialogStore<TPayload>({
     open: local.defaultOpen ?? false,
     openProp: local.open,
     activeTriggerId: local.defaultTriggerId ?? null,
@@ -343,7 +344,7 @@ export function useRenderDialogRoot(
     open,
     openAssign,
     setOpen,
-    store,
+    store: store as DialogStore,
     modal,
     disablePointerDismissal,
     nested,
@@ -382,9 +383,23 @@ export function useRenderDialogRoot(
     role,
   }
 
+  const payload = store.useState('payload')
+
   return (
     <DialogRootContext.Provider value={contextValue}>
-      {local.children}
+      {(() => {
+        // Read children once, and only under the Provider — Solid may expose
+        // `children` as a getter that creates the tree on access.
+        const resolvedChildren = local.children
+        if (typeof resolvedChildren === 'function') {
+          return (
+            resolvedChildren as PayloadChildRenderFunction<unknown>
+          )({
+            payload: payload(),
+          })
+        }
+        return resolvedChildren
+      })()}
     </DialogRootContext.Provider>
   )
 }
@@ -413,7 +428,9 @@ export function useRenderDialogRoot(
  * </Dialog.Root>
  * ```
  */
-export function DialogRoot(componentProps: DialogRootProps): JSX.Element {
+export function DialogRoot<TPayload = unknown>(
+  componentProps: DialogRootProps<TPayload>
+): JSX.Element {
   return useRenderDialogRoot('dialog', componentProps)
 }
 /** Root mode — matches upstream `useRenderDialogRoot(mode)`. */
@@ -423,7 +440,15 @@ export type DialogRootMode = 'dialog' | 'alert-dialog'
  *
  * Role is not public — use Alert Dialog for `alertdialog` (matches upstream).
  */
-export type DialogRootProps = {
+export type DialogRootProps<TPayload = unknown> = {
+  /**
+   * Dialog contents. May be a render function that receives the active
+   * trigger's `payload` (or the payload from `DialogHandle.openWithPayload`).
+   *
+   * Typed as {@link JSX.Element} so Solid's JSX transform does not wrap normal
+   * element children; {@link PayloadChildRenderFunction} is supported at
+   * runtime (and via assertion) matching `@base-ui/react`.
+   */
   children?: JSX.Element
   /** Whether the dialog is currently open. */
   open?: boolean
@@ -462,7 +487,7 @@ export type DialogRootProps = {
   /**
    * A handle to associate detached `Dialog.Trigger` components with this root.
    */
-  handle?: DialogHandle<unknown>
+  handle?: DialogHandle<TPayload>
   /**
    * ID of the trigger associated with a controlled dialog.
    */
