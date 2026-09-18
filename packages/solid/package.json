@@ -154,6 +154,11 @@
       "import": "./dist/select.js",
       "default": "./dist/select.js"
     },
+    "./combobox": {
+      "types": "./dist/combobox.d.ts",
+      "import": "./dist/combobox.js",
+      "default": "./dist/combobox.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
