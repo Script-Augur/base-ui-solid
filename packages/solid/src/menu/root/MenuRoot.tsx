@@ -6,6 +6,7 @@ import {
   splitProps,
 } from 'solid-js'
 
+import { useContextMenuRootContext } from '../../context-menu/root/ContextMenuRootContext'
 import {
   REASONS,
   createChangeEventDetails,
@@ -75,6 +76,7 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   ])
 
   const parentMenuRootContext = useMenuRootContext(true)
+  const contextMenuContext = useContextMenuRootContext(true)
   const submenuContext = useMenuSubmenuRootContext()
   const isSubmenu = () => submenuContext != null
 
@@ -83,6 +85,14 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
       return {
         type: 'menu',
         store: parentMenuRootContext.store,
+      }
+    }
+    // ContextMenu.Root clears MenuRootContext so this is not a Menu nested in
+    // ContextMenu.Trigger; parent is the context-menu cursor anchor context.
+    if (contextMenuContext && !parentMenuRootContext) {
+      return {
+        type: 'context-menu',
+        context: contextMenuContext,
       }
     }
     return { type: undefined }
@@ -104,19 +114,28 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   createImplicitActiveTrigger(store)
 
   const floatingId = generateId('base-ui-menu')
-  const rootId = generateId('base-ui-menu-root')
+  const rootId =
+    contextMenuContext && !parentMenuRootContext
+      ? contextMenuContext.rootId
+      : generateId('base-ui-menu-root')
   const portalId = generateId('base-ui-menu-portal')
 
   const floatingRoot = createPopupFloatingRootContext(
     store.context.triggerElements,
     floatingId,
-    parentFromContext().type !== undefined
+    parentFromContext().type === 'menu'
   )
   const floatingNodeId = generateId('base-ui-floating-node')
   store.set('floatingRootContext', floatingRoot)
   store.set('floatingId', floatingId)
   store.set('floatingNodeId', floatingNodeId)
   store.set('rootId', rootId)
+
+  // Share allowMouseUpTriggerRef with ContextMenu / nested parents.
+  if (contextMenuContext && !parentMenuRootContext) {
+    store.context.allowMouseUpTriggerRef =
+      contextMenuContext.allowMouseUpTriggerRef
+  }
 
   // Sync lite FloatingTree ids so nested() / data-nested reflect submenu nesting.
   createEffect(() => {
@@ -201,6 +220,10 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   const loopFocus = () => local.loopFocus ?? true
   const highlightItemOnHover = () => local.highlightItemOnHover ?? true
 
+  // Tracks the native event that opened the menu (upstream `openEventRef`).
+  // Context-menu right-click skips the outside-press grace; long-press does not.
+  const openEventRef: { current: Event | null } = { current: null }
+
   const setOpen = (
     nextOpen: boolean,
     eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
@@ -246,6 +269,9 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     // Reset so a later open → close cycle can unmount again after exit handoff.
     if (nextOpen) {
       preventUnmountOnCloseAssign(false)
+      openEventRef.current = eventDetails.event ?? null
+    } else {
+      openEventRef.current = null
     }
 
     store.state.floatingRootContext!.dispatchOpenChange(
@@ -356,13 +382,67 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     }
   })
 
+  // Expose setOpen / positioner to ContextMenu.Trigger (cursor open path).
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type !== 'context-menu') return
+    parent.context.actionsRef.current = { setOpen }
+    onCleanup(() => {
+      parent.context.actionsRef.current = null
+    })
+  })
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type !== 'context-menu') return
+    parent.context.positionerRef.current = positionerElement()
+  })
+
+  // Grace after context-menu open for long-press / non-contextmenu opens so the
+  // opening gesture does not dismiss. Right-click (`contextmenu`) skips grace
+  // (matches upstream `openEventRef.type === 'contextmenu'`).
+  const allowOutsidePressDismissalRef = {
+    current: parentFromContext().type !== 'context-menu',
+  }
+  let allowOutsidePressDismissalTimeout: ReturnType<typeof setTimeout> | undefined
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type !== 'context-menu') {
+      allowOutsidePressDismissalRef.current = true
+      return
+    }
+    if (!open()) {
+      if (allowOutsidePressDismissalTimeout) {
+        clearTimeout(allowOutsidePressDismissalTimeout)
+        allowOutsidePressDismissalTimeout = undefined
+      }
+      allowOutsidePressDismissalRef.current = false
+      openEventRef.current = null
+      return
+    }
+    // Right-click opens already allow immediate dismiss via openEventRef.
+    if (openEventRef.current?.type === 'contextmenu') {
+      allowOutsidePressDismissalRef.current = true
+      return
+    }
+    allowOutsidePressDismissalTimeout = setTimeout(() => {
+      allowOutsidePressDismissalRef.current = true
+    }, 500)
+    onCleanup(() => {
+      if (allowOutsidePressDismissalTimeout) {
+        clearTimeout(allowOutsidePressDismissalTimeout)
+        allowOutsidePressDismissalTimeout = undefined
+      }
+    })
+  })
+
   createScrollLock(
     () =>
       open() &&
       modal() &&
       mounted() &&
       store.select('lastOpenChangeReason') !== REASONS.triggerHover &&
-      parentFromContext().type === undefined
+      (parentFromContext().type === undefined ||
+        parentFromContext().type === 'context-menu')
   )
 
   createFocusTrap({
@@ -448,6 +528,20 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
           (backdrop != null &&
             (target === backdrop || contains(backdrop, target)))
         if ((internalBackdrop != null || backdrop != null) && !onBackdrop) {
+          return
+        }
+      }
+
+      // Upstream: allow immediate outside dismiss unless this is a context-menu
+      // that was not opened by `contextmenu` (e.g. touch long-press) and grace
+      // has not elapsed yet.
+      if (parentFromContext().type === 'context-menu') {
+        const openedByContextMenu =
+          openEventRef.current?.type === 'contextmenu'
+        if (
+          !openedByContextMenu &&
+          !allowOutsidePressDismissalRef.current
+        ) {
           return
         }
       }

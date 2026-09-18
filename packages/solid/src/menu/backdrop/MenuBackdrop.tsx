@@ -1,5 +1,6 @@
 import { mergeProps, splitProps } from 'solid-js'
 
+import { useContextMenuRootContext } from '../../context-menu/root/ContextMenuRootContext'
 import { createRender } from '../../internals/createRender'
 import { useMenuRootContext } from '../root/MenuRootContext'
 import { popupTransitionStateMapping } from '../utils/stateAttributesMapping'
@@ -16,6 +17,7 @@ import type { JSX } from 'solid-js'
  */
 export function MenuBackdrop(componentProps: MenuBackdropProps): JSX.Element {
   const context = useMenuRootContext()
+  const contextMenuContext = useContextMenuRootContext(true)
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -60,6 +62,9 @@ export function MenuBackdrop(componentProps: MenuBackdropProps): JSX.Element {
       },
       ref(element: HTMLElement) {
         context.backdropElementAssign(element)
+        if (contextMenuContext) {
+          contextMenuContext.backdropRef.current = element as HTMLDivElement
+        }
         const userRef = local.ref
         if (typeof userRef === 'function') {
           userRef(element as HTMLDivElement)

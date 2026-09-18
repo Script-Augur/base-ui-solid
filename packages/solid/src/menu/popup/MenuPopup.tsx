@@ -86,6 +86,9 @@ export function MenuPopup(componentProps: MenuPopupProps): JSX.Element {
       get 'aria-labelledby'() {
         return context.triggerElement()?.id
       },
+      get ['data-rootownerid']() {
+        return context.store.select('rootId') ?? undefined
+      },
       get ['attr:hidden']() {
         return context.mounted() ? undefined : true
       },

@@ -17,6 +17,8 @@ export const REASONS = {
   focusOut: 'focus-out',
   imperativeAction: 'imperative-action',
   itemPress: 'item-press',
+  cancelOpen: 'cancel-open',
+  siblingOpen: 'sibling-open',
   inputChange: 'input-change',
   inputClear: 'input-clear',
   inputBlur: 'input-blur',

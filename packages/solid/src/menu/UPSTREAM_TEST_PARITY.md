@@ -39,7 +39,7 @@ the Dialog/Popover hybrid `createControlled` overwrite.
 | Full Floating UI `useListNavigation` / `useTypeahead` / `useDismiss` merge | Lite keyboard + Solid `createDismiss`; interaction prop merge deferred |
 | Full `FloatingTree` / `FloatingNode` / `safePolygon` | Lite node id sync + `FloatingTreeStore` register; hover close is delay-based |
 | `useTriggerFocusGuards` / `inlineRect` | Not ported (context-menu polish) |
-| Menubar / Context Menu parent branches | Types exist; packages chain after this PR |
+| Menubar / Context Menu parent branches | Context Menu: types + parent wiring in this stack; package is `context-menu/`. Menubar still deferred |
 | Multi-trigger Viewport content transitions | Lite Viewport mounts children only |
 | Payload children render-prop (`children({ payload })`) | Deferred — Solid `children` is always a function; use store payload via handle later |
 | Adaptive origin middleware | Accepted for API parity; unused |
@@ -53,5 +53,5 @@ the Dialog/Popover hybrid `createControlled` overwrite.
 
 ## Explicitly out of this PR
 
-- Context Menu package
+- Context Menu package (see `context-menu/` — chained PR)
 - Menubar package
