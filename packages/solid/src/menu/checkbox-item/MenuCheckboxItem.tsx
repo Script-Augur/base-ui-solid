@@ -59,12 +59,6 @@ export function MenuCheckboxItem(
     defaultValue: local.defaultChecked ?? false,
   })
 
-  // Ensure uncontrolled updates always write the internal signal (Solid set
-  // accepts a value; avoid updater-form ambiguity for boolean false).
-  const setChecked = (next: boolean) => {
-    checkedAssign(next)
-  }
-
   const id = local.id ?? generateId('base-ui-menu-checkbox-item')
   const [itemElement, itemElementAssign] = createSignal<HTMLElement | null>(
     null
@@ -103,7 +97,7 @@ export function MenuCheckboxItem(
     const details = createChangeEventDetails(REASONS.itemPress, event)
     local.onCheckedChange?.(next, details)
     if (details.isCanceled) return
-    setChecked(next)
+    checkedAssign(next)
     if (closeOnClick()) {
       context.setOpen(false, details)
     }

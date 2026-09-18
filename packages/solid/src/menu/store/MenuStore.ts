@@ -230,6 +230,10 @@ export type MenuStoreContext = PopupStoreContext<MenuChangeEventDetails> & {
   readonly typingRef: { current: boolean }
   readonly itemDomElements: { current: Array<HTMLElement | null> }
   readonly itemLabels: { current: Array<string | null> }
+  /**
+   * Maps parent-list submenu trigger elements → open handlers (ArrowRight).
+   */
+  readonly submenuTriggerOpeners: Map<HTMLElement, (event: Event) => void>
   allowMouseUpTriggerRef: { current: boolean }
   readonly triggerFocusTargetRef: { current: HTMLElement | null }
   readonly beforeContentFocusGuardRef: { current: HTMLElement | null }
@@ -272,6 +276,7 @@ function createInitialMenuContext(
     typingRef: { current: false },
     itemDomElements: { current: [] },
     itemLabels: { current: [] },
+    submenuTriggerOpeners: new Map(),
     allowMouseUpTriggerRef: { current: false },
     triggerFocusTargetRef: { current: null },
     beforeContentFocusGuardRef: { current: null },

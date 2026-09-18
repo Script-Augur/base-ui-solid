@@ -257,6 +257,172 @@ describe('Menu', () => {
     const label = screen.getByText('Edit')
     expect(group.getAttribute('aria-labelledby')).toBe(label.id)
   })
+
+  it('highlights items via typeahead', async () => {
+    render(() => <BasicMenu defaultOpen />)
+
+    const menu = screen.getByRole('menu')
+    menu.focus()
+    fireEvent.keyDown(menu, { key: 'p' })
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menuitem', { name: 'Paste' }).getAttribute(
+          'data-highlighted'
+        )
+      ).toBe('')
+    })
+  })
+
+  it('renders Separator between items', () => {
+    render(() => (
+      <Menu.Root defaultOpen>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item>Cut</Menu.Item>
+              <Menu.Separator data-testid="sep" />
+              <Menu.Item>Copy</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ))
+
+    expect(screen.getByTestId('sep').getAttribute('role')).toBe('separator')
+  })
+
+  it('opens a submenu from SubmenuTrigger click and sets aria-controls', async () => {
+    render(() => <MenuWithSubmenu />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toBeVisible()
+    })
+
+    const submenuTrigger = screen.getByRole('menuitem', { name: 'More' })
+    fireEvent.click(submenuTrigger)
+
+    await waitFor(() => {
+      const menus = screen.getAllByRole('menu')
+      expect(menus.length).toBe(2)
+    })
+
+    await waitFor(() => {
+      const trigger = screen.getByRole('menuitem', { name: 'More' })
+      expect(trigger.getAttribute('aria-expanded')).toBe('true')
+      expect(trigger.getAttribute('aria-controls')).toBeTruthy()
+    })
+
+    expect(screen.getByRole('menuitem', { name: 'Nested' })).toBeVisible()
+    expect(document.querySelector('[data-nested]')).not.toBeNull()
+  })
+
+  it('includes SubmenuTrigger in parent ArrowDown navigation', async () => {
+    render(() => <MenuWithSubmenu defaultOpen />)
+
+    const menu = screen.getByRole('menu')
+    menu.focus()
+    fireEvent.keyDown(menu, { key: 'ArrowDown' })
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menuitem', { name: 'Cut' }).getAttribute(
+          'data-highlighted'
+        )
+      ).toBe('')
+    })
+    fireEvent.keyDown(menu, { key: 'ArrowDown' })
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menuitem', { name: 'More' }).getAttribute(
+          'data-highlighted'
+        )
+      ).toBe('')
+    })
+  })
+
+  it('opens submenu with ArrowRight and closes with ArrowLeft', async () => {
+    render(() => <MenuWithSubmenu defaultOpen />)
+
+    const parentMenu = screen.getByRole('menu')
+    parentMenu.focus()
+    fireEvent.keyDown(parentMenu, { key: 'ArrowDown' })
+    fireEvent.keyDown(parentMenu, { key: 'ArrowDown' })
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menuitem', { name: 'More' }).getAttribute(
+          'data-highlighted'
+        )
+      ).toBe('')
+    })
+
+    const submenuTrigger = screen.getByRole('menuitem', { name: 'More' })
+    // Keydown on the highlighted trigger (focus may have moved off the popup).
+    fireEvent.keyDown(submenuTrigger, { key: 'ArrowRight' })
+    await waitFor(() => {
+      expect(screen.getAllByRole('menu').length).toBe(2)
+    })
+
+    const nestedMenu = screen.getAllByRole('menu')[1]!
+    nestedMenu.focus()
+    fireEvent.keyDown(nestedMenu, { key: 'ArrowLeft' })
+    await waitFor(() => {
+      expect(screen.getAllByRole('menu').length).toBe(1)
+    })
+  })
+
+  it('clears preventUnmountOnClose on reopen so a later close can unmount', async () => {
+    const actionsRef: { unmount: () => void; close: () => void } = {
+      unmount: () => {},
+      close: () => {},
+    }
+    const onOpenChange = vi.fn(
+      (_next: boolean, details: MenuRootChangeEventDetails) => {
+        // Only hold mount on the first close; later closes should unmount normally.
+        if (onOpenChange.mock.calls.length === 1) {
+          details.preventUnmountOnClose?.()
+        }
+      }
+    )
+
+    render(() => (
+      <Menu.Root
+        defaultOpen
+        onOpenChange={onOpenChange}
+        actionsRef={actionsRef}
+      >
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Cut</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ))
+
+    expect(screen.getByTestId('popup')).toBeVisible()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(typeof onOpenChange.mock.calls[0]?.[1]?.preventUnmountOnClose).toBe(
+      'function'
+    )
+    expect(screen.getByTestId('popup')).toBeVisible()
+
+    actionsRef.unmount()
+    await waitFor(() => {
+      expect(screen.queryByRole('menu')).toBeNull()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toBeVisible()
+    })
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('menu')).toBeNull()
+    })
+  })
 })
 
 function BasicMenu(props: {
@@ -282,6 +448,33 @@ function BasicMenu(props: {
             <Menu.Item>Cut</Menu.Item>
             <Menu.Item>Copy</Menu.Item>
             <Menu.Item>Paste</Menu.Item>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
+  )
+}
+
+function MenuWithSubmenu(props: {
+  defaultOpen?: boolean
+}): JSX.Element {
+  return (
+    <Menu.Root defaultOpen={props.defaultOpen}>
+      <Menu.Trigger>Open</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup>
+            <Menu.Item>Cut</Menu.Item>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item>Nested</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
           </Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>

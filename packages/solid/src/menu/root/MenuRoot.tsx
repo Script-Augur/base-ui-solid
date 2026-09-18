@@ -112,9 +112,35 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     floatingId,
     parentFromContext().type !== undefined
   )
+  const floatingNodeId = generateId('base-ui-floating-node')
   store.set('floatingRootContext', floatingRoot)
   store.set('floatingId', floatingId)
+  store.set('floatingNodeId', floatingNodeId)
   store.set('rootId', rootId)
+
+  // Sync lite FloatingTree ids so nested() / data-nested reflect submenu nesting.
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type === 'menu') {
+      store.set(
+        'floatingParentNodeId',
+        parent.store.select('floatingNodeId') ?? null
+      )
+    } else {
+      store.set('floatingParentNodeId', null)
+    }
+  })
+  createEffect(() => {
+    const tree = store.select('floatingTreeRoot')
+    const nodeId = store.select('floatingNodeId')
+    const parentId = store.select('floatingParentNodeId')
+    if (nodeId == null) return
+    const node = { id: nodeId, parentId }
+    tree.addNode(node)
+    onCleanup(() => {
+      tree.removeNode(node)
+    })
+  })
 
   createEffect(() => {
     store.set('openProp', local.open)
@@ -196,8 +222,14 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     const shouldPreventUnmountOnClose = attachPreventUnmountOnClose(
       eventDetails as unknown as { preventUnmountOnClose: () => void }
     )
+    // Wrap attachPreventUnmountOnClose so callers of details.preventUnmountOnClose()
+    // also flip the Solid signal / store flag used by createOpenChangeComplete.
+    const markPreventUnmount = (
+      eventDetails as MenuRootChangeEventDetails
+    ).preventUnmountOnClose
     ;(eventDetails as MenuRootChangeEventDetails).preventUnmountOnClose =
       () => {
+        markPreventUnmount?.()
         preventUnmountOnCloseAssign(true)
         store.set('preventUnmountingOnClose', true)
       }
@@ -209,6 +241,11 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     local.onOpenChange?.(nextOpen, eventDetails)
     if (eventDetails.isCanceled) {
       return
+    }
+
+    // Reset so a later open → close cycle can unmount again after exit handoff.
+    if (nextOpen) {
+      preventUnmountOnCloseAssign(false)
     }
 
     store.state.floatingRootContext!.dispatchOpenChange(
@@ -462,6 +499,37 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     if (store.select('disabled')) return
     const key = event.key
     const vertical = orientation() === 'vertical'
+
+    // Vertical: ArrowRight opens highlighted submenu; ArrowLeft closes nested menu.
+    // Horizontal: those keys already navigate the list below.
+    if (vertical && key === 'ArrowRight') {
+      const active = store.select('activeIndex')
+      if (active != null) {
+        const el = store.context.itemDomElements.current[active]
+        if (el != null) {
+          const openSubmenu = store.context.submenuTriggerOpeners.get(el)
+          if (openSubmenu) {
+            event.preventDefault()
+            openSubmenu(event)
+            return
+          }
+          // Fallback: opener map miss (rare) — treat aria-haspopup menuitem as submenu.
+          if (el.getAttribute('aria-haspopup') === 'menu') {
+            event.preventDefault()
+            el.click()
+            return
+          }
+        }
+      }
+    }
+    if (vertical && key === 'ArrowLeft' && nested()) {
+      event.preventDefault()
+      setOpen(
+        false,
+        createChangeEventDetails(REASONS.listNavigation, event)
+      )
+      return
+    }
 
     if (
       (vertical && key === 'ArrowDown') ||

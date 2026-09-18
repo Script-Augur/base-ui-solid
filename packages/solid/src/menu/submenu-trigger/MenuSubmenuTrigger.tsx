@@ -12,8 +12,10 @@ import {
   createChangeEventDetails,
 } from '../../internals/createChangeEventDetails'
 import { createRender } from '../../internals/createRender'
+import { createTriggerDataForwarding } from '../../internals/popups'
 import { useButton } from '../../internals/useButton'
 import { useMenuRootContext } from '../root/MenuRootContext'
+import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext'
 import { OPEN_DELAY } from '../utils/constants'
 import { itemStateAttributesMapping } from '../utils/stateAttributesMapping'
 
@@ -26,11 +28,22 @@ import type { JSX } from 'solid-js'
  * Renders a `<div>` element with `role="menuitem"`.
  *
  * Documentation: [Base UI Menu](https://base-ui.com/react/components/menu)
+ *
+ * Registers on the **parent** menu list (highlight / typeahead / arrows) and
+ * opens the nested {@link MenuRoot} via the nested store (store-first).
  */
 export function MenuSubmenuTrigger(
   componentProps: MenuSubmenuTriggerProps
 ): JSX.Element {
-  const context = useMenuRootContext()
+  const submenuRootContext = useMenuSubmenuRootContext()
+  if (!submenuRootContext?.parentMenu) {
+    throw new Error(
+      'Base UI: <Menu.SubmenuTrigger> must be placed in <Menu.SubmenuRoot>.'
+    )
+  }
+  const parentMenu = submenuRootContext.parentMenu
+  // Nested MenuRoot that owns the submenu popup (open / trigger registration).
+  const nestedContext = useMenuRootContext()
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -47,21 +60,42 @@ export function MenuSubmenuTrigger(
     'closeDelay',
   ])
 
-  // SubmenuTrigger is used inside SubmenuRoot which is a nested MenuRoot.
-  // Opening is owned by the nested root's Trigger-like behavior on this item.
   const id = local.id ?? generateId('base-ui-menu-submenu-trigger')
   const [itemElement, itemElementAssign] = createSignal<HTMLElement | null>(
     null
   )
   const [itemIndex, itemIndexAssign] = createSignal(-1)
 
+  const { registerTrigger } = createTriggerDataForwarding(
+    () => id,
+    itemElement,
+    () => nestedContext.store,
+    () => ({})
+  )
+
   const disabled = () =>
-    (local.disabled ?? false) || context.store.select('disabled')
+    (local.disabled ?? false) ||
+    nestedContext.store.select('disabled') ||
+    parentMenu.select('disabled')
 
   const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     native: () => local.nativeButton ?? false,
   })
+
+  const openSubmenu = (event: Event) => {
+    if (disabled()) return
+    nestedContext.setOpen(
+      true,
+      createChangeEventDetails(
+        event instanceof KeyboardEvent
+          ? REASONS.listNavigation
+          : REASONS.triggerPress,
+        event,
+        itemElement() ?? undefined
+      )
+    )
+  }
 
   createEffect(() => {
     const el = itemElement()
@@ -69,9 +103,39 @@ export function MenuSubmenuTrigger(
     const label =
       local.label ??
       (typeof local.children === 'string' ? local.children : el.textContent)
-    const unregister = context.registerItem(el, label)
-    itemIndexAssign(context.store.context.itemDomElements.current.indexOf(el))
-    onCleanup(unregister)
+
+    // Register on the **parent** menu so ArrowDown/Up and typeahead include this item.
+    const elements = parentMenu.context.itemDomElements.current
+    const labels = parentMenu.context.itemLabels.current
+    let index = elements.indexOf(el)
+    if (index === -1) {
+      index = elements.findIndex(item => item == null)
+      if (index === -1) {
+        index = elements.length
+        elements.push(el)
+        labels.push(label)
+      } else {
+        elements[index] = el
+        labels[index] = label
+      }
+    } else {
+      labels[index] = label
+    }
+    itemIndexAssign(index)
+
+    parentMenu.context.submenuTriggerOpeners.set(el, openSubmenu)
+
+    registerTrigger(el)
+
+    onCleanup(() => {
+      const i = elements.indexOf(el)
+      if (i !== -1) {
+        elements[i] = null
+        labels[i] = null
+      }
+      parentMenu.context.submenuTriggerOpeners.delete(el)
+      registerTrigger(null)
+    })
   })
 
   let openTimeout: ReturnType<typeof setTimeout> | undefined
@@ -81,12 +145,19 @@ export function MenuSubmenuTrigger(
     if (closeTimeout) clearTimeout(closeTimeout)
   })
 
-  const activeIndex = context.store.useState('activeIndex')
+  const parentActiveIndex = parentMenu.useState('activeIndex')
+  const nestedOpen = nestedContext.store.useState('open')
+  const isOpen = () => nestedOpen()
   const highlighted = () => {
     const index = itemIndex()
-    return index >= 0 && activeIndex() === index
+    return index >= 0 && parentActiveIndex() === index
   }
-  const isOpen = () => context.open()
+  const popupId = () => {
+    const fromTrigger = nestedContext.store.select('triggerPopupId', id)
+    if (fromTrigger) return fromTrigger
+    // Fallback while popupElement id syncs / activeTriggerId races.
+    return isOpen() ? nestedContext.store.select('floatingId') : undefined
+  }
 
   const state: MenuSubmenuTriggerState = {
     get disabled() {
@@ -113,18 +184,12 @@ export function MenuSubmenuTrigger(
           id,
           role: 'menuitem',
           'aria-haspopup': 'menu',
-          get 'aria-expanded'() {
-            return isOpen()
-          },
-          get tabIndex() {
-            return context.open() && highlighted() ? 0 : -1
-          },
           get 'aria-disabled'() {
             return disabled() ? true : undefined
           },
           onClick(event: MouseEvent) {
             if (disabled()) return
-            context.setOpen(
+            nestedContext.setOpen(
               true,
               createChangeEventDetails(
                 REASONS.triggerPress,
@@ -138,7 +203,7 @@ export function MenuSubmenuTrigger(
             if (event.pointerType === 'touch') return
             if (openTimeout) clearTimeout(openTimeout)
             openTimeout = setTimeout(() => {
-              context.setOpen(
+              nestedContext.setOpen(
                 true,
                 createChangeEventDetails(
                   REASONS.triggerHover,
@@ -153,8 +218,11 @@ export function MenuSubmenuTrigger(
             if (event.pointerType === 'touch') return
             if (closeTimeout) clearTimeout(closeTimeout)
             closeTimeout = setTimeout(() => {
-              if (context.store.select('lastOpenChangeReason') === REASONS.triggerHover) {
-                context.setOpen(
+              if (
+                nestedContext.store.select('lastOpenChangeReason') ===
+                REASONS.triggerHover
+              ) {
+                nestedContext.setOpen(
                   false,
                   createChangeEventDetails(
                     REASONS.triggerHover,
@@ -166,15 +234,33 @@ export function MenuSubmenuTrigger(
             }, local.closeDelay ?? 0)
           },
           onMouseMove() {
-            if (!context.highlightItemOnHover() || disabled()) return
+            if (!parentMenu.select('highlightItemOnHover') || disabled()) return
             const index = itemIndex()
-            if (index >= 0) context.store.set('activeIndex', index)
+            if (index >= 0) parentMenu.set('activeIndex', index)
+          },
+          onBlur() {
+            if (highlighted()) {
+              parentMenu.set('activeIndex', null)
+            }
+          },
+          onKeyDown(event: KeyboardEvent) {
+            if (disabled()) return
+            // Vertical menus: ArrowRight / Enter / Space open the submenu from the trigger.
+            if (
+              event.key === 'ArrowRight' ||
+              event.key === 'Enter' ||
+              event.key === ' '
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+              openSubmenu(event)
+            }
           },
           children: local.children,
           ref(element: HTMLElement) {
             itemElementAssign(element)
-            // Also act as the nested menu's trigger element for positioning.
-            context.triggerElementAssign(element)
+            nestedContext.triggerElementAssign(element)
+            nestedContext.store.set('activeTriggerElement', element)
             buttonRefAssign(element)
             const userRef = local.ref
             if (typeof userRef === 'function') {
@@ -184,6 +270,16 @@ export function MenuSubmenuTrigger(
         })
       ),
       {
+        // Override after useButton so tabIndex / ARIA stay reactive.
+        get 'aria-expanded'() {
+          return isOpen()
+        },
+        get 'aria-controls'() {
+          return popupId()
+        },
+        get tabIndex() {
+          return isOpen() || highlighted() ? 0 : -1
+        },
         get class() {
           return local.class
         },
