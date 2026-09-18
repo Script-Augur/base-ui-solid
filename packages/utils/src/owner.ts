@@ -15,8 +15,11 @@
  * doc.addEventListener("keydown", onKeyDown)
  * ```
  */
-export function ownerDocument(node?: Node | null): Document {
-  return node?.ownerDocument ?? document
+export function ownerDocument(node?: EventTarget | Node | null): Document {
+  if (node instanceof Node) {
+    return node.ownerDocument ?? document
+  }
+  return document
 }
 
 /**

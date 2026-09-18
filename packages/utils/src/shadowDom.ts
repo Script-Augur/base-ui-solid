@@ -16,10 +16,17 @@
  * ```
  */
 export function contains(
-  parent: Node | null | undefined,
-  child: Node | null
+  parent: EventTarget | Node | null | undefined,
+  child: EventTarget | Node | null | undefined
 ): boolean {
-  if (!parent || !child) return false
+  if (
+    parent == null ||
+    child == null ||
+    !(parent instanceof Node) ||
+    !(child instanceof Node)
+  ) {
+    return false
+  }
   if (parent === child) return true
 
   const rootNode = child.getRootNode()
