@@ -40,6 +40,7 @@ export default defineConfig({
     'radio-group': 'src/radio-group/index.ts',
     select: 'src/select/index.ts',
     combobox: 'src/combobox/index.ts',
+    autocomplete: 'src/autocomplete/index.ts',
   },
   format: ['esm'],
   dts: true,

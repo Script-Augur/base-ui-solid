@@ -57,5 +57,7 @@ usable single-select type-to-filter path. This file records what is covered by
 | RTL remapping                                                        | Same as Select/Popover                                                                          |
 | Scroll arrows / ItemText                                             | Select-only — not part of Combobox                                                              |
 | InputGroup / Collection advanced recipes                             | Thin stubs exported                                                                             |
+| `selectionMode: 'none'` public Combobox API                          | Internal for Autocomplete; use Autocomplete package                                             |
 
 **Do not claim Covered** for Autocomplete filter modes or chips keyboard unless additional tests land.
+See `../autocomplete/UPSTREAM_TEST_PARITY.md` for Autocomplete-specific coverage.

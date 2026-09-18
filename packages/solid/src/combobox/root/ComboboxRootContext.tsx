@@ -49,6 +49,13 @@ export interface ComboboxRootContextValue<TValue = unknown> {
     eventDetails: ComboboxRootChangeEventDetails
   ) => void
   multiple: Accessor<boolean>
+  /**
+   * Selection semantics. `'none'` is used by Autocomplete (no persistent
+   * selection; item press fills the input).
+   */
+  selectionMode: Accessor<'single' | 'multiple' | 'none'>
+  /** When true (Autocomplete), item press fills the input from the item label. */
+  fillInputOnItemPress: Accessor<boolean>
   modal: Accessor<boolean>
   disabled: Accessor<boolean>
   readOnly: Accessor<boolean>

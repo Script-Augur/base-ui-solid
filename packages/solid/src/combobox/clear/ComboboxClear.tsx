@@ -40,6 +40,9 @@ export function ComboboxClear(componentProps: ComboboxClearProps): JSX.Element {
   const disabled = () => context.disabled() || Boolean(local.disabled)
 
   const hasValue = () => {
+    if (context.selectionMode() === 'none') {
+      return Boolean(context.inputValue())
+    }
     const current = context.value()
     if (context.multiple()) {
       return Array.isArray(current) && current.length > 0
@@ -47,8 +50,12 @@ export function ComboboxClear(componentProps: ComboboxClearProps): JSX.Element {
     return current != null
   }
 
-  const visible = () =>
-    hasValue() || Boolean(context.inputValue())
+  const visible = () => {
+    if (context.selectionMode() === 'none') {
+      return Boolean(context.inputValue())
+    }
+    return hasValue() || Boolean(context.inputValue())
+  }
 
   const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
@@ -58,6 +65,11 @@ export function ComboboxClear(componentProps: ComboboxClearProps): JSX.Element {
   function clear(event: Event) {
     if (disabled() || context.readOnly()) return
     const details = createChangeEventDetails(REASONS.clearPress, event)
+    // Autocomplete: clear only the input string (upstream clearPress on input).
+    if (context.selectionMode() === 'none') {
+      context.setInputValue('', details)
+      return
+    }
     context.setValue(context.multiple() ? [] : null, details)
     if (details.isCanceled) return
     context.setInputValue(
