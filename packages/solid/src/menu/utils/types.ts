@@ -1,8 +1,8 @@
+import type { ContextMenuRootContextValue } from '../../context-menu/root/ContextMenuRootContext'
 import type { MenuStore } from '../store/MenuStore'
 
 /**
  * Parent relationship for a Menu root (submenu / menubar / context-menu).
- * Menubar and Context Menu packages fill their context shapes later.
  */
 export type MenuParent =
   | {
@@ -20,15 +20,7 @@ export type MenuParent =
     }
   | {
       type: 'context-menu'
-      context: {
-        rootId?: string
-        allowMouseUpTriggerRef: { current: boolean }
-        positionerRef?: { current: HTMLElement | null }
-        actionsRef?: { current: { setOpen?: unknown } | null }
-        initialCursorPointRef?: {
-          current: { x: number; y: number } | null
-        }
-      }
+      context: ContextMenuRootContextValue
     }
   | {
       type: 'nested-context-menu'

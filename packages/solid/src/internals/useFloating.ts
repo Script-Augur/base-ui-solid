@@ -8,7 +8,12 @@ import {
 } from '@floating-ui/dom'
 import { createEffect, createSignal, onCleanup } from 'solid-js'
 
-import type { Middleware, Placement, Strategy } from '@floating-ui/dom'
+import type {
+  Middleware,
+  Placement,
+  Strategy,
+  VirtualElement,
+} from '@floating-ui/dom'
 import type { Accessor } from 'solid-js'
 
 export { offset, flip, shift, arrow, autoUpdate, computePosition }
@@ -113,6 +118,12 @@ export function useFloating(options: UseFloatingOptions): UseFloatingReturn {
     floatingStyles,
   }
 }
+/** Reference accepted by Floating UI (`Element` or virtual rect). */
+export type FloatingReference =
+  | Element
+  | VirtualElement
+  | null
+  | undefined
 export type { Placement, Strategy, Middleware }
 /**
  * Options for {@link useFloating}.
@@ -120,8 +131,8 @@ export type { Placement, Strategy, Middleware }
 export interface UseFloatingOptions {
   /** Whether positioning is active. */
   open: Accessor<boolean>
-  /** Reference (anchor) element. */
-  reference: Accessor<HTMLElement | null | undefined>
+  /** Reference (anchor) element or virtual rect (e.g. context-menu cursor). */
+  reference: Accessor<FloatingReference>
   /** Floating element to position. */
   floating: Accessor<HTMLElement | null | undefined>
   /** Optional arrow element for arrow middleware. */

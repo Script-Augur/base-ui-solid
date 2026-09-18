@@ -109,6 +109,11 @@
       "import": "./dist/menu.js",
       "default": "./dist/menu.js"
     },
+    "./context-menu": {
+      "types": "./dist/context-menu.d.ts",
+      "import": "./dist/context-menu.js",
+      "default": "./dist/context-menu.js"
+    },
     "./fieldset": {
       "types": "./dist/fieldset.d.ts",
       "import": "./dist/fieldset.js",

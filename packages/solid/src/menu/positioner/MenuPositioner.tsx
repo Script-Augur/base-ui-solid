@@ -6,6 +6,7 @@ import {
   splitProps,
 } from 'solid-js'
 
+import { useContextMenuRootContext } from '../../context-menu/root/ContextMenuRootContext'
 import { createRender } from '../../internals/createRender'
 import { useFloating } from '../../internals/useFloating'
 import { useMenuPortalContext } from '../portal/MenuPortalContext'
@@ -19,6 +20,7 @@ import { placementToSideAlign, sideAlignToPlacement } from './placement'
 import type { Align, Side } from './placement'
 import type { RenderProp } from '../../internals/createRender'
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps.types'
+import type { FloatingReference } from '../../internals/useFloating'
 import type { JSX } from 'solid-js'
 
 /**
@@ -35,6 +37,8 @@ export function MenuPositioner(
 ): JSX.Element {
   const keepMounted = useMenuPortalContext()
   const context = useMenuRootContext()
+  const contextMenuContext = useContextMenuRootContext(true)
+  const isContextMenu = () => context.parent.type === 'context-menu'
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -62,21 +66,44 @@ export function MenuPositioner(
   void local.sticky
   void local.disableAnchorTracking
   void local.collisionAvoidance
-  void local.alignOffset
 
   const [arrowEl, arrowElAssign] = createSignal<HTMLElement | null>(null)
 
-  const preferredSide = () => local.side ?? 'bottom'
-  const preferredAlign = () => local.align ?? 'center'
+  // Context menu defaults: start align, slight offset toward cursor.
+  const preferredSide = (): Side => local.side ?? 'bottom'
+  const preferredAlign = (): Align => {
+    if (isContextMenu()) return local.align ?? 'start'
+    return local.align ?? 'center'
+  }
+  const resolvedSideOffset = () => {
+    if (
+      isContextMenu() &&
+      local.side == null &&
+      preferredAlign() !== 'center'
+    ) {
+      return local.sideOffset ?? -5
+    }
+    return local.sideOffset ?? 0
+  }
   const placement = () =>
     sideAlignToPlacement(preferredSide(), preferredAlign())
 
-  const reference = createMemo(() => {
-    const anchor = local.anchor
-    if (anchor instanceof HTMLElement) return anchor
-    if (typeof anchor === 'function') {
-      const result = anchor()
+  const reference = createMemo((): FloatingReference => {
+    if (local.anchor instanceof HTMLElement) return local.anchor
+    if (typeof local.anchor === 'function') {
+      const result = local.anchor()
       return result instanceof HTMLElement ? result : null
+    }
+    if (local.anchor && typeof local.anchor === 'object') {
+      return local.anchor
+    }
+    if (isContextMenu()) {
+      return (
+        contextMenuContext?.anchor() ??
+        (context.parent.type === 'context-menu'
+          ? context.parent.context.anchor()
+          : null)
+      )
     }
     return context.triggerElement()
   })
@@ -87,8 +114,10 @@ export function MenuPositioner(
     floating: context.positionerElement,
     arrow: arrowEl,
     placement: placement(),
-    strategy: local.positionMethod ?? 'absolute',
-    offset: local.sideOffset ?? 0,
+    strategy:
+      local.positionMethod ??
+      (contextMenuContext || isContextMenu() ? 'fixed' : 'absolute'),
+    offset: resolvedSideOffset(),
   })
 
   const resolved = createMemo(() => placementToSideAlign(floating.placement()))
@@ -207,7 +236,11 @@ export interface MenuPositionerState extends Record<string, unknown> {
 
 /** Props for {@link MenuPositioner}. */
 export type MenuPositionerProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  anchor?: HTMLElement | null | (() => HTMLElement | null | undefined)
+  anchor?:
+    | HTMLElement
+    | null
+    | (() => HTMLElement | null | undefined)
+    | FloatingReference
   /**
    * @default 'absolute'
    */

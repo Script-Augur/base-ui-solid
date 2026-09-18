@@ -6,6 +6,7 @@ import {
   splitProps,
 } from 'solid-js'
 
+import { useContextMenuRootContext } from '../../context-menu/root/ContextMenuRootContext'
 import {
   REASONS,
   createChangeEventDetails,
@@ -75,6 +76,7 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   ])
 
   const parentMenuRootContext = useMenuRootContext(true)
+  const contextMenuContext = useContextMenuRootContext(true)
   const submenuContext = useMenuSubmenuRootContext()
   const isSubmenu = () => submenuContext != null
 
@@ -83,6 +85,14 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
       return {
         type: 'menu',
         store: parentMenuRootContext.store,
+      }
+    }
+    // ContextMenu.Root clears MenuRootContext so this is not a Menu nested in
+    // ContextMenu.Trigger; parent is the context-menu cursor anchor context.
+    if (contextMenuContext && !parentMenuRootContext) {
+      return {
+        type: 'context-menu',
+        context: contextMenuContext,
       }
     }
     return { type: undefined }
@@ -104,19 +114,28 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   createImplicitActiveTrigger(store)
 
   const floatingId = generateId('base-ui-menu')
-  const rootId = generateId('base-ui-menu-root')
+  const rootId =
+    contextMenuContext && !parentMenuRootContext
+      ? contextMenuContext.rootId
+      : generateId('base-ui-menu-root')
   const portalId = generateId('base-ui-menu-portal')
 
   const floatingRoot = createPopupFloatingRootContext(
     store.context.triggerElements,
     floatingId,
-    parentFromContext().type !== undefined
+    parentFromContext().type === 'menu'
   )
   const floatingNodeId = generateId('base-ui-floating-node')
   store.set('floatingRootContext', floatingRoot)
   store.set('floatingId', floatingId)
   store.set('floatingNodeId', floatingNodeId)
   store.set('rootId', rootId)
+
+  // Share allowMouseUpTriggerRef with ContextMenu / nested parents.
+  if (contextMenuContext && !parentMenuRootContext) {
+    store.context.allowMouseUpTriggerRef =
+      contextMenuContext.allowMouseUpTriggerRef
+  }
 
   // Sync lite FloatingTree ids so nested() / data-nested reflect submenu nesting.
   createEffect(() => {
@@ -356,13 +375,59 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     }
   })
 
+  // Expose setOpen / positioner to ContextMenu.Trigger (cursor open path).
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type !== 'context-menu') return
+    parent.context.actionsRef.current = { setOpen }
+    onCleanup(() => {
+      parent.context.actionsRef.current = null
+    })
+  })
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type !== 'context-menu') return
+    parent.context.positionerRef.current = positionerElement()
+  })
+
+  // Grace period after context-menu open so the opening press does not dismiss.
+  const allowOutsidePressDismissalRef = {
+    current: parentFromContext().type !== 'context-menu',
+  }
+  let allowOutsidePressDismissalTimeout: ReturnType<typeof setTimeout> | undefined
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type !== 'context-menu') {
+      allowOutsidePressDismissalRef.current = true
+      return
+    }
+    if (!open()) {
+      if (allowOutsidePressDismissalTimeout) {
+        clearTimeout(allowOutsidePressDismissalTimeout)
+        allowOutsidePressDismissalTimeout = undefined
+      }
+      allowOutsidePressDismissalRef.current = false
+      return
+    }
+    allowOutsidePressDismissalTimeout = setTimeout(() => {
+      allowOutsidePressDismissalRef.current = true
+    }, 500)
+    onCleanup(() => {
+      if (allowOutsidePressDismissalTimeout) {
+        clearTimeout(allowOutsidePressDismissalTimeout)
+        allowOutsidePressDismissalTimeout = undefined
+      }
+    })
+  })
+
   createScrollLock(
     () =>
       open() &&
       modal() &&
       mounted() &&
       store.select('lastOpenChangeReason') !== REASONS.triggerHover &&
-      parentFromContext().type === undefined
+      (parentFromContext().type === undefined ||
+        parentFromContext().type === 'context-menu')
   )
 
   createFocusTrap({
@@ -450,6 +515,13 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
         if ((internalBackdrop != null || backdrop != null) && !onBackdrop) {
           return
         }
+      }
+
+      if (
+        parentFromContext().type === 'context-menu' &&
+        !allowOutsidePressDismissalRef.current
+      ) {
+        return
       }
 
       setOpen(false, createChangeEventDetails(REASONS.outsidePress, event))
