@@ -68,6 +68,39 @@ describe('ContextMenu', () => {
     expect(onOpenChange.mock.calls[0]?.[1]?.reason).toBe('escape-key')
   })
 
+  it('closes on outside press immediately after contextmenu open (no grace)', async () => {
+    const onOpenChange = vi.fn()
+    render(() => (
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        <ContextMenu.Trigger data-testid="trigger">Area</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Backdrop data-testid="backdrop" />
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              <ContextMenu.Item>Cut</ContextMenu.Item>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ))
+
+    fireEvent.contextMenu(screen.getByTestId('trigger'), {
+      clientX: 20,
+      clientY: 30,
+    })
+    expect(screen.getByRole('menu')).toBeVisible()
+    expect(onOpenChange.mock.calls[0]?.[1]?.event?.type).toBe('contextmenu')
+
+    // Upstream skips the 500ms grace when openEvent.type === 'contextmenu'.
+    // Modal menus dismiss via backdrop press (same as Dialog).
+    fireEvent.pointerDown(screen.getByTestId('backdrop'), { button: 0 })
+    const closeCall = onOpenChange.mock.calls.find(call => call[0] === false)
+    expect(closeCall?.[1]?.reason).toBe('outside-press')
+    await waitFor(() => {
+      expect(screen.queryByRole('menu')).toBeNull()
+    })
+  })
+
   it('applies scroll lock when open (modal context menu)', () => {
     render(() => <BasicContextMenu defaultOpen />)
     expect(document.body.style.overflow).toBe('hidden')

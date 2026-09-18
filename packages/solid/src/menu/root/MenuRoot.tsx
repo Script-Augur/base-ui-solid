@@ -220,6 +220,10 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   const loopFocus = () => local.loopFocus ?? true
   const highlightItemOnHover = () => local.highlightItemOnHover ?? true
 
+  // Tracks the native event that opened the menu (upstream `openEventRef`).
+  // Context-menu right-click skips the outside-press grace; long-press does not.
+  const openEventRef: { current: Event | null } = { current: null }
+
   const setOpen = (
     nextOpen: boolean,
     eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
@@ -265,6 +269,9 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     // Reset so a later open → close cycle can unmount again after exit handoff.
     if (nextOpen) {
       preventUnmountOnCloseAssign(false)
+      openEventRef.current = eventDetails.event ?? null
+    } else {
+      openEventRef.current = null
     }
 
     store.state.floatingRootContext!.dispatchOpenChange(
@@ -390,7 +397,9 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     parent.context.positionerRef.current = positionerElement()
   })
 
-  // Grace period after context-menu open so the opening press does not dismiss.
+  // Grace after context-menu open for long-press / non-contextmenu opens so the
+  // opening gesture does not dismiss. Right-click (`contextmenu`) skips grace
+  // (matches upstream `openEventRef.type === 'contextmenu'`).
   const allowOutsidePressDismissalRef = {
     current: parentFromContext().type !== 'context-menu',
   }
@@ -407,6 +416,12 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
         allowOutsidePressDismissalTimeout = undefined
       }
       allowOutsidePressDismissalRef.current = false
+      openEventRef.current = null
+      return
+    }
+    // Right-click opens already allow immediate dismiss via openEventRef.
+    if (openEventRef.current?.type === 'contextmenu') {
+      allowOutsidePressDismissalRef.current = true
       return
     }
     allowOutsidePressDismissalTimeout = setTimeout(() => {
@@ -517,11 +532,18 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
         }
       }
 
-      if (
-        parentFromContext().type === 'context-menu' &&
-        !allowOutsidePressDismissalRef.current
-      ) {
-        return
+      // Upstream: allow immediate outside dismiss unless this is a context-menu
+      // that was not opened by `contextmenu` (e.g. touch long-press) and grace
+      // has not elapsed yet.
+      if (parentFromContext().type === 'context-menu') {
+        const openedByContextMenu =
+          openEventRef.current?.type === 'contextmenu'
+        if (
+          !openedByContextMenu &&
+          !allowOutsidePressDismissalRef.current
+        ) {
+          return
+        }
       }
 
       setOpen(false, createChangeEventDetails(REASONS.outsidePress, event))

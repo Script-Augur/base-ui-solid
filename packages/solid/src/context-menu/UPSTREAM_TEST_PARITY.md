@@ -15,10 +15,11 @@ Context Menu is a thin wrapper: cursor/long-press `Trigger` +
 
 | Behavior | Status |
 | -------- | ------ |
-| Right-click (`contextmenu`) opens at cursor | covered |
+| Right-click (`contextmenu`) opens (cursor anchor wired; jsdom position not asserted) | covered |
 | Controlled `open` + `onOpenChange` (`trigger-press`) | covered |
 | Escape dismiss | covered |
 | Item click closes | covered |
+| Outside press immediately after `contextmenu` open (no 500ms grace) | covered |
 | Modal scroll lock | covered |
 | Portal mount | covered |
 | `role=menu` / `role=menuitem` | covered |
@@ -33,10 +34,10 @@ Context Menu is a thin wrapper: cursor/long-press `Trigger` +
 | -------- | ----- |
 | Touch long-press open (500ms) + move cancel | Code present on Trigger; jsdom touch matrix limited — not asserted |
 | Mouseup-after-open cancel (`cancel-open`) when release outside | Wired (AbortController + grace); flaky in jsdom — deferred assertion |
-| Outside-press 500ms grace after open | Root implements; not separately tested beyond open path |
+| Outside-press 500ms grace after long-press / non-`contextmenu` open | Root implements via `openEventRef`; `contextmenu` skips grace (tested); long-press grace assert deferred |
 | Item mouseup-to-select / initialCursorPoint click-guard | Upstream `useMenuItemCommonProps` polish — Lite click-only |
 | InternalBackdrop + `internalBackdropRef` | Not rendered in Solid Menu Positioner yet; backdropRef wired |
-| Full Floating UI collision / shift for cursor menus | Lite `useFloating` + fixed strategy |
+| Full Floating UI collision / shift / CM `alignOffset` default `2` | Lite `useFloating` + fixed strategy; sideOffset `-5` only |
 | Detached `createHandle` on Context Menu | Omitted from Root props (upstream 1.7.0) |
 | Menubar | Sibling package — out of scope |
 
