@@ -66,8 +66,22 @@ export function MenuPositioner(
 
   const [arrowEl, arrowElAssign] = createSignal<HTMLElement | null>(null)
 
-  const preferredSide = () => local.side ?? 'bottom'
-  const preferredAlign = () => local.align ?? 'center'
+  const parent = () => context.parent
+  const preferredSide = (): Side => {
+    if (local.side) return local.side
+    const p = parent()
+    if (p.type === 'menu') return 'inline-end'
+    if (p.type === 'menubar') {
+      return p.context.orientation === 'vertical' ? 'inline-end' : 'bottom'
+    }
+    return 'bottom'
+  }
+  const preferredAlign = (): Align => {
+    if (local.align) return local.align
+    const p = parent()
+    if (p.type === 'menu' || p.type === 'menubar') return 'start'
+    return 'center'
+  }
   const placement = () =>
     sideAlignToPlacement(preferredSide(), preferredAlign())
 

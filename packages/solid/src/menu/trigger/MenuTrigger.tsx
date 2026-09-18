@@ -1,5 +1,6 @@
 import { generateId } from '@script-augur/base-ui-utils'
 import {
+  Show,
   createEffect,
   createSignal,
   mergeProps,
@@ -7,6 +8,7 @@ import {
   splitProps,
 } from 'solid-js'
 
+import { CompositeItem } from '../../internals/composite/item/CompositeItem'
 import {
   REASONS,
   createChangeEventDetails,
@@ -28,6 +30,7 @@ import type { JSX } from 'solid-js'
 /**
  * A button that opens the menu.
  * Renders a `<button>` element.
+ * Inside a Menubar, renders as a composite `role="menuitem"`.
  *
  * Documentation: [Base UI Menu](https://base-ui.com/react/components/menu)
  *
@@ -73,12 +76,23 @@ export function MenuTrigger(componentProps: MenuTriggerProps): JSX.Element {
       () => ({ payload: local.payload })
     )
 
+  const parent = () => store()!.select('parent')
+  const isInMenubar = () => parent().type === 'menubar'
+  const parentMenubarHasSubmenuOpen = () => {
+    const p = parent()
+    return p.type === 'menubar' && p.context.hasSubmenuOpen()
+  }
+
   const disabled = () =>
-    local.disabled ?? store()!.select('disabled')
+    Boolean(local.disabled ?? store()!.select('disabled'))
+
+  const openOnHover = () =>
+    local.openOnHover ?? parentMenubarHasSubmenuOpen()
 
   const { getButtonProps, buttonRefAssign } = useButton({
     disabled,
     native: () => local.nativeButton ?? true,
+    composite: () => isInMenubar(),
   })
 
   let openTimeout: ReturnType<typeof setTimeout> | undefined
@@ -87,12 +101,12 @@ export function MenuTrigger(componentProps: MenuTriggerProps): JSX.Element {
   const clearHoverTimers = () => {
     if (openTimeout) {
       clearTimeout(openTimeout)
-      openTimeout = undefined
     }
+    openTimeout = undefined
     if (closeTimeout) {
       clearTimeout(closeTimeout)
-      closeTimeout = undefined
     }
+    closeTimeout = undefined
   }
 
   onCleanup(clearHoverTimers)
@@ -117,92 +131,144 @@ export function MenuTrigger(componentProps: MenuTriggerProps): JSX.Element {
     },
   }
 
-  return createRender<MenuTriggerState, Record<string, unknown>>({
-    defaultElement: 'button',
-    state,
-    render: local.render,
-    mapStateToDataAttributes: true,
-    stateAttributesMapping: triggerOpenStateMapping,
-    props: mergeProps(
-      getButtonProps(
-        mergeProps(elementProps as Record<string, unknown>, {
-          id: triggerId,
-          'aria-haspopup': 'menu',
-          get 'aria-expanded'() {
-            return isOpenedByThisTrigger()
-          },
-          get 'aria-controls'() {
-            return popupId()
-          },
-          onClick(event: MouseEvent) {
-            if (disabled()) return
-            const activeStore = store()!
-            const next = !isOpen()
-            activeStore.setOpen(
-              next,
-              createChangeEventDetails(
-                REASONS.triggerPress,
-                event,
-                triggerElement() ?? undefined
-              )
-            )
-          },
-          onPointerEnter(event: PointerEvent) {
-            if (disabled() || !(local.openOnHover ?? false)) return
-            if (event.pointerType === 'touch') return
-            clearHoverTimers()
-            openTimeout = setTimeout(() => {
-              if (!isOpen()) {
-                store()!.setOpen(
-                  true,
-                  createChangeEventDetails(
-                    REASONS.triggerHover,
-                    event,
-                    triggerElement() ?? undefined
-                  )
-                )
-              }
-            }, local.delay ?? OPEN_DELAY)
-          },
-          onPointerLeave(event: PointerEvent) {
-            if (disabled() || !(local.openOnHover ?? false)) return
-            if (event.pointerType === 'touch') return
-            clearHoverTimers()
-            closeTimeout = setTimeout(() => {
-              const reason = store()!.select('lastOpenChangeReason')
-              if (isOpen() && reason === REASONS.triggerHover) {
-                store()!.setOpen(
-                  false,
-                  createChangeEventDetails(
-                    REASONS.triggerHover,
-                    event,
-                    triggerElement() ?? undefined
-                  )
-                )
-              }
-            }, local.closeDelay ?? store()!.select('closeDelay'))
-          },
-          ref(element: HTMLElement) {
-            triggerElementAssign(element)
-            registerTrigger(element)
-            buttonRefAssign(element)
-            const userRef = local.ref
-            if (typeof userRef === 'function') {
-              userRef(element as HTMLButtonElement)
-            }
-          },
-        })
-      ),
-      {
-        get class() {
-          return local.class
-        },
-        get style() {
-          return local.style
-        },
+  const triggerHandlers = {
+    id: triggerId,
+    'aria-haspopup': 'menu' as const,
+    get 'aria-expanded'() {
+      return isOpenedByThisTrigger()
+    },
+    get 'aria-controls'() {
+      return popupId()
+    },
+    onClick(event: MouseEvent) {
+      if (disabled()) return
+      const activeStore = store()!
+      const next = !isOpen()
+      activeStore.setOpen(
+        next,
+        createChangeEventDetails(
+          REASONS.triggerPress,
+          event,
+          triggerElement() ?? undefined
+        )
+      )
+    },
+    onFocus(event: FocusEvent) {
+      if (disabled() || !parentMenubarHasSubmenuOpen()) return
+      if (isOpenedByThisTrigger()) return
+      store()!.setOpen(
+        true,
+        createChangeEventDetails(
+          REASONS.triggerFocus,
+          event,
+          triggerElement() ?? undefined
+        )
+      )
+    },
+    onPointerEnter(event: PointerEvent) {
+      if (disabled() || !openOnHover()) return
+      if (event.pointerType === 'touch') return
+      // Menubar: only hover-open when another menu is already open and this
+      // trigger is not the one currently mounting the popup.
+      if (
+        isInMenubar() &&
+        (!parentMenubarHasSubmenuOpen() || isMountedByThisTrigger())
+      ) {
+        return
       }
-    ),
-  })
+      clearHoverTimers()
+      openTimeout = setTimeout(() => {
+        if (!isOpen()) {
+          store()!.setOpen(
+            true,
+            createChangeEventDetails(
+              REASONS.triggerHover,
+              event,
+              triggerElement() ?? undefined
+            )
+          )
+        }
+      }, local.delay ?? OPEN_DELAY)
+    },
+    onPointerLeave(event: PointerEvent) {
+      if (disabled() || !openOnHover()) return
+      if (event.pointerType === 'touch') return
+      if (isInMenubar()) return
+      clearHoverTimers()
+      closeTimeout = setTimeout(() => {
+        const reason = store()!.select('lastOpenChangeReason')
+        if (isOpen() && reason === REASONS.triggerHover) {
+          store()!.setOpen(
+            false,
+            createChangeEventDetails(
+              REASONS.triggerHover,
+              event,
+              triggerElement() ?? undefined
+            )
+          )
+        }
+      }, local.closeDelay ?? store()!.select('closeDelay'))
+    },
+    ref(element: HTMLElement) {
+      triggerElementAssign(element)
+      registerTrigger(element)
+      buttonRefAssign(element)
+      const userRef = local.ref
+      if (typeof userRef === 'function') {
+        userRef(element as HTMLButtonElement)
+      }
+    },
+  }
+
+  return (
+    <Show
+      when={isInMenubar()}
+      fallback={createRender<MenuTriggerState, Record<string, unknown>>({
+        defaultElement: 'button',
+        state,
+        render: local.render,
+        mapStateToDataAttributes: true,
+        stateAttributesMapping: triggerOpenStateMapping,
+        props: mergeProps(
+          getButtonProps(
+            mergeProps(elementProps as Record<string, unknown>, triggerHandlers)
+          ),
+          {
+            get class() {
+              return local.class
+            },
+            get style() {
+              return local.style
+            },
+          }
+        ),
+      })}
+    >
+      <CompositeItem<Record<string, never>, MenuTriggerState>
+        tag="button"
+        render={local.render}
+        class={local.class}
+        style={local.style}
+        state={state}
+        stateAttributesMapping={triggerOpenStateMapping}
+        refs={[
+          el => {
+            triggerHandlers.ref(el as HTMLElement)
+          },
+        ]}
+        props={[
+          getButtonProps(
+            mergeProps(elementProps as Record<string, unknown>, {
+              ...triggerHandlers,
+              role: 'menuitem',
+              // CompositeItem owns tabindex; drop button default.
+              ref: undefined,
+            })
+          ),
+        ]}
+      />
+    </Show>
+  )
 }
 
 /** Public state for {@link MenuTrigger}. */
@@ -222,7 +288,7 @@ export type MenuTriggerProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   nativeButton?: boolean
   /**
    * Whether the menu opens when hovering over the trigger.
-   * @default false
+   * @default false (true when a sibling menubar menu is open)
    */
   openOnHover?: boolean
   /**

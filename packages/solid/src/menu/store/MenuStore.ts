@@ -27,10 +27,7 @@ const selectors = {
   ...popupStoreSelectors,
   disabled: (state: MenuStoreState) =>
     state.parent.type === 'menubar'
-      ? Boolean(
-          (state.parent.context as { disabled?: boolean }).disabled ||
-            state.disabled
-        )
+      ? Boolean(state.parent.context.disabled || state.disabled)
       : state.disabled,
   modal: (state: MenuStoreState) =>
     (state.parent.type === undefined || state.parent.type === 'context-menu') &&
@@ -42,6 +39,9 @@ const selectors = {
   rootId: (state: MenuStoreState): string | undefined => {
     if (state.parent.type === 'menu') {
       return state.parent.store.select('rootId')
+    }
+    if (state.parent.type === 'menubar') {
+      return state.parent.context.rootId
     }
     return state.parent.type !== undefined
       ? (state.parent.context as { rootId?: string }).rootId
@@ -56,6 +56,9 @@ const selectors = {
   floatingTreeRoot: (state: MenuStoreState): FloatingTreeStore => {
     if (state.parent.type === 'menu') {
       return state.parent.store.select('floatingTreeRoot')
+    }
+    if (state.parent.type === 'menubar') {
+      return state.parent.context.floatingTreeRoot
     }
     return state.floatingTreeRoot
   },
@@ -127,6 +130,12 @@ export class MenuStore<TPayload = unknown> extends SolidStore<
         })
         this.context.allowMouseUpTriggerRef =
           typedParent.store.context.allowMouseUpTriggerRef
+        return
+      }
+      if (typedParent.type === 'menubar') {
+        this.context.allowMouseUpTriggerRef =
+          typedParent.context.allowMouseUpTriggerRef
+        this.unsubscribeParentListener = null
         return
       }
       if (typedParent.type !== undefined) {

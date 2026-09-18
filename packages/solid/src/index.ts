@@ -333,6 +333,12 @@ export {
   createNullMenuStore,
 } from './menu'
 export {
+  Menubar,
+  MenubarContext,
+  useMenubarContext,
+  MenubarDataAttributes,
+} from './menubar'
+export {
   Checkbox,
   CheckboxRoot,
   PARENT_CHECKBOX,
@@ -707,6 +713,11 @@ export type {
   MenuHandleStore,
   MenuStoreContext,
 } from './menu'
+export type {
+  MenubarProps,
+  MenubarState,
+  MenubarContextValue,
+} from './menubar'
 export type {
   InputProps,
   InputState,

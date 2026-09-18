@@ -4,8 +4,10 @@ import {
   createSignal,
   onCleanup,
   splitProps,
+  useContext,
 } from 'solid-js'
 
+import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext'
 import {
   REASONS,
   createChangeEventDetails,
@@ -25,6 +27,7 @@ import {
   setPopupOpenState,
 } from '../../internals/popups'
 import { createScrollLock } from '../../internals/scrollLock'
+import { useMenubarContext } from '../../menubar/MenubarContext'
 import { MenuStore } from '../store/MenuStore'
 import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext'
 import { TYPEAHEAD_RESET_MS } from '../utils/constants'
@@ -76,6 +79,8 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
 
   const parentMenuRootContext = useMenuRootContext(true)
   const submenuContext = useMenuSubmenuRootContext()
+  const menubarContext = useMenubarContext(true)
+  const compositeRootContext = useContext(CompositeRootContext)
   const isSubmenu = () => submenuContext != null
 
   const parentFromContext = (): MenuParent => {
@@ -83,6 +88,12 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
       return {
         type: 'menu',
         store: parentMenuRootContext.store,
+      }
+    }
+    if (menubarContext) {
+      return {
+        type: 'menubar',
+        context: menubarContext,
       }
     }
     return { type: undefined }
@@ -117,8 +128,18 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   store.set('floatingId', floatingId)
   store.set('floatingNodeId', floatingNodeId)
   store.set('rootId', rootId)
+  const initialParent = parentFromContext()
+  if (initialParent.type === 'menubar') {
+    store.set('floatingParentNodeId', initialParent.context.floatingNodeId)
+  } else if (initialParent.type === 'menu') {
+    store.set(
+      'floatingParentNodeId',
+      initialParent.store.select('floatingNodeId') ?? null
+    )
+  }
 
-  // Sync lite FloatingTree ids so nested() / data-nested reflect submenu nesting.
+  // Sync lite FloatingTree ids so nested() / data-nested reflect submenu nesting
+  // and menubar parentage (shared tree under Menubar).
   createEffect(() => {
     const parent = parentFromContext()
     if (parent.type === 'menu') {
@@ -126,19 +147,61 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
         'floatingParentNodeId',
         parent.store.select('floatingNodeId') ?? null
       )
+    } else if (parent.type === 'menubar') {
+      store.set('floatingParentNodeId', parent.context.floatingNodeId)
     } else {
       store.set('floatingParentNodeId', null)
     }
   })
+  const floatingNodeIdState = store.useState('floatingNodeId')
+  const floatingParentNodeIdState = store.useState('floatingParentNodeId')
   createEffect(() => {
     const tree = store.select('floatingTreeRoot')
-    const nodeId = store.select('floatingNodeId')
-    const parentId = store.select('floatingParentNodeId')
+    const nodeId = floatingNodeIdState()
+    const parentId = floatingParentNodeIdState()
     if (nodeId == null) return
     const node = { id: nodeId, parentId }
     tree.addNode(node)
     onCleanup(() => {
       tree.removeNode(node)
+    })
+  })
+
+  // Relay popup keydowns to Menubar CompositeRoot (detached-trigger parity Lite).
+  createEffect(() => {
+    const parent = parentFromContext()
+    if (parent.type === 'menubar' && compositeRootContext) {
+      store.set('keyboardEventRelay', compositeRootContext.onKeyDown)
+    } else if (parent.type !== 'menu') {
+      store.set('keyboardEventRelay', undefined)
+    }
+  })
+
+  createEffect(() => {
+    const tree = store.select('floatingTreeRoot')
+    const nodeId = floatingNodeIdState()
+    const parentNodeId = floatingParentNodeIdState()
+    function onMenuOpenChange(details: unknown) {
+      const payload = details as {
+        open?: boolean
+        nodeId?: string
+        parentNodeId?: string | null
+      }
+      if (!payload.open || payload.nodeId == null) return
+      if (
+        payload.nodeId !== nodeId &&
+        payload.parentNodeId != null &&
+        payload.parentNodeId === parentNodeId
+      ) {
+        store.setOpen(
+          false,
+          createChangeEventDetails(REASONS.siblingOpen)
+        )
+      }
+    }
+    tree.events.on('menuopenchange', onMenuOpenChange)
+    onCleanup(() => {
+      tree.events.off('menuopenchange', onMenuOpenChange)
     })
   })
 
@@ -172,6 +235,17 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   const { mounted, mountedAssign, transitionStatus } =
     createTransitionStatus(open)
 
+  // Notify Menubar / sibling menus when this menu opens or closes.
+  createEffect(() => {
+    const tree = store.select('floatingTreeRoot')
+    tree.events.emit('menuopenchange', {
+      open: open(),
+      nodeId: floatingNodeIdState(),
+      parentNodeId: floatingParentNodeIdState(),
+      reason: store.select('lastOpenChangeReason'),
+    })
+  })
+
   const [popupElement, popupElementAssign] = createSignal<HTMLElement | null>(
     null
   )
@@ -197,6 +271,11 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
 
   const nested = () => store.select('floatingParentNodeId') != null
   const modal = () => Boolean(store.select('modal'))
+  const isEffectivelyModal = () => {
+    const parent = parentFromContext()
+    if (parent.type === 'menubar') return parent.context.modal
+    return modal()
+  }
   const orientation = () => local.orientation ?? 'vertical'
   const loopFocus = () => local.loopFocus ?? true
   const highlightItemOnHover = () => local.highlightItemOnHover ?? true
@@ -279,7 +358,16 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     )
     store.update(updatedState)
 
-    if (isKeyboardClick || isDismissClose) {
+    if (
+      parentFromContext().type === 'menubar' &&
+      (reason === REASONS.triggerFocus ||
+        reason === REASONS.focusOut ||
+        reason === REASONS.triggerHover ||
+        reason === REASONS.listNavigation ||
+        reason === REASONS.siblingOpen)
+    ) {
+      store.set('instantType', 'group')
+    } else if (isKeyboardClick || isDismissClose) {
       store.set('instantType', isKeyboardClick ? 'click' : 'dismiss')
     } else {
       store.set('instantType', undefined)
@@ -359,17 +447,18 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
   createScrollLock(
     () =>
       open() &&
-      modal() &&
       mounted() &&
+      isEffectivelyModal() &&
       store.select('lastOpenChangeReason') !== REASONS.triggerHover &&
-      parentFromContext().type === undefined
+      (parentFromContext().type === undefined ||
+        parentFromContext().type === 'menubar')
   )
 
   createFocusTrap({
     enabled: () =>
       open() &&
       mounted() &&
-      modal() &&
+      isEffectivelyModal() &&
       store.select('lastOpenChangeReason') !== REASONS.triggerHover,
     container: popupElement,
     initialFocus: () => {
@@ -438,7 +527,17 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
         return
       }
 
-      if (modal()) {
+      // Menubar content is a cutout (upstream InternalBackdrop hole) — clicks on
+      // other menubar triggers must not outside-dismiss before they can open.
+      const parent = parentFromContext()
+      if (parent.type === 'menubar') {
+        const content = parent.context.contentElement()
+        if (content && contains(content, target)) {
+          return
+        }
+      }
+
+      if (isEffectivelyModal()) {
         const internalBackdrop = internalBackdropElement()
         const backdrop = backdropElement()
         const onBackdrop =
