@@ -106,6 +106,69 @@ describe('Menubar', () => {
     })
   })
 
+  it('relays ArrowRight from an open popup to the menubar CompositeRoot', async () => {
+    render(() => (
+      <Menubar>
+        <FileMenu />
+        <EditMenu />
+      </Menubar>
+    ))
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'File' }))
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toBeVisible()
+    })
+
+    const menu = screen.getByRole('menu')
+    menu.focus()
+    fireEvent.keyDown(menu, { key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(
+        screen.getByRole('menuitem', { name: 'Edit' })
+      )
+      expect(screen.getByRole('menuitem', { name: 'Undo' })).toBeVisible()
+    })
+  })
+
+  it('does not close a menubar menu on ArrowLeft from the popup', () => {
+    render(() => (
+      <Menubar>
+        <FileMenu />
+      </Menubar>
+    ))
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'File' }))
+    const menu = screen.getByRole('menu')
+    menu.focus()
+    fireEvent.keyDown(menu, { key: 'ArrowLeft' })
+
+    expect(screen.getByRole('menu')).toBeVisible()
+    expect(screen.getByRole('menuitem', { name: 'New' })).toBeVisible()
+  })
+
+  it('highlights a sibling trigger on hover while a menu is open', async () => {
+    render(() => (
+      <Menubar>
+        <FileMenu />
+        <EditMenu />
+      </Menubar>
+    ))
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'File' }))
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menubar').getAttribute('data-has-submenu-open')
+      ).toBe('')
+    })
+
+    const edit = screen.getByRole('menuitem', { name: 'Edit' })
+    fireEvent.mouseMove(edit)
+    await waitFor(() => {
+      expect(document.activeElement).toBe(edit)
+    })
+  })
+
   it('honors disabled on the menubar', () => {
     render(() => (
       <Menubar disabled>

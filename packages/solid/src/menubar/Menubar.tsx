@@ -138,7 +138,7 @@ export function Menubar(componentProps: MenubarProps): JSX.Element {
         style={local.style}
         state={state}
         stateAttributesMapping={menubarStateAttributesMapping}
-        refs={[el => contentElementAssign(el), setUserRef]}
+        refs={[el => contentElementAssign(el), userRefAssign]}
         props={[
           {
             role: 'menubar',
@@ -152,7 +152,7 @@ export function Menubar(componentProps: MenubarProps): JSX.Element {
         orientation={orientation}
         loopFocus={loopFocus}
         enableHomeAndEndKeys
-        highlightItemOnHover={hasSubmenuOpen()}
+        highlightItemOnHover={hasSubmenuOpen}
         tag="div"
       >
         {local.children}
@@ -165,7 +165,7 @@ export function Menubar(componentProps: MenubarProps): JSX.Element {
    *
    * @param el - Mounted menubar element, or `null` on unmount.
    */
-  function setUserRef(el: HTMLElement | null) {
+  function userRefAssign(el: HTMLElement | null) {
     const userRef = local.ref
     if (typeof userRef === 'function') {
       userRef(el as HTMLDivElement)

@@ -16,7 +16,10 @@ a shared lite `FloatingTreeStore`, `CompositeRoot` (`role=menubar`), and
 | Open menu from menubar trigger click | covered |
 | `data-has-submenu-open` via `menuopenchange` | covered |
 | Sibling menu close when another top-level menu opens | covered |
-| ArrowRight moves highlight between triggers (CompositeRoot) | covered |
+| ArrowRight moves highlight between triggers (menubar host keys) | covered |
+| ArrowRight from open popup relays to CompositeRoot (opens sibling) | covered |
+| ArrowLeft from open popup does **not** close as nested submenu | covered |
+| Hover highlight while `hasSubmenuOpen` (reactive `highlightItemOnHover`) | covered |
 | `disabled` disables nested Menu triggers (store selector) | covered |
 | Modal scroll lock / `modal={false}` | covered |
 
@@ -27,7 +30,7 @@ a shared lite `FloatingTreeStore`, `CompositeRoot` (`role=menubar`), and
 | Full Floating UI `useHover` / `useFocus` / `safePolygon` on menubar triggers | Lite: click + hover-when-`hasSubmenuOpen` + focus-open when submenu open |
 | Mixed click/mousedown toggle (`useMixedToggleClickHandler`) | Lite: click toggle only |
 | InternalBackdrop cutout geometry for `contentElement` | Lite: outside-press ignores presses inside menubar `contentElement` (no visual hole) |
-| Detached Menu.handle triggers inside Menubar + keyboardEventRelay matrix | Relay wired when CompositeRoot present; detached matrix deferred |
+| Detached Menu.handle triggers inside Menubar + keyboardEventRelay matrix | Attached relay covered (from-popup arrows); detached matrix deferred |
 | Vertical menubar placement / RTL inline sides | Placement defaults exist; RTL deferred with Menu |
 | Full `loopFocus` / Home / End edge matrix vs upstream composite | CompositeRoot Home/End enabled; not exhaustively tested |
 | Patient click / pointer-up open quirks | Deferred with Menu hover Lite |

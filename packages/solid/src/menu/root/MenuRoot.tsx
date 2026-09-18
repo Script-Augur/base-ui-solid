@@ -599,8 +599,10 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
     const key = event.key
     const vertical = orientation() === 'vertical'
 
-    // Vertical: ArrowRight opens highlighted submenu; ArrowLeft closes nested menu.
-    // Horizontal: those keys already navigate the list below.
+    // Vertical: ArrowRight opens highlighted submenu; ArrowLeft closes nested
+    // *submenu* only (`parent.type === 'menu'`). Menubar children are also
+    // `nested()` (floating parent = menubar node) but must relay Left/Right to
+    // CompositeRoot — matching upstream `parentOrientation` / keyboardEventRelay.
     if (vertical && key === 'ArrowRight') {
       const active = store.select('activeIndex')
       if (active != null) {
@@ -621,7 +623,11 @@ export function MenuRoot(componentProps: MenuRootProps): JSX.Element {
         }
       }
     }
-    if (vertical && key === 'ArrowLeft' && nested()) {
+    if (
+      vertical &&
+      key === 'ArrowLeft' &&
+      parentFromContext().type === 'menu'
+    ) {
       event.preventDefault()
       setOpen(
         false,
