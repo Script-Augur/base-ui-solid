@@ -224,6 +224,8 @@ export {
   DialogTitle,
   DialogDescription,
   DialogClose,
+  createDialogHandle,
+  DialogHandle,
 } from './dialog'
 export {
   AlertDialog,

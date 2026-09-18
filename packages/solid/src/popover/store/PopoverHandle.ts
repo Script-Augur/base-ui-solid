@@ -1,35 +1,63 @@
-/**
- * Detached popover handle — deferred pending popup-handle store (same as Dialog).
- *
- * @see UPSTREAM_TEST_PARITY.md
- */
-export class PopoverHandle<TPayload = unknown> {
-  /** @internal Payload type phantom. */
-  declare readonly _payload?: TPayload
+import { BasePopupHandle } from '../../internals/popups'
 
+import { createNullPopoverStore } from './PopoverStore'
+
+import type { PopoverHandleStore, PopoverStore } from './PopoverStore'
+
+/**
+ * Controls a Popover imperatively and associates detached `Popover.Trigger` components with a
+ * `Popover.Root`. Create one with `Popover.createHandle()` and pass it to the `handle` prop of the
+ * root and of any triggers rendered outside of it.
+ *
+ * The imperative methods take effect only while a root using this handle is mounted; calls made
+ * before a root attaches (or after it unmounts) are ignored.
+ *
+ * @typeParam TPayload - Optional payload type.
+ */
+export class PopoverHandle<TPayload = unknown> extends BasePopupHandle<
+  PopoverHandleStore<TPayload>,
+  PopoverStore<TPayload>
+> {
   /**
-   * Opens the associated popover. No-op until handle store is ported.
+   * Creates a popover handle with an inert fallback store.
    */
-  open(_triggerId?: string | null, _payload?: TPayload): void {
-    // Deferred — see UPSTREAM_TEST_PARITY.md
+  constructor() {
+    super(createNullPopoverStore<TPayload>(), 'Popover')
   }
 
   /**
-   * Closes the associated popover. No-op until handle store is ported.
+   * Opens the popover and associates it with the trigger with the given id.
+   *
+   * This method should only be called in an event handler or an effect (not during rendering).
+   *
+   * @param triggerId - ID of the trigger to associate with the popover.
+   */
+  open(triggerId?: string | null): void {
+    this.openByTrigger(triggerId)
+  }
+
+  /**
+   * Closes the popover.
+   *
+   * This method should only be called in an event handler or an effect (not during rendering).
    */
   close(): void {
-    // Deferred — see UPSTREAM_TEST_PARITY.md
+    this.closePopup()
+  }
+
+  /**
+   * Whether the popover is currently open. Returns `false` while no root is attached.
+   */
+  get isOpen(): boolean {
+    return Boolean(this.attachedStore?.select('open'))
   }
 }
 
 /**
- * Creates a {@link PopoverHandle} for detached triggers.
+ * Creates a new handle to connect a Popover.Root with detached Popover.Trigger components.
  *
- * Deferred: returns a stub handle. Full `createHandle` / multi-trigger wiring
- * matches Dialog — follow-up with Menu / Preview Card.
- *
- * @typeParam TPayload - Optional payload forwarded from the active trigger.
- * @returns A stub {@link PopoverHandle}.
+ * @typeParam TPayload - Optional payload type.
+ * @returns A new {@link PopoverHandle}.
  */
 export function createPopoverHandle<
   TPayload = unknown,

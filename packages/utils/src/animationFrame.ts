@@ -27,6 +27,14 @@ export class AnimationFrame {
   }
 
   /**
+   * Creates an idle animation-frame manager. Call {@link AnimationFrame.request}
+   * to schedule work.
+   */
+  static create(): AnimationFrame {
+    return new AnimationFrame()
+  }
+
+  /**
    * Schedules `callback` on the next animation frame, canceling any prior
    * pending frame from this instance.
    *

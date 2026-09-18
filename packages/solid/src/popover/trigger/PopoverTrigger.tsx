@@ -1,10 +1,21 @@
-import { createEffect, mergeProps, onCleanup, splitProps } from 'solid-js'
+import { generateId } from '@script-augur/base-ui-utils'
+import {
+  createEffect,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  splitProps,
+} from 'solid-js'
 
 import {
   REASONS,
   createChangeEventDetails,
 } from '../../internals/createChangeEventDetails'
 import { createRender } from '../../internals/createRender'
+import {
+  createPopupHandleStore,
+  createTriggerDataForwarding,
+} from '../../internals/popups'
 import { useButton } from '../../internals/useButton'
 import { usePopoverRootContext } from '../root/PopoverRootContext'
 import { OPEN_DELAY } from '../utils/constants'
@@ -13,6 +24,7 @@ import { triggerOpenStateMapping } from '../utils/stateAttributesMapping'
 import { PopoverTriggerDataAttributes } from './PopoverTriggerDataAttributes'
 
 import type { RenderProp } from '../../internals/createRender'
+import type { PopoverHandle } from '../store/PopoverHandle'
 import type { JSX } from 'solid-js'
 
 /**
@@ -27,7 +39,7 @@ import type { JSX } from 'solid-js'
 export function PopoverTrigger(
   componentProps: PopoverTriggerProps
 ): JSX.Element {
-  const context = usePopoverRootContext()
+  const popoverRootContext = usePopoverRootContext(true)
 
   const [local, elementProps] = splitProps(componentProps, [
     'render',
@@ -39,14 +51,43 @@ export function PopoverTrigger(
     'delay',
     'closeDelay',
     'ref',
+    'id',
+    'payload',
+    'handle',
   ])
+
+  const handleStore = createPopupHandleStore(
+    local.handle
+  )
+  const store = () =>
+    (handleStore() ??
+      popoverRootContext?.store)
+
+  if (!store()) {
+    throw new Error(
+      'Base UI: <Popover.Trigger> must be used within <Popover.Root> or provided with a handle.'
+    )
+  }
+
+  const triggerId = local.id ?? generateId('base-ui-popover-trigger')
+  const [triggerElement, triggerElementAssign] =
+    createSignal<HTMLElement | null>(null)
+
+  const { registerTrigger, isMountedByThisTrigger } =
+    createTriggerDataForwarding(
+      () => triggerId,
+      triggerElement,
+      () => store()!,
+      () => ({ payload: local.payload })
+    )
 
   const disabled = () => local.disabled ?? false
 
   createEffect(() => {
-    context.openOnHoverAssign(local.openOnHover ?? false)
-    context.hoverDelayAssign(local.delay ?? OPEN_DELAY)
-    context.hoverCloseDelayAssign(local.closeDelay ?? 0)
+    if (!popoverRootContext) return
+    popoverRootContext.openOnHoverAssign(local.openOnHover ?? false)
+    popoverRootContext.hoverDelayAssign(local.delay ?? OPEN_DELAY)
+    popoverRootContext.hoverCloseDelayAssign(local.closeDelay ?? 0)
   })
 
   const { getButtonProps, buttonRefAssign } = useButton({
@@ -70,12 +111,17 @@ export function PopoverTrigger(
 
   onCleanup(clearHoverTimers)
 
+  const isOpenedByThisTrigger = () =>
+    store()!.select('isOpenedByTrigger', triggerId)
+  const popupId = () => store()!.select('triggerPopupId', triggerId)
+  const isOpen = () => store()!.select('open')
+
   const state: PopoverTriggerState = {
     get disabled() {
       return disabled()
     },
     get open() {
-      return context.open()
+      return isOpenedByThisTrigger()
     },
   }
 
@@ -90,20 +136,31 @@ export function PopoverTrigger(
         mergeProps(elementProps as Record<string, unknown>, {
           onClick(event: MouseEvent) {
             if (disabled()) return
+            const activeStore = store()!
+            const stickIfOpen =
+              popoverRootContext?.stickIfOpen() ??
+              activeStore.select('stickIfOpen')
+            const openChangeReason =
+              popoverRootContext?.openChangeReason() ??
+              activeStore.select('openChangeReason')
             // Match Floating UI useClick: stickIfOpen only blocks close when
             // the popup was opened by a non-click event (hover). Click-open
             // must still toggle closed on a second trigger press.
             if (
-              context.open() &&
-              context.stickIfOpen() &&
-              context.openChangeReason() === REASONS.triggerHover
+              isOpen() &&
+              stickIfOpen &&
+              openChangeReason === REASONS.triggerHover
             ) {
               return
             }
-            const next = !context.open()
-            context.setOpen(
+            const next = !isOpen()
+            activeStore.setOpen(
               next,
-              createChangeEventDetails(REASONS.triggerPress, event)
+              createChangeEventDetails(
+                REASONS.triggerPress,
+                event,
+                triggerElement() ?? undefined
+              )
             )
           },
           onPointerEnter(event: PointerEvent) {
@@ -111,10 +168,14 @@ export function PopoverTrigger(
             if (event.pointerType === 'touch') return
             clearHoverTimers()
             openTimeout = setTimeout(() => {
-              if (!context.open()) {
-                context.setOpen(
+              if (!isOpen()) {
+                store()!.setOpen(
                   true,
-                  createChangeEventDetails(REASONS.triggerHover, event)
+                  createChangeEventDetails(
+                    REASONS.triggerHover,
+                    event,
+                    triggerElement() ?? undefined
+                  )
                 )
               }
             }, local.delay ?? OPEN_DELAY)
@@ -124,13 +185,17 @@ export function PopoverTrigger(
             if (event.pointerType === 'touch') return
             clearHoverTimers()
             closeTimeout = setTimeout(() => {
-              if (
-                context.open() &&
-                context.openChangeReason() === REASONS.triggerHover
-              ) {
-                context.setOpen(
+              const openChangeReason =
+                popoverRootContext?.openChangeReason() ??
+                store()!.select('openChangeReason')
+              if (isOpen() && openChangeReason === REASONS.triggerHover) {
+                store()!.setOpen(
                   false,
-                  createChangeEventDetails(REASONS.triggerHover, event)
+                  createChangeEventDetails(
+                    REASONS.triggerHover,
+                    event,
+                    triggerElement() ?? undefined
+                  )
                 )
               }
             }, local.closeDelay ?? 0)
@@ -138,16 +203,17 @@ export function PopoverTrigger(
         }) as Record<string, unknown>
       ),
       {
+        get id() {
+          return triggerId
+        },
         get 'aria-haspopup'() {
           return 'dialog' as const
         },
         get 'aria-expanded'() {
-          return context.open()
+          return isOpenedByThisTrigger()
         },
         get 'aria-controls'() {
-          return context.open()
-            ? (context.popupElement()?.id ?? undefined)
-            : undefined
+          return popupId()
         },
         get class() {
           return local.class
@@ -156,11 +222,15 @@ export function PopoverTrigger(
           return local.style
         },
         get [PopoverTriggerDataAttributes.popupOpen]() {
-          return context.open() ? '' : undefined
+          return isOpenedByThisTrigger() ? '' : undefined
         },
         ref(element: HTMLElement) {
           buttonRefAssign(element)
-          context.triggerElementAssign(element)
+          triggerElementAssign(element)
+          registerTrigger(element)
+          if (isMountedByThisTrigger() || popoverRootContext) {
+            popoverRootContext?.triggerElementAssign(element)
+          }
           const userRef = local.ref
           if (typeof userRef === 'function') {
             userRef(element as HTMLButtonElement)
@@ -204,11 +274,11 @@ export type PopoverTriggerProps = Omit<
    */
   closeDelay?: number
   /**
-   * Detached-trigger handle. Deferred — see UPSTREAM_TEST_PARITY.md.
+   * A handle to associate this trigger with a popover root rendered elsewhere.
    */
-  handle?: unknown
+  handle?: PopoverHandle<unknown>
   /**
-   * Payload for detached triggers. Deferred.
+   * Payload associated with this trigger.
    */
   payload?: unknown
   render?: RenderProp<PopoverTriggerState, Record<string, unknown>>

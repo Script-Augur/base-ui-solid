@@ -9,6 +9,25 @@ export {
   createGenericEventDetails,
   REASONS,
 } from './createChangeEventDetails'
+export {
+  BasePopupHandle,
+  PopupTriggerMap,
+  SolidStore,
+  NullStore,
+  ReactiveStore,
+  createInitialPopupStoreState,
+  popupStoreSelectors,
+  createPopupHandleAttachment,
+  createPopupHandleStore,
+  createTriggerRegistration,
+  createTriggerDataForwarding,
+  createImplicitActiveTrigger,
+  createActiveTriggerElementSync,
+  isEventOnPopupTrigger,
+  setPopupOpenState,
+  attachPreventUnmountOnClose,
+  EMPTY_OBJECT,
+} from './popups'
 export { createRender, splitRenderProps } from './createRender'
 export { useRender, mergeAttrs, dataAttr, callHandler } from './useRender'
 export { useButton } from './useButton'

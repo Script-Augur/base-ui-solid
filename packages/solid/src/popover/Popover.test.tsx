@@ -8,6 +8,8 @@ import {
 import { createSignal } from 'solid-js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { usePopoverRootContext } from './root/PopoverRootContext'
+
 import { Popover } from './index'
 
 import type {
@@ -47,8 +49,8 @@ describe('Popover', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open' }))
     expect(onOpenChange).toHaveBeenCalled()
-    expect(onOpenChange.mock.calls[0][0]).toBe(true)
-    expect(onOpenChange.mock.calls[0][1].reason).toBe('trigger-press')
+    expect(onOpenChange.mock.calls[0]?.[0]).toBe(true)
+    expect(onOpenChange.mock.calls[0]?.[1]?.reason).toBe('trigger-press')
   })
 
   it('wires aria-labelledby / aria-describedby to Title and Description', () => {
@@ -343,11 +345,155 @@ describe('Popover', () => {
     expect(screen.getByTestId('arrow')).toBeInTheDocument()
   })
 
-  it('exports createHandle stub', () => {
+  it('exports createHandle and ignores open while unattached', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const handle = Popover.createHandle()
     expect(handle).toBeInstanceOf(Popover.Handle)
+    expect(handle.isOpen).toBe(false)
     expect(() => handle.open()).not.toThrow()
     expect(() => handle.close()).not.toThrow()
+    expect(handle.isOpen).toBe(false)
+    warn.mockRestore()
+  })
+
+  it('opens and closes via createHandle when Root is attached', async () => {
+    const handle = Popover.createHandle()
+    render(() => (
+      <>
+        <Popover.Trigger handle={handle} id="detached-trigger">
+          Detached
+        </Popover.Trigger>
+        <Popover.Root handle={handle}>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">
+                <Popover.Title>Title</Popover.Title>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>
+    ))
+
+    expect(screen.queryByTestId('popup')).toBeNull()
+    handle.open('detached-trigger')
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+    expect(handle.isOpen).toBe(true)
+    handle.close()
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+    })
+  })
+
+  it('uses the detached trigger as Positioner reference', async () => {
+    const handle = Popover.createHandle()
+    render(() => (
+      <>
+        <Popover.Trigger handle={handle} id="detached-anchor">
+          Detached anchor
+        </Popover.Trigger>
+        <Popover.Root handle={handle}>
+          <TriggerElementProbe />
+          <Popover.Portal>
+            <Popover.Positioner data-testid="positioner">
+              <Popover.Popup data-testid="popup">
+                <Popover.Title>Title</Popover.Title>
+                <Popover.Close>Close</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>
+    ))
+
+    const trigger = screen.getByRole('button', { name: 'Detached anchor' })
+    fireEvent.click(trigger)
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+    expect(screen.getByTestId('trigger-probe').textContent).toBe(
+      'detached-anchor'
+    )
+    expect(screen.getByTestId('trigger-probe').dataset.sameNode).toBe('true')
+  })
+
+  it('restores focus to a detached trigger on close', async () => {
+    const handle = Popover.createHandle()
+    render(() => (
+      <>
+        <Popover.Trigger handle={handle} id="detached-focus">
+          Detached focus
+        </Popover.Trigger>
+        <Popover.Root handle={handle} modal="trap-focus">
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">
+                <Popover.Title>Title</Popover.Title>
+                <Popover.Close>Close</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>
+    ))
+
+    const trigger = screen.getByRole('button', { name: 'Detached focus' })
+    trigger.focus()
+    fireEvent.click(trigger)
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+      expect(trigger).toHaveFocus()
+    })
+  })
+
+  it('does not dismiss on outside press targeting a detached trigger', async () => {
+    const handle = Popover.createHandle()
+    const onOpenChange = vi.fn()
+    render(() => (
+      <>
+        <Popover.Trigger handle={handle} id="detached-outside">
+          Detached outside
+        </Popover.Trigger>
+        <Popover.Root handle={handle} onOpenChange={onOpenChange}>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">
+                <Popover.Title>Title</Popover.Title>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>
+    ))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Detached outside' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+    onOpenChange.mockClear()
+
+    fireEvent.pointerDown(
+      screen.getByRole('button', { name: 'Detached outside' }),
+      { button: 0 }
+    )
+    expect(screen.getByTestId('popup')).toBeVisible()
+    expect(onOpenChange).not.toHaveBeenCalled()
+
+    fireEvent.pointerDown(document.body, { button: 0 })
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+    })
+    expect(onOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: 'outside-press' })
+    )
   })
 
   it('sets aria-modal when modal is true', () => {
@@ -355,6 +501,19 @@ describe('Popover', () => {
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
   })
 })
+function TriggerElementProbe(): JSX.Element {
+  const context = usePopoverRootContext()
+  const trigger = () => context.triggerElement()
+  const detached = () => document.getElementById('detached-anchor')
+  return (
+    <span
+      data-testid="trigger-probe"
+      data-same-node={String(trigger() === detached())}
+    >
+      {trigger()?.id ?? ''}
+    </span>
+  )
+}
 function BasicPopover(props: {
   open?: boolean
   defaultOpen?: boolean

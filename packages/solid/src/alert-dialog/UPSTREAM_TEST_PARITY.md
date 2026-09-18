@@ -27,8 +27,8 @@ store, Lite transitions, etc.) in addition to the Alert-specific rows below.
 
 | Behavior                                                          | Notes                                                                     |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `AlertDialog.createHandle` / detached triggers / payload children | Same as Dialog — requires popup-handle store; follow-up with Menu/Popover |
-| Multi-trigger ARIA sync (`triggerId` / `defaultTriggerId`)        | Deferred with handle store                                                |
+| `AlertDialog.createHandle` / detached triggers / payload children | Handle shared with Dialog; payload children render-prop deferred |
+| Multi-trigger ARIA sync (`triggerId` / `defaultTriggerId`)        | Basic wiring via shared popup-handle store                                |
 | Full `onOpenChangeComplete` animation matrix                      | Inherited from Dialog Lite transitions                                    |
 | Focus-manager / floating-ui depth                                 | Inherited Dialog Lite gap                                                 |
 | `popupConformanceTests` suite                                     | Not ported; key ARIA / open-close cases covered above                     |

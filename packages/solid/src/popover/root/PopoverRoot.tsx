@@ -11,7 +11,15 @@ import { createTransitionStatus } from '../../internals/createTransitionStatus'
 import { createDismiss } from '../../internals/dismiss'
 import { createFocusTrap } from '../../internals/focusTrap'
 import { listenerEffect } from '../../internals/listenerEffect'
+import {
+  createActiveTriggerElementSync,
+  createImplicitActiveTrigger,
+  createPopupHandleAttachment,
+  isEventOnPopupTrigger,
+  setPopupOpenState,
+} from '../../internals/popups'
 import { createScrollLock } from '../../internals/scrollLock'
+import { PopoverStore } from '../store/PopoverStore'
 import { PATIENT_CLICK_THRESHOLD } from '../utils/constants'
 
 import { PopoverRootContext, usePopoverRootContext } from './PopoverRootContext'
@@ -21,6 +29,7 @@ import type {
   BaseUIChangeEventDetails,
   ChangeEventReason,
 } from '../../internals/createChangeEventDetails'
+import type { PopoverHandle } from '../store/PopoverHandle'
 import type { JSX } from 'solid-js'
 
 /**
@@ -58,6 +67,9 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     'onOpenChangeComplete',
     'modal',
     'actionsRef',
+    'handle',
+    'triggerId',
+    'defaultTriggerId',
   ])
 
   const parentContext = usePopoverRootContext(true)
@@ -69,6 +81,43 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
   })
 
   const modal = () => local.modal ?? false
+
+  const store = new PopoverStore({
+    open: local.defaultOpen ?? false,
+    openProp: local.open,
+    activeTriggerId: local.defaultTriggerId ?? null,
+    triggerIdProp: local.triggerId,
+    modal: modal(),
+  })
+
+  createPopupHandleAttachment(local.handle, store)
+  createImplicitActiveTrigger(store)
+
+  // Open pipeline (Dialog/Popover hybrid — see internals/popups/OPEN_PIPELINE.md):
+  // `createControlled` owns UI `open`; Root `setOpen` is the only writer. Handle /
+  // detached triggers call `store.setOpen`, which Root overwrites below so both
+  // paths share one pipeline. Menu must NOT copy this overwrite — use store +
+  // floating `setOpen` dispatch instead.
+
+  createEffect(() => {
+    store.set('openProp', local.open)
+  })
+  createEffect(() => {
+    store.set('triggerIdProp', local.triggerId)
+  })
+  createEffect(() => {
+    store.set('modal', modal())
+  })
+  createEffect(() => {
+    store.context.onOpenChange = local.onOpenChange as
+      | ((
+          open: boolean,
+          eventDetails: BaseUIChangeEventDetails<ChangeEventReason>
+        ) => void)
+      | undefined
+    store.context.onOpenChangeComplete = local.onOpenChangeComplete
+  })
+  onCleanup(() => store.dispose())
 
   const { mounted, mountedAssign, transitionStatus } =
     createTransitionStatus(open)
@@ -88,6 +137,7 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     createSignal<HTMLElement | null>(null)
   const [triggerElement, triggerElementAssign] =
     createSignal<HTMLElement | null>(null)
+  createActiveTriggerElementSync(store, triggerElementAssign)
   const [backdropElement, backdropElementAssign] =
     createSignal<HTMLElement | null>(null)
   const [internalBackdropElement, internalBackdropElementAssign] =
@@ -128,6 +178,7 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     const details = eventDetails as PopoverRootChangeEventDetails
     details.preventUnmountOnClose = () => {
       preventUnmountOnCloseAssign(true)
+      store.set('preventUnmountingOnClose', true)
     }
     local.onOpenChange?.(nextOpen, details)
     if (eventDetails.isCanceled) return
@@ -159,7 +210,18 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     } else {
       instantTypeAssign(undefined)
     }
+
+    const updatedState = {
+      open: nextOpen,
+      openChangeReason: reason,
+      stickIfOpen: stickIfOpen(),
+      instantType: instantType(),
+    }
+    setPopupOpenState(updatedState, nextOpen, details.trigger)
+    store.update(updatedState)
   }
+
+  store.setOpen = setOpen
 
   const handleUnmount = () => {
     mountedAssign(false)
@@ -280,8 +342,15 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
       const positioner = positionerElement()
       if (positioner && contains(positioner, target)) return
 
-      const trigger = triggerElement()
-      if (trigger && contains(trigger, target)) return
+      if (
+        isEventOnPopupTrigger(
+          store.context.triggerElements,
+          target,
+          triggerElement()
+        )
+      ) {
+        return
+      }
 
       const modalMode = modal()
       if (modalMode === true) {
@@ -303,10 +372,42 @@ export function PopoverRoot(componentProps: PopoverRootProps): JSX.Element {
     true
   )
 
+  createEffect(() => {
+    store.set('popupElement', popupElement())
+    store.context.popupRef.current = popupElement()
+  })
+  createEffect(() => {
+    store.set('positionerElement', positionerElement())
+  })
+  createEffect(() => {
+    store.set('mounted', mounted())
+  })
+  createEffect(() => {
+    store.set('stickIfOpen', stickIfOpen())
+  })
+  createEffect(() => {
+    store.set('openChangeReason', openChangeReason())
+  })
+  createEffect(() => {
+    store.set('instantType', instantType())
+  })
+  createEffect(() => {
+    store.set('openOnHover', openOnHover())
+  })
+  createEffect(() => {
+    store.set('closeDelay', hoverCloseDelay())
+  })
+  createEffect(() => {
+    if (store.state.open !== open()) {
+      store.set('open', open())
+    }
+  })
+
   const contextValue: PopoverRootContextValue = {
     open,
     openAssign,
     setOpen,
+    store,
     modal,
     nested,
     nestedOpenPopoverCount: ownNestedOpenPopovers,
@@ -399,18 +500,17 @@ export type PopoverRootProps = {
   actionsRef?: PopoverRootActions
   /**
    * ID of the trigger associated with a controlled popover.
-   * Detached-trigger / handle wiring is deferred — see UPSTREAM_TEST_PARITY.md.
    */
   triggerId?: string | null
   /**
    * Default trigger id for an initially open uncontrolled popover.
-   * Detached-trigger / handle wiring is deferred.
+   * @default null
    */
   defaultTriggerId?: string | null
   /**
-   * Handle for detached triggers. Deferred — see UPSTREAM_TEST_PARITY.md.
+   * A handle to associate detached `Popover.Trigger` components with this root.
    */
-  handle?: unknown
+  handle?: PopoverHandle<unknown>
 }
 
 /** Imperative actions exposed via `actionsRef`. */

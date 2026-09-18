@@ -21,6 +21,10 @@ export { DialogPopupCssVars } from './popup/DialogPopupCssVars'
 export { DialogTitle } from './title/DialogTitle'
 export { DialogDescription } from './description/DialogDescription'
 export { DialogClose } from './close/DialogClose'
+export {
+  createDialogHandle,
+  DialogHandle,
+} from './store/DialogHandle'
 
 export type {
   DialogRootProps,
