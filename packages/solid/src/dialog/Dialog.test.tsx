@@ -726,6 +726,53 @@ describe('Dialog', () => {
     })
     expect(handle.isOpen).toBe(true)
   })
+
+  it('keeps element Root children stable when a detached trigger writes payload', async () => {
+    const handle = Dialog.createHandle<{ text: string }>()
+    render(() => (
+      <>
+        <Dialog.Trigger
+          handle={handle}
+          id="element-payload"
+          payload={{ text: 'ignored-by-element-children' }}
+        >
+          Detached payload
+        </Dialog.Trigger>
+        <Dialog.Root handle={handle}>
+          <Dialog.Portal>
+            <Dialog.Popup data-testid="popup">
+              <Dialog.Title>Title</Dialog.Title>
+              <Dialog.Close>Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </>
+    ))
+
+    const trigger = screen.getByRole('button', { name: 'Detached payload' })
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+
+    const popup = screen.getByTestId('popup')
+    const portal = document.querySelector('[data-base-ui-portal]')
+    expect(portal).not.toBeNull()
+
+    // Payload write from the mounted trigger must not remount Portal/Popup
+    // (React-shaped typeof===function would subscribe zero-arg children).
+    await Promise.resolve()
+    expect(screen.getByTestId('popup')).toBe(popup)
+    expect(document.querySelector('[data-base-ui-portal]')).toBe(portal)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+      expect(trigger).toHaveFocus()
+    })
+  })
 })
 
 function BasicDialog(props: {

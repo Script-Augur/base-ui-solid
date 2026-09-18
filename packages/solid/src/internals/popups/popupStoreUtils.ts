@@ -518,6 +518,23 @@ export function createImplicitActiveTrigger<
 }
 
 /**
+ * Whether `children` is a payload render prop (not a Solid zero-arg lazy child).
+ *
+ * Solid resolves many element children as zero-arg functions. Upstream React
+ * uses `typeof === 'function'` alone; Solid must also require `length > 0`
+ * (same convention as Solid's `Show`) so we do not call the child as
+ * `({ payload }) => …` or subscribe Root to `payload` for normal Portal trees.
+ *
+ * @param children - Root `children` value.
+ * @returns `true` when `children` is a payload render function.
+ */
+export function isPayloadChildRenderFunction(
+  children: unknown
+): children is PayloadChildRenderFunction<unknown> {
+  return typeof children === 'function' && children.length > 0
+}
+
+/**
  * The subset of a popup handle that a Root needs to bind its store to.
  *
  * @typeParam TStore - Root-owned store type.

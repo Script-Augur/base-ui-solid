@@ -537,6 +537,53 @@ describe('Popover', () => {
     })
   })
 
+  it('keeps element Root children stable when a detached trigger writes payload', async () => {
+    const handle = Popover.createHandle<{ text: string }>()
+    render(() => (
+      <>
+        <Popover.Trigger
+          handle={handle}
+          id="element-payload"
+          payload={{ text: 'ignored-by-element-children' }}
+        >
+          Detached payload
+        </Popover.Trigger>
+        <Popover.Root handle={handle} modal="trap-focus">
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">
+                <Popover.Title>Title</Popover.Title>
+                <Popover.Close>Close</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>
+    ))
+
+    const trigger = screen.getByRole('button', { name: 'Detached payload' })
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible()
+    })
+
+    const popup = screen.getByTestId('popup')
+    const portal = document.querySelector('[data-base-ui-portal]')
+    expect(portal).not.toBeNull()
+
+    await Promise.resolve()
+    expect(screen.getByTestId('popup')).toBe(popup)
+    expect(document.querySelector('[data-base-ui-portal]')).toBe(portal)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBeNull()
+      expect(trigger).toHaveFocus()
+    })
+  })
+
   it('sets aria-modal when modal is true', () => {
     render(() => <BasicPopover defaultOpen modal />)
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')

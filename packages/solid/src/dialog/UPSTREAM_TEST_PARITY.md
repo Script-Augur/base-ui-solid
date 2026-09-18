@@ -33,12 +33,13 @@ Upstream reference: `@base-ui/react@1.7.0` `Dialog` (`Root`, `Trigger`,
 | `createHandle` / detached trigger open/close           | covered |
 | Detached focus restore / outside-press ignores triggers | covered |
 | Payload children render function / `openWithPayload`   | covered |
+| Detached element children + trigger payload (no remount) | covered |
 
 ## Deferred / partial
 
 | Behavior                                                     | Notes                                                                        |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| Payload children TS prop typing                              | Runtime supports render-prop children; Root `children` typed as `JSX.Element` so Solid’s JSX transform does not wrap element trees (assert / cast at call sites) |
+| Payload children TS prop typing                              | Runtime supports render-prop children; Root `children` typed as `JSX.Element` so Solid’s JSX transform does not wrap element trees (assert / cast at call sites). Detection uses `fn.length > 0` (Solid), not React’s `typeof === 'function'` alone. |
 | Multi-trigger ARIA sync edge cases                           | Basic `triggerId` / active trigger wired via popup store                     |
 | `actionsRef.unmount` + exit-animation handoff edge cases     | `actionsRef` + `preventUnmountOnClose` wired; full animation matrix deferred |
 | Intentional vs sloppy outside-press (mousedown vs click)     | Solid uses `pointerdown`; matches Lite dismiss helper                        |

@@ -18,6 +18,7 @@ export {
   createImplicitActiveTrigger,
   createActiveTriggerElementSync,
   isEventOnPopupTrigger,
+  isPayloadChildRenderFunction,
   setPopupOpenState,
   attachPreventUnmountOnClose,
 } from './popupStoreUtils'

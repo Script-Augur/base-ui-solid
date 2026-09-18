@@ -16,6 +16,7 @@ import {
   createImplicitActiveTrigger,
   createPopupHandleAttachment,
   isEventOnPopupTrigger,
+  isPayloadChildRenderFunction,
   setPopupOpenState,
 } from '../../internals/popups'
 import { createScrollLock } from '../../internals/scrollLock'
@@ -468,10 +469,11 @@ export function PopoverRoot<TPayload = unknown>(
   return (
     <PopoverRootContext.Provider value={contextValue}>
       {(() => {
-        // Read children once, and only under the Provider — Solid may expose
-        // `children` as a getter that creates the tree on access.
+        // Read children once under the Provider. Only treat arity > 0 as a
+        // payload render prop — Solid zero-arg lazy children must not subscribe
+        // to `payload` or remount on trigger / openWithPayload writes.
         const resolvedChildren = local.children
-        if (typeof resolvedChildren === 'function') {
+        if (isPayloadChildRenderFunction(resolvedChildren)) {
           return (
             resolvedChildren as PayloadChildRenderFunction<unknown>
           )({
